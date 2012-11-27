@@ -1,4 +1,32 @@
 #!/usr/bin/env python
+
+# curvature.py
+#
+# Find roads that are the most curved or twisty based on Open Street Map (OSM) data.
+#
+# The goal of this script is to help those who enjoy twisty roads (such as 
+# motorcycle or driving enthusiasts) to find promising roads that are not well known.
+# It works by calculating a synthectic "curvature" parameter for each road segment
+# (known as a "way" in OSM parlance) that represents how twisty that segment is. 
+# These twisty segments can then be output as KML files that can be viewed in Google Earth
+# or viewed in tabular form.
+# 
+# About the "curvature" parameter:
+# The "cuvature" of a way is determined by calculating the ratio of the traveled distance
+# to hypotenuse for every sequence of three points, then adding all of the ratios.
+# Sharp curves will have a travelled-distance much greater than the hypotenuse 
+# (as well as many coordinate points for a given distance) and will rack up "curvature"
+# much faster than straight roads where there is very little difference between the
+# traveled distance and the hypotenuse.
+#
+# The current curvature parameter is certainly not ideal and suggestions for improvement
+# are welcome.
+# 
+# Author: Adam Franco
+# https://github.com/adamfranco/curvature
+# Copyright 2012 Adam Franco
+# License: GNU General Public License Version 3 or later
+
 import codecs
 import sys
 import os.path
@@ -6,7 +34,7 @@ import math
 from imposm.parser import OSMParser
 import argparse
 
-parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an OSM XML file.')
+parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='verbose mode, showing status output')
 parser.add_argument('-q', action='store_true', help='quiet mode, do not output tabular data')
 parser.add_argument('--no_kml', action='store_true', help='if passed, no KML file will be generated. By default a KML file is generated with the name of the input file followed by .kml')
