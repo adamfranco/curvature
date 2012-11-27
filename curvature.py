@@ -5,17 +5,28 @@ import os.path
 import math
 from imposm.parser import OSMParser
 
+rad_earth = 3960 # Radius of the earth in miles
+
+settings = {
+	'min_length': 2,
+	'max_length': 0,
+	'min_curvature': 0.7,
+	'max_curvature': 0,
+	'ignored_surfaces': ['dirt', 'unpaved', 'gravel', 'sand', 'grass', 'ground'],
+}
+
 # simple class that handles the parsed OSM data.
 class CurvatureEvaluator(object):
 	ways = []
 	roads = ['secondary', 'residential', 'tertiary', 'primary', 'primary_link', 'motorway', 'motorway_link', 'road', 'trunk', 'trunk_link', 'unclassified']
-	ignored_surfaces = ['dirt', 'unpaved', 'gravel', 'sand', 'grass', 'ground']
 	coords = {}
 	
 	def coords_callback(self, coords):
 		# callback method for coords
 		for osm_id, lon, lat in coords:
 			self.coords[osm_id] = {'lon': lon, 'lat': lat}
+			
+			# status output
 			if not (len(self.coords) % 10000):
 				sys.stdout.write('-')
 				sys.stdout.flush()
@@ -24,11 +35,11 @@ class CurvatureEvaluator(object):
 		# callback method for ways
 		for osmid, tags, refs in ways:
 			if 'highway' in tags and tags['highway'] in self.roads:				
-				if 'name' not in tags:
+				if 'name' not in tags or tags['name'] == '':
 					continue
 				if refs[0] == refs[-1]:
 					continue
-				if 'surface' in tags and tags['surface'] in self.ignored_surfaces:
+				if 'surface' in tags and tags['surface'] in settings['ignored_surfaces']:
 					continue
 				
 				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
@@ -41,11 +52,14 @@ class CurvatureEvaluator(object):
 				else:
 					way['surface'] = 'unknown'
 				self.ways = self.ways + [way]
+			
+			# status output
 			if not (len(self.ways) % 1000):
 				sys.stdout.write('.')
 				sys.stdout.flush()
 	
 	def calculate(self):
+		# status output
 		i = 0
 		total = len(self.ways)
 		if total < 100:
@@ -54,10 +68,12 @@ class CurvatureEvaluator(object):
 			marker = round(len(self.ways)/100)
 		
 		for way in self.ways:
+			# status output
 			i = i + 1
 			if not (i % marker):
 				sys.stdout.write('*')
 				sys.stdout.flush()
+			
 			start = self.coords[way['refs'][0]]
 			end = self.coords[way['refs'][-1]]
 			way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon'])
@@ -91,6 +107,8 @@ class CurvatureEvaluator(object):
 				way['curvature'] = curvature
 			else:
 				way['curvature'] = 0
+		
+		# status output
 		print ""
 				
 
@@ -127,31 +145,42 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 	# in your favorite set of units to get length.
 	return arc
 
-# instantiate counter and parser and start parsing
-evaluator = CurvatureEvaluator()
-p = OSMParser(concurrency=4, ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
-
+# Validate command-line arguments
 if len(sys.argv) < 2: 
 	sys.exit("Please pass the path of an osm file.")
 filename = sys.argv[1]
 if not os.path.isfile(filename):
 	sys.exit("File doesn't exist: %s" % (filename))
 
+# instantiate counter and parser and start parsing
+evaluator = CurvatureEvaluator()
+p = OSMParser(concurrency=4, ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
 p.parse(filename)
+
+# status output
 print " "
 print "%d ways matched in %s, %d coordinates loaded." % (len(evaluator.ways), filename, len(evaluator.coords))
 sys.stdout.flush()
 
 # Loop through the ways and calculate their curvature
 evaluator.calculate()
-rad_earth = 3960 # Radius of the earth in miles
 
-sorted_ways = sorted(evaluator.ways, key=lambda k: k['curvature'])
-sorted_ways = filter(lambda w: w['length'] * rad_earth > 2 and w['name'] != '', sorted_ways)
-sorted_ways = filter(lambda w: w['curvature'] > 0.7, sorted_ways)
+# Filter out ways that are too short/long or too straight or too curvy
+if settings['min_length'] > 0:
+	evaluator.ways = filter(lambda w: w['length'] * rad_earth > settings['min_length'], evaluator.ways)
+if settings['max_length'] > 0:
+	evaluator.ways = filter(lambda w: w['length'] * rad_earth < settings['max_length'], evaluator.ways)
+if settings['min_curvature'] > 0:
+	evaluator.ways = filter(lambda w: w['curvature'] > settings['min_curvature'], evaluator.ways)
+if settings['max_curvature'] > 0:
+	evaluator.ways = filter(lambda w: w['curvature'] < settings['max_curvature'], evaluator.ways)
 
+# Sort the ways based on curvature
+evaluator.ways = sorted(evaluator.ways, key=lambda k: k['curvature'])
+
+# Output our tabular data
 print "Curvature	Length (mi) Distance (mi)	Id				Name  			County"
-for way in sorted_ways:
+for way in evaluator.ways:
 	print '%9.1f	%9.2f	%9.2f	%10s	%25s	%20s' % (way['curvature'], way['length'] * rad_earth, way['distance'] * rad_earth, way['id'], way['name'], way['county'])
 
 # Generate KML output
@@ -181,9 +210,8 @@ f.write('			<key>highlight</key>\n')
 f.write('			<styleUrl>#lineStyleHighlight</styleUrl>\n')
 f.write('		</Pair>\n')
 f.write('	</StyleMap>\n')
-
-sorted_ways.reverse()
-for way in sorted_ways:
+evaluator.ways.reverse()
+for way in evaluator.ways:
 	f.write('	<Placemark>\n')
 	f.write('		<name>' + way['name'] + '</name>\n')
 	f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] * rad_earth, way['type'], way['surface']) + '</description>\n')
