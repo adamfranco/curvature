@@ -4,14 +4,12 @@ from imposm.parser import OSMParser
 class CurvatureEvaluator(object):
 	ways = []
 	roads = ['secondary', 'residential', 'tertiary', 'primary', 'primary_link', 'motorway', 'motorway_link', 'road', 'trunk', 'trunk_link', 'unclassified']
-	coords_needed = []
 	coords = {}
 	
 	def coords_callback(self, coords):
 		# callback method for coords
 		for osm_id, lon, lat in coords:
-			if osm_id in self.coords_needed:
-				self.coords[osm_id] = {'lon': lon, 'lat': lat}
+			self.coords[osm_id] = {'lon': lon, 'lat': lat}
 
 	def ways_callback(self, ways):
 		# callback method for ways
@@ -23,7 +21,6 @@ class CurvatureEvaluator(object):
 					continue
 				
 				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
-				self.coords_needed = self.coords_needed + refs
 				self.ways = self.ways + [way]
 	
 	def calculate(self):
@@ -96,7 +93,7 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 # instantiate counter and parser and start parsing
 evaluator = CurvatureEvaluator()
-p = OSMParser(concurrency=4, ways_callback=evaluator.ways_callback)
+p = OSMParser(concurrency=4, ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
 
 import sys
 import os.path
@@ -107,10 +104,7 @@ if not os.path.isfile(filename):
 	sys.exit("File doesn't exist: %s" % (filename))
 
 p.parse(filename)
-print "%d ways matched in %s" % (len(evaluator.ways), filename)
-p = OSMParser(concurrency=4, coords_callback=evaluator.coords_callback)
-p.parse(filename)
-print "%d coordinates loaded from %s" % (len(evaluator.coords_needed), filename)
+print "%d ways matched in %s, %d coordinates loaded." % (len(evaluator.ways), filename, len(evaluator.coords))
 
 # Loop through the ways and calculate their curvature
 evaluator.calculate()
