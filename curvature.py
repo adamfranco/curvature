@@ -11,6 +11,9 @@ class CurvatureEvaluator(object):
 		# callback method for coords
 		for osm_id, lon, lat in coords:
 			self.coords[osm_id] = {'lon': lon, 'lat': lat}
+			if not (len(self.coords) % 10000):
+				sys.stdout.write('-')
+				sys.stdout.flush()
 
 	def ways_callback(self, ways):
 		# callback method for ways
@@ -29,9 +32,23 @@ class CurvatureEvaluator(object):
 				else:
 					way['surface'] = 'unknown'
 				self.ways = self.ways + [way]
+			if not (len(self.ways) % 1000):
+				sys.stdout.write('.')
+				sys.stdout.flush()
 	
 	def calculate(self):
+		i = 0
+		total = len(self.ways)
+		if total < 100:
+			marker = 1
+		else:
+			marker = round(len(self.ways)/100)
+		
 		for way in self.ways:
+			i = i + 1
+			if not (i % marker):
+				sys.stdout.write('*')
+				sys.stdout.flush()
 			start = self.coords[way['refs'][0]]
 			end = self.coords[way['refs'][-1]]
 			way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon'])
@@ -62,6 +79,7 @@ class CurvatureEvaluator(object):
 				second_third_length = first_second_length
 					
 					
+		print ""
 				
 
 # From http://www.johndcook.com/python_longitude_latitude.html
@@ -111,7 +129,9 @@ if not os.path.isfile(filename):
 	sys.exit("File doesn't exist: %s" % (filename))
 
 p.parse(filename)
+print " "
 print "%d ways matched in %s, %d coordinates loaded." % (len(evaluator.ways), filename, len(evaluator.coords))
+sys.stdout.flush()
 
 # Loop through the ways and calculate their curvature
 evaluator.calculate()
