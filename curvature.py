@@ -1,3 +1,7 @@
+import codecs
+import sys
+import os.path
+import math
 from imposm.parser import OSMParser
 
 # simple class that handles the parsed OSM data.
@@ -90,7 +94,6 @@ class CurvatureEvaluator(object):
 				
 
 # From http://www.johndcook.com/python_longitude_latitude.html
-import math
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
 	if lat1 == lat2	 and long1 == long2:
 		return 0
@@ -127,8 +130,6 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 evaluator = CurvatureEvaluator()
 p = OSMParser(concurrency=4, ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
 
-import sys
-import os.path
 if len(sys.argv) < 2: 
 	sys.exit("Please pass the path of an osm file.")
 filename = sys.argv[1]
@@ -153,7 +154,6 @@ for way in sorted_ways:
 	print '%9.1f	%9.2f	%9.2f	%10s	%25s	%20s' % (way['curvature'], way['length'] * rad_earth, way['distance'] * rad_earth, way['id'], way['name'], way['county'])
 
 # Generate KML output
-import codecs
 f = codecs.open(filename + '.kml', 'w', "utf-8")
 f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
 f.write('<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n')
