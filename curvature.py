@@ -171,7 +171,8 @@ class CurvatureEvaluator(object):
 				continue
 			
 			first_third_length = distance_on_unit_sphere(first['lat'], first['lon'], third['lat'], third['lon'])
-			if first_third_length > 0:
+			# ignore curvature from zero-distance blips and broad curves
+			if first_third_length > 0 and (first_second_length + second_third_length) < 0.1 / rad_earth:
 				curvature += ((first_second_length + second_third_length) / first_third_length) - 1
 			
 			third = second
