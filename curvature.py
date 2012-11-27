@@ -57,7 +57,7 @@ class CurvatureEvaluator(object):
 			end = self.coords[way['refs'][-1]]
 			way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon'])
 			way['length'] = 0.0
-			way['curvature'] = 0.0
+			curvature = 0.0
 			second = 0
 			third = 0
 			for ref in way['refs']:
@@ -76,13 +76,16 @@ class CurvatureEvaluator(object):
 					continue
 				
 				first_third_length = distance_on_unit_sphere(first['lat'], first['lon'], third['lat'], third['lon'])
-				way['curvature'] += (first_second_length + second_third_length) / first_third_length
+				if first_third_length > 0:
+					curvature += ((first_second_length + second_third_length) / first_third_length) - 1
 				
 				third = second
 				second = first
 				second_third_length = first_second_length
-					
-					
+			if way['length'] > 0:
+				way['curvature'] = curvature
+			else:
+				way['curvature'] = 0
 		print ""
 				
 
