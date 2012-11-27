@@ -107,7 +107,7 @@ class CurvatureEvaluator(object):
 					way['surface'] = tags['surface']
 				else:
 					way['surface'] = 'unknown'
-				self.ways = self.ways + [way]
+				self.ways.append(way)
 			
 			# status output
 			if args.v:
