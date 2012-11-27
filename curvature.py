@@ -4,6 +4,7 @@ from imposm.parser import OSMParser
 class CurvatureEvaluator(object):
 	ways = []
 	roads = ['secondary', 'residential', 'tertiary', 'primary', 'primary_link', 'motorway', 'motorway_link', 'road', 'trunk', 'trunk_link', 'unclassified']
+	ignored_surfaces = ['dirt', 'unpaved', 'gravel', 'sand', 'grass', 'ground']
 	coords = {}
 	
 	def coords_callback(self, coords):
@@ -19,8 +20,14 @@ class CurvatureEvaluator(object):
 					continue
 				if refs[0] == refs[-1]:
 					continue
+				if 'surface' in tags and tags['surface'] in self.ignored_surfaces:
+					continue
 				
 				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
+				if 'surface' in tags:
+					way['surface'] = tags['surface']
+				else:
+					way['surface'] = 'unknown'
 				self.ways = self.ways + [way]
 	
 	def calculate(self):
