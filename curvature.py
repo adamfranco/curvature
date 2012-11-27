@@ -27,6 +27,10 @@ class CurvatureEvaluator(object):
 					continue
 				
 				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
+				if 'tiger:county' in tags:
+					way['county'] = tags['tiger:county']
+				else:
+					way['county'] = ''
 				if 'surface' in tags:
 					way['surface'] = tags['surface']
 				else:
@@ -140,6 +144,6 @@ rad_earth = 3960 # Radius of the earth in miles
 sorted_ways = sorted(evaluator.ways, key=lambda k: k['curvature'])
 sorted_ways = filter(lambda w: w['length'] * rad_earth > 0.4 and w['name'] != '', sorted_ways)
 
-print "Curvature	Length (mi) Distance (mi)	Id		Name"
+print "Curvature	Length (mi) Distance (mi)	Id				Name  			County"
 for way in sorted_ways:
-	print '%9.1f	%9.2f	%9.2f	%s	%s' % (way['curvature'], way['length'] * rad_earth, way['distance'] * rad_earth, way['id'], way['name'])
+	print '%9.1f	%9.2f	%9.2f	%10s	%25s	%20s' % (way['curvature'], way['length'] * rad_earth, way['distance'] * rad_earth, way['id'], way['name'], way['county'])
