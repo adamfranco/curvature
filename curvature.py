@@ -136,43 +136,51 @@ class CurvatureEvaluator(object):
 					sys.stdout.write('*')
 					sys.stdout.flush()
 			
-			start = self.coords[way['refs'][0]]
-			end = self.coords[way['refs'][-1]]
-			way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon'])
-			way['length'] = 0.0
-			curvature = 0.0
-			second = 0
-			third = 0
-			for ref in way['refs']:
-				first = self.coords[ref]
-				
-				if not second:
-					second = first
-					continue
-				
-				first_second_length = distance_on_unit_sphere(first['lat'], first['lon'], second['lat'], second['lon'])
-				way['length'] += first_second_length
-				
-				if not third:
-					third = second
-					second_third_length = first_second_length
-					continue
-				
-				first_third_length = distance_on_unit_sphere(first['lat'], first['lon'], third['lat'], third['lon'])
-				if first_third_length > 0:
-					curvature += ((first_second_length + second_third_length) / first_third_length) - 1
-				
-				third = second
-				second = first
-				second_third_length = first_second_length
-			if way['length'] > 0:
-				way['curvature'] = curvature
-			else:
-				way['curvature'] = 0
+			try:
+				self.calculate_distance_and_curvature(way)
+			except Exception as e:
+				print e
 		
 		# status output
 		if args.v:
 			print ""
+	
+	def calculate_distance_and_curvature(self, way):
+		way['distance'] = 0.0
+		way['curvature'] = 0.0
+		way['length'] = 0.0
+		start = self.coords[way['refs'][0]]
+		end = self.coords[way['refs'][-1]]
+		way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon'])
+		curvature = 0.0
+		second = 0
+		third = 0
+		for ref in way['refs']:
+			first = self.coords[ref]
+			
+			if not second:
+				second = first
+				continue
+			
+			first_second_length = distance_on_unit_sphere(first['lat'], first['lon'], second['lat'], second['lon'])
+			way['length'] += first_second_length
+			
+			if not third:
+				third = second
+				second_third_length = first_second_length
+				continue
+			
+			first_third_length = distance_on_unit_sphere(first['lat'], first['lon'], third['lat'], third['lon'])
+			if first_third_length > 0:
+				curvature += ((first_second_length + second_third_length) / first_third_length) - 1
+			
+			third = second
+			second = first
+			second_third_length = first_second_length
+		if way['length'] > 0:
+			way['curvature'] = curvature
+		else:
+			way['curvature'] = 0
 				
 
 # From http://www.johndcook.com/python_longitude_latitude.html
