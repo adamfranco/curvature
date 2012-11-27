@@ -6,13 +6,13 @@
 #
 # The goal of this script is to help those who enjoy twisty roads (such as 
 # motorcycle or driving enthusiasts) to find promising roads that are not well known.
-# It works by calculating a synthectic "curvature" parameter for each road segment
+# It works by calculating a synthetic "curvature" parameter for each road segment
 # (known as a "way" in OSM parlance) that represents how twisty that segment is. 
 # These twisty segments can then be output as KML files that can be viewed in Google Earth
 # or viewed in tabular form.
 # 
 # About the "curvature" parameter:
-# The "cuvature" of a way is determined by calculating the ratio of the traveled distance
+# The "curvature" of a way is determined by calculating the ratio of the traveled distance
 # to hypotenuse for every sequence of three points, then adding all of the ratios.
 # Sharp curves will have a travelled-distance much greater than the hypotenuse 
 # (as well as many coordinate points for a given distance) and will rack up "curvature"
@@ -29,7 +29,6 @@
 
 import codecs
 import sys
-import os.path
 import math
 from imposm.parser import OSMParser
 import argparse
