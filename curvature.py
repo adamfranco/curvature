@@ -145,7 +145,8 @@ evaluator.calculate()
 rad_earth = 3960 # Radius of the earth in miles
 
 sorted_ways = sorted(evaluator.ways, key=lambda k: k['curvature'])
-sorted_ways = filter(lambda w: w['length'] * rad_earth > 0.4 and w['name'] != '', sorted_ways)
+sorted_ways = filter(lambda w: w['length'] * rad_earth > 2 and w['name'] != '', sorted_ways)
+sorted_ways = filter(lambda w: w['curvature'] > 0.7, sorted_ways)
 
 print "Curvature	Length (mi) Distance (mi)	Id				Name  			County"
 for way in sorted_ways:
