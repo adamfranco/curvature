@@ -90,14 +90,13 @@ class CurvatureEvaluator(object):
 	def ways_callback(self, ways):
 		# callback method for ways
 		for osmid, tags, refs in ways:
+			if refs[0] == refs[-1]:
+				continue
+			if 'name' not in tags or tags['name'] == '':
+				continue
+			if 'surface' in tags and tags['surface'] in settings['ignored_surfaces']:
+				continue
 			if 'highway' in tags and tags['highway'] in settings['roads']:
-				if 'name' not in tags or tags['name'] == '':
-					continue
-				if refs[0] == refs[-1]:
-					continue
-				if 'surface' in tags and tags['surface'] in settings['ignored_surfaces']:
-					continue
-				
 				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
 				if 'tiger:county' in tags:
 					way['county'] = tags['tiger:county']
