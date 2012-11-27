@@ -75,6 +75,8 @@ if args.highway_types is not None:
 class CurvatureEvaluator(object):
 	ways = []
 	coords = {}
+	num_coords = 0
+	num_ways = 0
 	
 	def coords_callback(self, coords):
 		# callback method for coords
@@ -83,8 +85,9 @@ class CurvatureEvaluator(object):
 			
 			# status output
 			if args.v:
-				if not (len(self.coords) % 10000):
-					sys.stdout.write('-')
+				self.num_coords = self.num_coords + 1
+				if not (self.num_coords % 10000):
+					sys.stdout.write('.')
 					sys.stdout.flush()
 
 	def ways_callback(self, ways):
@@ -110,8 +113,9 @@ class CurvatureEvaluator(object):
 			
 			# status output
 			if args.v:
-				if not (len(self.ways) % 1000):
-					sys.stdout.write('.')
+				self.num_ways = self.num_ways + 1
+				if not (self.num_ways % 1000):
+					sys.stdout.write('-')
 					sys.stdout.flush()
 	
 	def calculate(self):
