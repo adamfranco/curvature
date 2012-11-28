@@ -300,7 +300,7 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 # instantiate counter and parser and start parsing
 evaluator = CurvatureEvaluator()
-p = OSMParser(concurrency=4, ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
+p = OSMParser(ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
 p.parse(args.file.name)
 
 # status output
