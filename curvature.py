@@ -59,6 +59,10 @@ parser.add_argument('--level_4_max_radius', type=int, help='the maximum radius o
 parser.add_argument('--level_4_weight', type=float, help='the weight to give segments that are classified as level 4. Default 2')
 parser.add_argument('--ignored_surfaces', help='a list of the surfaces that should be ignored. The default is dirt,unpaved,gravel,sand,grass,ground')
 parser.add_argument('--highway_types', help='a list of the highway types that should be included. The default is secondary,residential,tertiary,primary,primary_link,motorway,motorway_link,road,trunk,trunk_link,unclassified')
+parser.add_argument('--min_lat_bound', type=float, help='The minimum latitude to include.')
+parser.add_argument('--max_lat_bound', type=float, help='The maximum latitude to include.')
+parser.add_argument('--min_lon_bound', type=float, help='The minimum longitude to include.')
+parser.add_argument('--max_lon_bound', type=float, help='The maximum longitude to include.')
 parser.add_argument('file', type=argparse.FileType('r'), help='the input file. Should be an OSM XML file.')
 args = parser.parse_args()
 
@@ -122,6 +126,15 @@ class CurvatureEvaluator(object):
 	def coords_callback(self, coords):
 		# callback method for coords
 		for osm_id, lon, lat in coords:
+			if args.min_lat_bound and lat < args.min_lat_bound:
+				continue
+			if args.max_lat_bound and lat > args.max_lat_bound:
+				continue
+			if args.min_lon_bound and lon < args.min_lon_bound:
+				continue
+			if args.max_lon_bound and lon > args.max_lon_bound:
+				continue
+			
 			self.coords[osm_id] = {'lon': lon, 'lat': lat}
 			
 			# status output
@@ -136,6 +149,21 @@ class CurvatureEvaluator(object):
 		for osmid, tags, refs in ways:
 			if refs[0] == refs[-1]:
 				continue
+			
+			if args.min_lat_bound or args.max_lat_bound or args.min_lon_bound or args.min_lat_bound:
+				try:
+					start = self.coords[refs[0]]
+					if args.min_lat_bound and start['lat'] < args.min_lat_bound:
+						continue
+					if args.max_lat_bound and start['lat'] > args.max_lat_bound:
+						continue
+					if args.min_lon_bound and start['lon'] < args.min_lon_bound:
+						continue
+					if args.max_lon_bound and start['lon'] > args.max_lon_bound:
+						continue
+				except:
+					continue
+			
 			if 'name' not in tags or tags['name'] == '':
 				continue
 			if 'surface' in tags and tags['surface'] in settings['ignored_surfaces']:
@@ -179,8 +207,8 @@ class CurvatureEvaluator(object):
 			
 			try:
 				self.calculate_distance_and_curvature(way)
-			except Exception as e:
-				print e
+			except:
+				continue
 		
 		# status output
 		if args.v:
