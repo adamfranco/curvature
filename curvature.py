@@ -40,10 +40,11 @@ from imposm.parser import OSMParser
 import argparse
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
-parser.add_argument('-v', action='store_true', help='verbose mode, showing status output')
-parser.add_argument('-q', action='store_true', help='quiet mode, do not output tabular data')
-parser.add_argument('--no_kml', action='store_true', help='if passed, no KML file will be generated. By default a KML file is generated with the name of the input file followed by .kml')
-parser.add_argument('--kml_file', type=argparse.FileType('w'), help='a custom destination for the KML file')
+parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
+parser.add_argument('-q', action='store_true', help='Quiet mode, do not output tabular data')
+parser.add_argument('--no_kml', action='store_true', help='Do not generate a KML file. By default a KML file is generated with the name of the input file followed by .kml')
+parser.add_argument('--kml_file', type=argparse.FileType('w'), help='A custom destination for the KML file')
+parser.add_argument('--kml_colorize', action='store_true', help='Colorize KML lines based on the curvature of the road at each segment. Without this option roads will be lines of a single color. For large regions this may make Google Earth run slowly.')
 parser.add_argument('--min_length', type=float, help='the minimum length of a way that should be included, in miles, 0 for no minimum. The default is 2.0')
 parser.add_argument('--max_length', type=float, help='the maximum length of a way that should be included, in miles, 0 for no maximum. The default is 0')
 parser.add_argument('--min_curvature', type=float, help='the minimum curvature of a way that should be included, 0 for no minimum. The default is 300 which catches most twisty roads.')
@@ -323,6 +324,52 @@ if not args.q:
 	for way in evaluator.ways:
 		print '%d	%9.2f	%9.2f	%10s	%25s	%20s' % (way['curvature'], way['length'] / 1609, way['distance'] / 1609, way['id'], way['name'], way['county'])
 
+def write_way_kml_colorize(f, way):
+	f.write('	<Folder>\n')
+	f.write('		<styleUrl>#folderStyle</styleUrl>\n')
+	f.write('		<name>' + way['name'] + '</name>\n')
+	f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) + '</description>\n')
+	current_curvature_level = 0
+	i = 0
+	for segment in way['segments']:
+		if segment['curvature_level'] != current_curvature_level or not i:
+			current_curvature_level = segment['curvature_level']
+			# Close the open LineString
+			if i:
+				f.write('</coordinates>\n')
+				f.write('			</LineString>\n')
+				f.write('		</Placemark>\n')
+			# Start a new linestring for this level
+			f.write('		<Placemark>\n')
+			f.write('			<styleUrl>#lineStyle%d</styleUrl>\n' % (current_curvature_level))
+			f.write('			<LineString>\n')
+			f.write('				<tessellate>1</tessellate>\n')
+			f.write('				<coordinates>')
+			f.write("%.6f,%6f " %(segment['start']['lon'], segment['start']['lat']))
+		f.write("%.6f,%6f " %(segment['end']['lon'], segment['end']['lat']))
+		i = i + 1
+	if i:
+		f.write('</coordinates>\n')
+		f.write('			</LineString>\n')
+		f.write('		</Placemark>\n')
+	f.write('	</Folder>\n')
+	
+def write_way_kml_single_color(f, way):
+	f.write('	<Placemark>\n')
+	f.write('		<styleUrl>#lineStyle4</styleUrl>\n')
+	f.write('		<name>' + way['name'] + '</name>\n')
+	f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) + '</description>\n')
+	f.write('		<LineString>\n')
+	f.write('			<tessellate>1</tessellate>\n')
+	f.write('			<coordinates>')
+	f.write("%.6f,%6f " %(way['segments'][0]['start']['lon'], way['segments'][0]['start']['lat']))
+	for segment in way['segments']:
+		f.write("%.6f,%6f " %(segment['end']['lon'], segment['end']['lat']))
+
+	f.write('</coordinates>\n')
+	f.write('		</LineString>\n')
+	f.write('	</Placemark>\n')
+
 if not args.no_kml:
 	if args.kml_file is None:
 		kml_file = args.file.name + '.kml'
@@ -381,34 +428,9 @@ if not args.no_kml:
 	f.write('	</Style>\n')
 	evaluator.ways.reverse()
 	for way in evaluator.ways:
-		f.write('	<Folder>\n')
-		f.write('		<styleUrl>#folderStyle</styleUrl>\n')
-		f.write('		<name>' + way['name'] + '</name>\n')
-		f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) + '</description>\n')
-		current_curvature_level = 0
-		i = 0
-		for segment in way['segments']:
-			if segment['curvature_level'] != current_curvature_level or not i:
-				current_curvature_level = segment['curvature_level']
-				# Close the open LineString
-				if i:
-					f.write('</coordinates>\n')
-					f.write('			</LineString>\n')
-					f.write('		</Placemark>\n')
-				# Start a new linestring for this level
-				f.write('		<Placemark>\n')
-				f.write('			<styleUrl>#lineStyle%d</styleUrl>\n' % (current_curvature_level))
-				f.write('			<LineString>\n')
-				f.write('				<tessellate>1</tessellate>\n')
-				f.write('				<coordinates>')
-				f.write("%.6f,%6f " %(segment['start']['lon'], segment['start']['lat']))
-			f.write("%.6f,%6f " %(segment['end']['lon'], segment['end']['lat']))
-			i = i + 1
-		if i:
-			f.write('</coordinates>\n')
-			f.write('			</LineString>\n')
-			f.write('		</Placemark>\n')
-		f.write('	</Folder>\n')
-	
+		if args.kml_colorize:
+			write_way_kml_colorize(f, way)
+		else:
+			write_way_kml_single_color(f, way)
 	f.write('</Document>\n')
 	f.write('</kml>\n')
