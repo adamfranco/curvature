@@ -178,6 +178,12 @@ class CurvatureEvaluator(object):
 					way['surface'] = tags['surface']
 				else:
 					way['surface'] = 'unknown'
+				
+				try:
+					self.calculate_distance_and_curvature(way)
+				except:
+					continue
+				
 				self.ways.append(way)
 			
 			# status output
@@ -186,33 +192,6 @@ class CurvatureEvaluator(object):
 				if not (self.num_ways % 1000):
 					sys.stdout.write('-')
 					sys.stdout.flush()
-	
-	def calculate(self):
-		# status output
-		if args.v:
-			i = 0
-			total = len(self.ways)
-			if total < 100:
-				marker = 1
-			else:
-				marker = round(len(self.ways)/100)
-		
-		for way in self.ways:
-			# status output
-			if args.v:
-				i = i + 1
-				if not (i % marker):
-					sys.stdout.write('*')
-					sys.stdout.flush()
-			
-			try:
-				self.calculate_distance_and_curvature(way)
-			except:
-				continue
-		
-		# status output
-		if args.v:
-			print ""
 	
 	def calculate_distance_and_curvature(self, way):
 		way['distance'] = 0.0
@@ -329,9 +308,6 @@ if args.v:
 	print " "
 	print "%d ways matched in %s, %d coordinates loaded." % (len(evaluator.ways), args.file.name, len(evaluator.coords))
 	sys.stdout.flush()
-
-# Loop through the ways and calculate their curvature
-evaluator.calculate()
 
 # Filter out ways that are too short/long or too straight or too curvy
 if settings['min_length'] > 0:
