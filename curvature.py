@@ -135,7 +135,8 @@ class CurvatureEvaluator(object):
 			if args.max_lon_bound and lon > args.max_lon_bound:
 				continue
 			
-			self.coords[osm_id] = {'lon': lon, 'lat': lat}
+			if osm_id in self.coords:
+				self.coords[osm_id] = {'lon': lon, 'lat': lat}
 			
 			# status output
 			if args.v:
@@ -179,6 +180,9 @@ class CurvatureEvaluator(object):
 				else:
 					way['surface'] = 'unknown'
 				self.ways.append(way)
+				
+				for ref in refs:
+					self.coords[ref] = None
 			
 			# status output
 			if args.v:
@@ -321,7 +325,10 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 # instantiate counter and parser and start parsing
 evaluator = CurvatureEvaluator()
-p = OSMParser(ways_callback=evaluator.ways_callback, coords_callback=evaluator.coords_callback)
+p = OSMParser(ways_callback=evaluator.ways_callback)
+p.parse(args.file.name)
+
+p = OSMParser(coords_callback=evaluator.coords_callback)
 p.parse(args.file.name)
 
 # status output
