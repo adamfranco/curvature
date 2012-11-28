@@ -13,15 +13,21 @@ or viewed in tabular form.
 
 About the "curvature" parameter:
 --------------------------------
-The "curvature" of a way is determined by calculating the ratio of the traveled distance
-to hypotenuse for every sequence of three points, then adding all of the ratios.
-Sharp curves will have a travelled-distance much greater than the hypotenuse 
-(as well as many coordinate points for a given distance) and will rack up "curvature"
-much faster than straight roads where there is very little difference between the
-traveled distance and the hypotenuse.
+The "curvature" of a way is determined by iterating over every set of three points
+in the line. Each set of three points form a triangle and that triangle has a circumcircle
+whose radius corresponds to the radius of the curve for that set. Since every line
+segment (between two points) is part of two separate triangles, the radius of the curve
+at that segment is considdered to be the average of the radii for its member sets.
+Now that we have a curve radius for each segment we can categorize each segment into
+ranges of radii from very tight (short radius turn) to very broad or straight (long radius turn).
+Once each segment is categorized its length can be multiplied by a weighting (by default
+zero for straight segments, 1 for broad curves, and up to 2 for the tightest curves).
+The sum of all of these weighting gives us a number for curvature that corresponds
+proportionally to the distance (in meters) that you will be in a turn.*
 
-The current curvature parameter is certainly not ideal and suggestions for improvement
-are welcome.
+* If all weights are 1 then the curvature parameter will be exactly the distance
+  in turns. The goal of this project however is to prefer tighter turns, so sharp
+  corners are given an increased weight.
 
 About & License
 ---------------
@@ -59,11 +65,16 @@ default options:
 
 <code>./curvature.py vermont.osm</code>
 
-This will generate a vermont.osm.kml file that includes red lines for all of the matched segments
+This will generate a vermont.osm.kml file that includes lines for all of the matched segments
 and output the matched segments in tabular for as well.
 
 Use
 
 <code>./curvature.py -h</code>
 
-for more options
+for more options.
+
+KML Output
+----------
+
+Open the KML files in Google Earth. The color-coding is as follows: straight segments are green and the four levels of curves are color-coded from yellow to red with decreasing turn radii.
