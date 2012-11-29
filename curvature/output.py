@@ -20,6 +20,7 @@ class TabOutput(Output):
 			print '%d	%9.2f	%9.2f	%10s	%25s	%20s' % (way['curvature'], way['length'] / 1609, way['distance'] / 1609, way['id'], way['name'], way['county'])
 
 import codecs
+from xml.sax.saxutils import escape
 class KmlOutput(Output):
 	def _write_header(self, f):
 		f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -98,7 +99,7 @@ class SingleColorKmlOutput(KmlOutput):
 		for way in ways:
 			f.write('	<Placemark>\n')
 			f.write('		<styleUrl>#lineStyle4</styleUrl>\n')
-			f.write('		<name>' + way['name'] + '</name>\n')
+			f.write('		<name>' + escape(way['name']) + '</name>\n')
 			f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) + '</description>\n')
 			f.write('		<LineString>\n')
 			f.write('			<tessellate>1</tessellate>\n')
@@ -118,7 +119,7 @@ class MultiColorKmlOutput(KmlOutput):
 		for way in ways:
 			f.write('	<Folder>\n')
 			f.write('		<styleUrl>#folderStyle</styleUrl>\n')
-			f.write('		<name>' + way['name'] + '</name>\n')
+			f.write('		<name>' + escape(way['name']) + '</name>\n')
 			f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) + '</description>\n')
 			current_curvature_level = 0
 			i = 0
