@@ -90,6 +90,7 @@ class KmlOutput(Output):
 		self._write_header(f)
 		self._write_ways(f, ways)
 		self._write_footer(f)
+		f.close()
 
 class SingleColorKmlOutput(KmlOutput):
 	
