@@ -28,6 +28,12 @@ class WayCollector(object):
 	level_4_weight = 2
 	
 	def load_file(self, filename):
+		# Reinitialize if we have a new file
+		ways = []
+		coords = {}
+		num_coords = 0
+		num_ways = 0
+		
 		# status output
 		if self.verbose:
 			sys.stderr.write("loading ways, each '-' is 100 ways, each row is 10,000 ways\n")
