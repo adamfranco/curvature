@@ -34,6 +34,7 @@
 # License: GNU General Public License Version 3 or later
 
 import os
+import sys
 import argparse
 from curvature.collector import WayCollector
 from curvature.filter import WayFilter
@@ -127,7 +128,7 @@ if args.t:
 # Generate KML output
 if not args.no_kml:
 	if args.v:
-		print "generating KML output"
+		sys.stderr.write("generating KML output\n")
 	
 	if args.output_path is None:
 		path = os.path.dirname(args.file.name)
@@ -147,4 +148,4 @@ if not args.no_kml:
 	kml.write(collector.ways, path, basename)
 	
 if args.v:
-	print "done."
+	sys.stderr.write("done.\n")

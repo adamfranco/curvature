@@ -28,14 +28,16 @@ class WayCollector(object):
 	level_4_weight = 2
 	
 	def load_file(self, filename):
-		print "loading ways, each '-' is 100 ways, each row is 10,000 ways"
+		# status output
+		if self.verbose:
+			sys.stderr.write("loading ways, each '-' is 100 ways, each row is 10,000 ways\n")
+		
 		p = OSMParser(ways_callback=self.ways_callback)
 		p.parse(filename)
 		
 		# status output
 		if self.verbose:
-			print " "
-			print "%d ways matched in %s, %d coordinates will be loaded, each '.' is 1%% complete" % (len(self.ways), filename, len(self.coords))
+			sys.stderr.write("\n{} ways matched in {}, {} coordinates will be loaded, each '.' is 1%% complete\n".format(len(self.ways), filename, len(self.coords)))
 			
 			total = len(self.coords)
 			if total < 100:
@@ -48,9 +50,8 @@ class WayCollector(object):
 		
 		# status output
 		if self.verbose:
-			print " "
-			print "coordinates loaded, calculating curvature, each '.' is 1%% complete"
-			sys.stdout.flush()
+			sys.stderr.write("\ncoordinates loaded, calculating curvature, each '.' is 1%% complete\n")
+			sys.stderr.flush()
 		
 		# Loop through the ways and calculate their curvature
 		self.calculate()
@@ -74,8 +75,8 @@ class WayCollector(object):
 				if self.verbose:
 					self.num_coords = self.num_coords + 1
 					if not (self.num_coords % self.coords_marker):
-						sys.stdout.write('.')
-						sys.stdout.flush()
+						sys.stderr.write('.')
+						sys.stderr.flush()
 
 	def ways_callback(self, ways):
 		# callback method for ways
@@ -120,10 +121,10 @@ class WayCollector(object):
 				if self.verbose:
 					self.num_ways = self.num_ways + 1
 					if not (self.num_ways % 100):
-						sys.stdout.write('-')
+						sys.stderr.write('-')
 						if not self.num_ways % 10000:
-							sys.stdout.write('\n')
-						sys.stdout.flush()
+							sys.stderr.write('\n')
+						sys.stderr.flush()
 	
 	def calculate(self):
 		# status output
@@ -140,8 +141,8 @@ class WayCollector(object):
 			if self.verbose:
 				i = i + 1
 				if not (i % marker):
-					sys.stdout.write('.')
-					sys.stdout.flush()
+					sys.stderr.write('.')
+					sys.stderr.flush()
 			
 			try:
 				self.calculate_distance_and_curvature(way)
@@ -150,7 +151,7 @@ class WayCollector(object):
 		
 		# status output
 		if self.verbose:
-			print ""
+			sys.stderr.write('\n')
 	
 	def calculate_distance_and_curvature(self, way):
 		way['distance'] = 0.0
