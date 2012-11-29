@@ -34,10 +34,8 @@
 # License: GNU General Public License Version 3 or later
 
 import codecs
-import sys
-import math
-from imposm.parser import OSMParser
 import argparse
+from curvature.collector import WayCollector
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
@@ -73,19 +71,13 @@ settings = {
 	'max_length': 0,
 	'min_curvature': 300,
 	'max_curvature': 0,
-	'roads': ['secondary', 'residential', 'tertiary', 'primary', 'primary_link', 'motorway', 'motorway_link', 'road', 'trunk', 'trunk_link', 'unclassified'],
-	'ignored_surfaces': ['dirt', 'unpaved', 'gravel', 'sand', 'grass', 'ground'],
-	'level_1_max_radius': 175,
-	'level_1_weight': 1,
-	'level_2_max_radius': 100,
-	'level_2_weight': 1.3,
-	'level_3_max_radius': 60,
-	'level_3_weight': 1.6,
-	'level_4_max_radius': 30,
-	'level_4_weight': 2,
 }
 
+# Instantiate our collector
+collector = WayCollector()
+
 # Configure settings based on the command-line arguments
+collector.verbose = args.v
 if args.min_length is not None:
 	settings['min_length'] = args.min_length
 if args.max_length is not None:
@@ -95,268 +87,55 @@ if args.min_curvature is not None:
 if args.max_curvature is not None:
 	settings['max_curvature'] = args.max_curvature
 if args.ignored_surfaces is not None:
-	settings['ignored_surfaces'] = args.ignored_surfaces.split(',')
+	collector.ignored_surfaces = args.ignored_surfaces.split(',')
 if args.highway_types is not None:
-	settings['roads'] = args.highway_types.split(',')
+	collector.roads = args.highway_types.split(',')
 if args.level_1_max_radius is not None:
-	settings['level_1_max_radius'] = args.level_1_max_radius
+	collector.level_1_max_radius = args.level_1_max_radius
 if args.level_1_weight is not None:
-	settings['level_1_weight'] = args.level_1_weight
+	collector.level_1_weight = args.level_1_weight
 if args.level_2_max_radius is not None:
-	settings['level_2_max_radius'] = args.level_2_max_radius
+	collector.level_2_max_radius = args.level_2_max_radius
 if args.level_2_weight is not None:
-	settings['level_2_weight'] = args.level_2_weight
+	collector.level_2_weight = args.level_2_weight
 if args.level_3_max_radius is not None:
-	settings['level_3_max_radius'] = args.level_3_max_radius
+	collector.level_3_max_radius = args.level_3_max_radius
 if args.level_3_weight is not None:
-	settings['level_3_weight'] = args.level_3_weight
+	collector.level_3_weight = args.level_3_weight
 if args.level_4_max_radius is not None:
-	settings['level_4_max_radius'] = args.level_4_max_radius
+	collector.level_4_max_radius = args.level_4_max_radius
 if args.level_4_weight is not None:
-	settings['level_4_weight'] = args.level_4_weight
+	collector.level_4_weight = args.level_4_weight
+if args.min_lat_bound is not None:
+	collector.min_lat_bound = args.min_lat_bound
+if args.max_lat_bound is not None:
+	collector.max_lat_bound = args.max_lat_bound
+if args.min_lon_bound is not None:
+	collector.min_lon_bound = args.min_lon_bound
+if args.max_lon_bound is not None:
+	collector.max_lon_bound = args.max_lon_bound
 
-
-# simple class that handles the parsed OSM data.
-class CurvatureEvaluator(object):
-	ways = []
-	coords = {}
-	num_coords = 0
-	num_ways = 0
-	
-	def coords_callback(self, coords):
-		# callback method for coords
-		for osm_id, lon, lat in coords:
-			if args.min_lat_bound and lat < args.min_lat_bound:
-				continue
-			if args.max_lat_bound and lat > args.max_lat_bound:
-				continue
-			if args.min_lon_bound and lon < args.min_lon_bound:
-				continue
-			if args.max_lon_bound and lon > args.max_lon_bound:
-				continue
-			
-			if osm_id in self.coords:
-				self.coords[osm_id] = {'lon': lon, 'lat': lat}
-			
-			# status output
-			if args.v:
-				self.num_coords = self.num_coords + 1
-				if not (self.num_coords % 10000):
-					sys.stdout.write('.')
-					sys.stdout.flush()
-
-	def ways_callback(self, ways):
-		# callback method for ways
-		for osmid, tags, refs in ways:
-			if refs[0] == refs[-1]:
-				continue
-			
-			if args.min_lat_bound or args.max_lat_bound or args.min_lon_bound or args.min_lat_bound:
-				try:
-					start = self.coords[refs[0]]
-					if args.min_lat_bound and start['lat'] < args.min_lat_bound:
-						continue
-					if args.max_lat_bound and start['lat'] > args.max_lat_bound:
-						continue
-					if args.min_lon_bound and start['lon'] < args.min_lon_bound:
-						continue
-					if args.max_lon_bound and start['lon'] > args.max_lon_bound:
-						continue
-				except:
-					continue
-			
-			if 'name' not in tags or tags['name'] == '':
-				continue
-			if 'surface' in tags and tags['surface'] in settings['ignored_surfaces']:
-				continue
-			if 'highway' in tags and tags['highway'] in settings['roads']:
-				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
-				if 'tiger:county' in tags:
-					way['county'] = tags['tiger:county']
-				else:
-					way['county'] = ''
-				if 'surface' in tags:
-					way['surface'] = tags['surface']
-				else:
-					way['surface'] = 'unknown'
-				self.ways.append(way)
-				
-				for ref in refs:
-					self.coords[ref] = None
-			
-			# status output
-			if args.v:
-				self.num_ways = self.num_ways + 1
-				if not (self.num_ways % 1000):
-					sys.stdout.write('-')
-					sys.stdout.flush()
-	
-	def calculate(self):
-		# status output
-		if args.v:
-			i = 0
-			total = len(self.ways)
-			if total < 100:
-				marker = 1
-			else:
-				marker = round(len(self.ways)/100)
-		
-		for way in self.ways:
-			# status output
-			if args.v:
-				i = i + 1
-				if not (i % marker):
-					sys.stdout.write('*')
-					sys.stdout.flush()
-			
-			try:
-				self.calculate_distance_and_curvature(way)
-			except:
-				continue
-		
-		# status output
-		if args.v:
-			print ""
-	
-	def calculate_distance_and_curvature(self, way):
-		way['distance'] = 0.0
-		way['curvature'] = 0.0
-		way['length'] = 0.0
-		start = self.coords[way['refs'][0]]
-		end = self.coords[way['refs'][-1]]
-		way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon']) * rad_earth_m
-		second = 0
-		third = 0
-		segments = []
-		for ref in way['refs']:
-			first = self.coords[ref]
-			
-			if not second:
-				second = first
-				continue
-			
-			first_second_length = distance_on_unit_sphere(first['lat'], first['lon'], second['lat'], second['lon']) * rad_earth_m
-			way['length'] += first_second_length
-			
-			if not third:
-				third = second
-				second = first
-				second_third_length = first_second_length
-				continue
-			
-			first_third_length = distance_on_unit_sphere(first['lat'], first['lon'], third['lat'], third['lon']) * rad_earth_m
-			# ignore curvature from zero-distance
-			if first_third_length > 0 and first_second_length > 0 and second_third_length > 0:
-				# Circumcircle radius calculation from http://www.mathopenref.com/trianglecircumcircle.html
-				a = first_second_length
-				b = second_third_length
-				c = first_third_length
-				r = (a * b * c)/math.sqrt(math.fabs((a+b+c)*(b+c-a)*(c+a-b)*(a+b-c)))
-			else:
-				r = 1000
-			
-			if not len(segments):
-				# Add the first segment using the first point
-				segments.append({'start': third, 'end': second, 'length': second_third_length, 'radius': r})
-			else:
-				# set the radius of the previous segment to the average radius of both circumcircles it's a part of
-				segments[-1]['radius'] = (segments[-1]['radius'] + r) / 2
-			# Add our latest segment
-			segments.append({'start': second, 'end': first, 'length': first_second_length, 'radius': r})
-			
-			third = second
-			second = first
-			second_third_length = first_second_length
-		
-		way['segments'] = segments
-
-		# Calculate the curvature as a weighted distance traveled at each curvature.
-		way['curvature'] = 0
-		for segment in segments:
-			if segment['radius'] < settings['level_4_max_radius']:
-				segment['curvature_level'] = 4
-				way['curvature'] += segment['length'] * settings['level_4_weight']
-			elif segment['radius'] < settings['level_3_max_radius']:
-				segment['curvature_level'] = 3
-				way['curvature'] += segment['length'] * settings['level_3_weight']
-			elif segment['radius'] < settings['level_2_max_radius']:
-				segment['curvature_level'] = 2
-				way['curvature'] += segment['length'] * settings['level_2_weight']
-			elif segment['radius'] < settings['level_1_max_radius']:
-				segment['curvature_level'] = 1
-				way['curvature'] += segment['length'] * settings['level_1_weight']
-			else:
-				segment['curvature_level'] = 0
-				
-
-# From http://www.johndcook.com/python_longitude_latitude.html
-def distance_on_unit_sphere(lat1, long1, lat2, long2):
-	if lat1 == lat2	 and long1 == long2:
-		return 0
-
-	# Convert latitude and longitude to 
-	# spherical coordinates in radians.
-	degrees_to_radians = math.pi/180.0
-		
-	# phi = 90 - latitude
-	phi1 = (90.0 - lat1)*degrees_to_radians
-	phi2 = (90.0 - lat2)*degrees_to_radians
-		
-	# theta = longitude
-	theta1 = long1*degrees_to_radians
-	theta2 = long2*degrees_to_radians
-		
-	# Compute spherical distance from spherical coordinates.
-		
-	# For two locations in spherical coordinates 
-	# (1, theta, phi) and (1, theta, phi)
-	# cosine( arc length ) = 
-	#	 sin phi sin phi' cos(theta-theta') + cos phi cos phi'
-	# distance = rho * arc length
-	
-	cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) + 
-		   math.cos(phi1)*math.cos(phi2))
-	arc = math.acos( cos )
-
-	# Remember to multiply arc by the radius of the earth 
-	# in your favorite set of units to get length.
-	return arc
-
-
-# instantiate counter and parser and start parsing
-evaluator = CurvatureEvaluator()
-p = OSMParser(ways_callback=evaluator.ways_callback)
-p.parse(args.file.name)
-
-p = OSMParser(coords_callback=evaluator.coords_callback)
-p.parse(args.file.name)
-
-# status output
-if args.v:
-	print " "
-	print "%d ways matched in %s, %d coordinates loaded." % (len(evaluator.ways), args.file.name, len(evaluator.coords))
-	sys.stdout.flush()
-
-# Loop through the ways and calculate their curvature
-evaluator.calculate()
+# start parsing
+collector.load_file(args.file.name)
+ways = collector.ways
 
 # Filter out ways that are too short/long or too straight or too curvy
 if settings['min_length'] > 0:
-	evaluator.ways = filter(lambda w: w['length'] / 1609 > settings['min_length'], evaluator.ways)
+	ways = filter(lambda w: w['length'] / 1609 > settings['min_length'], ways)
 if settings['max_length'] > 0:
-	evaluator.ways = filter(lambda w: w['length'] / 1609 < settings['max_length'], evaluator.ways)
+	ways = filter(lambda w: w['length'] / 1609 < settings['max_length'], ways)
 if settings['min_curvature'] > 0:
-	evaluator.ways = filter(lambda w: w['curvature'] > settings['min_curvature'], evaluator.ways)
+	ways = filter(lambda w: w['curvature'] > settings['min_curvature'], ways)
 if settings['max_curvature'] > 0:
-	evaluator.ways = filter(lambda w: w['curvature'] < settings['max_curvature'], evaluator.ways)
+	ways = filter(lambda w: w['curvature'] < settings['max_curvature'], ways)
 
 # Sort the ways based on curvature
-evaluator.ways = sorted(evaluator.ways, key=lambda k: k['curvature'])
+ways = sorted(ways, key=lambda k: k['curvature'])
 
 # Output our tabular data
 if not args.q:
 	print "Curvature	Length (mi) Distance (mi)	Id				Name  			County"
-	for way in evaluator.ways:
+	for way in ways:
 		print '%d	%9.2f	%9.2f	%10s	%25s	%20s' % (way['curvature'], way['length'] / 1609, way['distance'] / 1609, way['id'], way['name'], way['county'])
 
 def write_way_kml_colorize(f, way):
@@ -455,8 +234,8 @@ if not args.no_kml:
 	f.write('			<listItemType>checkHideChildren</listItemType>\n')
 	f.write('		</ListStyle>\n')
 	f.write('	</Style>\n')
-	evaluator.ways.reverse()
-	for way in evaluator.ways:
+	ways.reverse()
+	for way in ways:
 		if args.kml_colorize:
 			write_way_kml_colorize(f, way)
 		else:
