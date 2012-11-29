@@ -36,6 +36,7 @@
 import codecs
 import argparse
 from curvature.collector import WayCollector
+from curvature.filter import WayFilter
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
@@ -66,26 +67,21 @@ args = parser.parse_args()
 
 rad_earth_mi = 3960 # Radius of the earth in miles
 rad_earth_m = 6373000 # Radius of the earth in meters
-settings = {
-	'min_length': 1,
-	'max_length': 0,
-	'min_curvature': 300,
-	'max_curvature': 0,
-}
 
 # Instantiate our collector
 collector = WayCollector()
+default_filter = WayFilter()
 
 # Configure settings based on the command-line arguments
 collector.verbose = args.v
 if args.min_length is not None:
-	settings['min_length'] = args.min_length
+	default_filter.min_length = args.min_length
 if args.max_length is not None:
-	settings['max_length'] = args.max_length
+	default_filter.max_length = args.max_length
 if args.min_curvature is not None:
-	settings['min_curvature'] = args.min_curvature
+	default_filter.min_curvature = args.min_curvature
 if args.max_curvature is not None:
-	settings['max_curvature'] = args.max_curvature
+	default_filter.max_curvature = args.max_curvature
 if args.ignored_surfaces is not None:
 	collector.ignored_surfaces = args.ignored_surfaces.split(',')
 if args.highway_types is not None:
@@ -117,17 +113,9 @@ if args.max_lon_bound is not None:
 
 # start parsing
 collector.load_file(args.file.name)
-ways = collector.ways
 
 # Filter out ways that are too short/long or too straight or too curvy
-if settings['min_length'] > 0:
-	ways = filter(lambda w: w['length'] / 1609 > settings['min_length'], ways)
-if settings['max_length'] > 0:
-	ways = filter(lambda w: w['length'] / 1609 < settings['max_length'], ways)
-if settings['min_curvature'] > 0:
-	ways = filter(lambda w: w['curvature'] > settings['min_curvature'], ways)
-if settings['max_curvature'] > 0:
-	ways = filter(lambda w: w['curvature'] < settings['max_curvature'], ways)
+ways = default_filter.filter(collector.ways)
 
 # Sort the ways based on curvature
 ways = sorted(ways, key=lambda k: k['curvature'])
