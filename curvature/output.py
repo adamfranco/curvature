@@ -77,9 +77,13 @@ class KmlOutput(Output):
 		ways = self.filter_and_sort(ways)
 		ways.reverse()
 		
-		filename = basename + '-{0:.0f}'.format(self.filter.min_curvature)
+		filename = basename + '.c_{0:.0f}'.format(self.filter.min_curvature)
 		if self.filter.max_curvature > 0:
 			filename += '-{0:.0f}'.format(self.filter.max_curvature)
+		if self.filter.min_length != 1 or self.filter.max_length > 0:
+			filename += '.l_{0:.0f}'.format(self.filter.min_length)
+		if self.filter.max_length > 0:
+			filename += '-{0:.0f}'.format(self.filter.max_length)
 		filename += self._filename_suffix() + '.kml'
 		f = codecs.open(path + '/' + filename, 'w', "utf-8")
 		
