@@ -34,6 +34,8 @@
 # License: GNU General Public License Version 3 or later
 
 import os
+import copy
+import ast
 import sys
 import argparse
 from curvature.collector import WayCollector
@@ -48,11 +50,12 @@ parser.add_argument('-t', action='store_true', help='Display tabular output')
 parser.add_argument('--no_kml', action='store_true', help='Do not generate a KML file. By default a KML file is generated with the name of the input file followed by .kml')
 parser.add_argument('--output_path', type=str, help='The path under which output files should be written')
 parser.add_argument('--output_basename', type=str, help='The base of the name for output files. This will be appended with a suffix and extension')
-parser.add_argument('--kml_colorize', action='store_true', help='Colorize KML lines based on the curvature of the road at each segment. Without this option roads will be lines of a single color. For large regions this may make Google Earth run slowly.')
+parser.add_argument('--colorize', action='store_true', help='Colorize KML lines based on the curvature of the road at each segment. Without this option roads will be lines of a single color. For large regions this may make Google Earth run slowly.')
 parser.add_argument('--min_length', type=float, help='the minimum length of a way that should be included, in miles, 0 for no minimum. The default is 2.0')
 parser.add_argument('--max_length', type=float, help='the maximum length of a way that should be included, in miles, 0 for no maximum. The default is 0')
 parser.add_argument('--min_curvature', type=float, help='the minimum curvature of a way that should be included, 0 for no minimum. The default is 300 which catches most twisty roads.')
 parser.add_argument('--max_curvature', type=float, help='the maximum curvature of a way that should be included, 0 for no maximum. The default is 0')
+parser.add_argument('--add_kml', metavar='PARAMETERS', type=str, action='append', help='Output an additional KML file with alternate output parameters. PARAMETERS should be a python dictionary that may include any of the following options: colorize, min_curvature, max_curvature, min_length, and max_length. Example: --add_kml "{\'colorize\':1,\'min_curvature\':1000}"')
 parser.add_argument('--level_1_max_radius', type=int, help='the maximum radius of a curve (in meters) that will be considered part of level 1. Curves with radii larger than this will be considered straight. The default is 175')
 parser.add_argument('--level_1_weight', type=float, help='the weight to give segments that are classified as level 1. Default 1')
 parser.add_argument('--level_2_max_radius', type=int, help='the maximum radius of a curve (in meters) that will be considered part of level 2. The default is 100')
@@ -141,11 +144,36 @@ if not args.no_kml:
 	else:
 		basename = os.path.basename(args.output_basename)
 		
-	if args.kml_colorize:
+	if args.colorize:
 		kml = MultiColorKmlOutput(default_filter)
 	else:
 		kml = SingleColorKmlOutput(default_filter)
 	kml.write(collector.ways, path, basename)
+
+	if args.add_kml is not None:
+		for opt_string in args.add_kml:
+			colorize = args.colorize
+			filter = copy.copy(default_filter)
+			opts = ast.literal_eval(opt_string)
+			if 'colorize' in opts:
+				if opts['colorize']:
+					colorize = 1
+				else:
+					colorize = 0
+			if 'min_curvature' in opts:
+				filter.min_curvature = float(opts['min_curvature'])
+			if 'max_curvature' in opts:
+				filter.max_curvature = float(opts['max_curvature'])
+			if 'min_length' in opts:
+				filter.min_length = float(opts['min_length'])
+			if 'max_length' in opts:
+				filter.max_length = float(opts['max_length'])
+			
+			if colorize:
+				kml = MultiColorKmlOutput(filter)
+			else:
+				kml = SingleColorKmlOutput(filter)
+			kml.write(collector.ways, path, basename)
 	
 if args.v:
 	sys.stderr.write("done.\n")
