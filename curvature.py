@@ -70,7 +70,7 @@ parser.add_argument('--min_lat_bound', type=float, help='The minimum latitude to
 parser.add_argument('--max_lat_bound', type=float, help='The maximum latitude to include.')
 parser.add_argument('--min_lon_bound', type=float, help='The minimum longitude to include.')
 parser.add_argument('--max_lon_bound', type=float, help='The maximum longitude to include.')
-parser.add_argument('file', type=argparse.FileType('r'), help='the input file. Should be an OSM XML file.')
+parser.add_argument('file', type=argparse.FileType('r'), nargs='+', help='the input file. Should be an OSM XML file.')
 args = parser.parse_args()
 
 rad_earth_mi = 3960 # Radius of the earth in miles
@@ -120,60 +120,64 @@ if args.max_lon_bound is not None:
 	collector.max_lon_bound = args.max_lon_bound
 
 # start parsing
-collector.load_file(args.file.name)
-
-
-# Output our tabular data
-if args.t:
-	tab = TabOutput(default_filter)
-	tab.output(collector.ways)
-
-# Generate KML output
-if not args.no_kml:
+for file in args.file:
 	if args.v:
-		sys.stderr.write("generating KML output\n")
-	
-	if args.output_path is None:
-		path = os.path.dirname(args.file.name)
-	else:
-		path = args.output_path
-	if args.output_basename is None:
-		basename = os.path.basename(args.file.name)
-		parts = os.path.splitext(basename)
-		basename = parts[0]
-	else:
-		basename = os.path.basename(args.output_basename)
+		sys.stderr.write("Loading {}\n".format(file.name))
 		
-	if args.colorize:
-		kml = MultiColorKmlOutput(default_filter)
-	else:
-		kml = SingleColorKmlOutput(default_filter)
-	kml.write(collector.ways, path, basename)
-
-	if args.add_kml is not None:
-		for opt_string in args.add_kml:
-			colorize = args.colorize
-			filter = copy.copy(default_filter)
-			opts = ast.literal_eval(opt_string)
-			if 'colorize' in opts:
-				if opts['colorize']:
-					colorize = 1
-				else:
-					colorize = 0
-			if 'min_curvature' in opts:
-				filter.min_curvature = float(opts['min_curvature'])
-			if 'max_curvature' in opts:
-				filter.max_curvature = float(opts['max_curvature'])
-			if 'min_length' in opts:
-				filter.min_length = float(opts['min_length'])
-			if 'max_length' in opts:
-				filter.max_length = float(opts['max_length'])
+	collector.load_file(file.name)
+	
+	
+	# Output our tabular data
+	if args.t:
+		tab = TabOutput(default_filter)
+		tab.output(collector.ways)
+	
+	# Generate KML output
+	if not args.no_kml:
+		if args.v:
+			sys.stderr.write("generating KML output\n")
+		
+		if args.output_path is None:
+			path = os.path.dirname(file.name)
+		else:
+			path = args.output_path
+		if args.output_basename is None:
+			basename = os.path.basename(file.name)
+			parts = os.path.splitext(basename)
+			basename = parts[0]
+		else:
+			basename = os.path.basename(args.output_basename)
 			
-			if colorize:
-				kml = MultiColorKmlOutput(filter)
-			else:
-				kml = SingleColorKmlOutput(filter)
-			kml.write(collector.ways, path, basename)
+		if args.colorize:
+			kml = MultiColorKmlOutput(default_filter)
+		else:
+			kml = SingleColorKmlOutput(default_filter)
+		kml.write(collector.ways, path, basename)
+	
+		if args.add_kml is not None:
+			for opt_string in args.add_kml:
+				colorize = args.colorize
+				filter = copy.copy(default_filter)
+				opts = ast.literal_eval(opt_string)
+				if 'colorize' in opts:
+					if opts['colorize']:
+						colorize = 1
+					else:
+						colorize = 0
+				if 'min_curvature' in opts:
+					filter.min_curvature = float(opts['min_curvature'])
+				if 'max_curvature' in opts:
+					filter.max_curvature = float(opts['max_curvature'])
+				if 'min_length' in opts:
+					filter.min_length = float(opts['min_length'])
+				if 'max_length' in opts:
+					filter.max_length = float(opts['max_length'])
+				
+				if colorize:
+					kml = MultiColorKmlOutput(filter)
+				else:
+					kml = SingleColorKmlOutput(filter)
+				kml.write(collector.ways, path, basename)
 	
 if args.v:
 	sys.stderr.write("done.\n")
