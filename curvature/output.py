@@ -111,16 +111,31 @@ class MultiColorKmlOutput(KmlOutput):
 	
 	def _write_ways(self, f, ways):
 		for way in ways:
-			f.write('	<Placemark>\n')
-			f.write('		<styleUrl>#lineStyle4</styleUrl>\n')
+			f.write('	<Folder>\n')
+			f.write('		<styleUrl>#folderStyle</styleUrl>\n')
 			f.write('		<name>' + way['name'] + '</name>\n')
 			f.write('		<description>' + 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) + '</description>\n')
-			f.write('		<LineString>\n')
-			f.write('			<tessellate>1</tessellate>\n')
-			f.write('			<coordinates>')
-			f.write("%.6f,%6f " %(way['segments'][0]['start']['lon'], way['segments'][0]['start']['lat']))
+			current_curvature_level = 0
+			i = 0
 			for segment in way['segments']:
+				if segment['curvature_level'] != current_curvature_level or not i:
+					current_curvature_level = segment['curvature_level']
+					# Close the open LineString
+					if i:
+						f.write('</coordinates>\n')
+						f.write('			</LineString>\n')
+						f.write('		</Placemark>\n')
+					# Start a new linestring for this level
+					f.write('		<Placemark>\n')
+					f.write('			<styleUrl>#lineStyle%d</styleUrl>\n' % (current_curvature_level))
+					f.write('			<LineString>\n')
+					f.write('				<tessellate>1</tessellate>\n')
+					f.write('				<coordinates>')
+					f.write("%.6f,%6f " %(segment['start']['lon'], segment['start']['lat']))
 				f.write("%.6f,%6f " %(segment['end']['lon'], segment['end']['lat']))
-			f.write('</coordinates>\n')
-			f.write('		</LineString>\n')
-			f.write('	</Placemark>\n')
+				i = i + 1
+			if i:
+				f.write('</coordinates>\n')
+				f.write('			</LineString>\n')
+				f.write('		</Placemark>\n')
+			f.write('	</Folder>\n')
