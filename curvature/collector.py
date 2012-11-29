@@ -28,8 +28,20 @@ class WayCollector(object):
 	level_4_weight = 2
 	
 	def load_file(self, filename):
+		print "loading ways, each '-' is 100 ways, each row is 10,000 ways"
 		p = OSMParser(ways_callback=self.ways_callback)
 		p.parse(filename)
+		
+		# status output
+		if self.verbose:
+			print " "
+			print "%d ways matched in %s, %d coordinates will be loaded, each '.' is 1%% complete" % (len(self.ways), filename, len(self.coords))
+			
+			total = len(self.coords)
+			if total < 100:
+				self.coords_marker = 1
+			else:
+				self.coords_marker = round(total/100)
 		
 		p = OSMParser(coords_callback=self.coords_callback)
 		p.parse(filename)
@@ -37,7 +49,7 @@ class WayCollector(object):
 		# status output
 		if self.verbose:
 			print " "
-			print "%d ways matched in %s, %d coordinates loaded." % (len(self.ways), filename, len(self.coords))
+			print "coordinates loaded, calculating curvature, each '.' is 1%% complete"
 			sys.stdout.flush()
 		
 		# Loop through the ways and calculate their curvature
@@ -58,12 +70,12 @@ class WayCollector(object):
 			if osm_id in self.coords:
 				self.coords[osm_id] = {'lon': lon, 'lat': lat}
 			
-			# status output
-			if self.verbose:
-				self.num_coords = self.num_coords + 1
-				if not (self.num_coords % 10000):
-					sys.stdout.write('.')
-					sys.stdout.flush()
+				# status output
+				if self.verbose:
+					self.num_coords = self.num_coords + 1
+					if not (self.num_coords % self.coords_marker):
+						sys.stdout.write('.')
+						sys.stdout.flush()
 
 	def ways_callback(self, ways):
 		# callback method for ways
@@ -104,12 +116,14 @@ class WayCollector(object):
 				for ref in refs:
 					self.coords[ref] = None
 			
-			# status output
-			if self.verbose:
-				self.num_ways = self.num_ways + 1
-				if not (self.num_ways % 1000):
-					sys.stdout.write('-')
-					sys.stdout.flush()
+				# status output
+				if self.verbose:
+					self.num_ways = self.num_ways + 1
+					if not (self.num_ways % 100):
+						sys.stdout.write('-')
+						if not self.num_ways % 10000:
+							sys.stdout.write('\n')
+						sys.stdout.flush()
 	
 	def calculate(self):
 		# status output
@@ -119,14 +133,14 @@ class WayCollector(object):
 			if total < 100:
 				marker = 1
 			else:
-				marker = round(len(self.ways)/100)
+				marker = round(total/100)
 		
 		for way in self.ways:
 			# status output
 			if self.verbose:
 				i = i + 1
 				if not (i % marker):
-					sys.stdout.write('*')
+					sys.stdout.write('.')
 					sys.stdout.flush()
 			
 			try:

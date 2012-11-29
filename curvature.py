@@ -126,6 +126,9 @@ if args.t:
 
 # Generate KML output
 if not args.no_kml:
+	if args.v:
+		print "generating KML output"
+	
 	if args.output_path is None:
 		path = os.path.dirname(args.file.name)
 	else:
@@ -143,3 +146,5 @@ if not args.no_kml:
 		kml = SingleColorKmlOutput(default_filter)
 	kml.write(collector.ways, path, basename)
 	
+if args.v:
+	print "done."
