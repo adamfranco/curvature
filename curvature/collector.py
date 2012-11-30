@@ -44,7 +44,7 @@ class WayCollector(object):
 		
 		# status output
 		if self.verbose:
-			sys.stderr.write("\n{} ways matched in {} {mem:.1f}MB memory used, {} coordinates will be loaded, each '.' is 1%% complete\n".format(len(self.ways), filename, len(self.coords), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+			sys.stderr.write("\n{} ways matched in {} {mem:.1f}MB memory used, {} coordinates will be loaded, each '.' is 1% complete\n".format(len(self.ways), filename, len(self.coords), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			
 			total = len(self.coords)
 			if total < 100:
@@ -57,7 +57,7 @@ class WayCollector(object):
 		
 		# status output
 		if self.verbose:
-			sys.stderr.write("\ncoordinates loaded {mem:.1f}MB memory used, calculating curvature, each '.' is 1%% complete\n".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+			sys.stderr.write("\ncoordinates loaded {mem:.1f}MB memory used, calculating curvature, each '.' is 1% complete\n".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			sys.stderr.flush()
 		
 		# Loop through the ways and calculate their curvature
