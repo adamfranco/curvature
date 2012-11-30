@@ -55,7 +55,7 @@ parser.add_argument('--min_length', type=float, help='the minimum length of a wa
 parser.add_argument('--max_length', type=float, help='the maximum length of a way that should be included, in miles, 0 for no maximum. The default is 0')
 parser.add_argument('--min_curvature', type=float, help='the minimum curvature of a way that should be included, 0 for no minimum. The default is 300 which catches most twisty roads.')
 parser.add_argument('--max_curvature', type=float, help='the maximum curvature of a way that should be included, 0 for no maximum. The default is 0')
-parser.add_argument('--add_kml', metavar='PARAMETERS', type=str, action='append', help='Output an additional KML file with alternate output parameters. PARAMETERS should be a python dictionary that may include any of the following options: colorize, min_curvature, max_curvature, min_length, and max_length. Example: --add_kml "{\'colorize\':1,\'min_curvature\':1000}"')
+parser.add_argument('--add_kml', metavar='PARAMETERS', type=str, action='append', help='Output an additional KML file with alternate output parameters. PARAMETERS should be a comma-separated list of option=value that may include any of the following options: colorize, min_curvature, max_curvature, min_length, and max_length. Example: --add_kml colorize=1,min_curvature=1000')
 parser.add_argument('--level_1_max_radius', type=int, help='the maximum radius of a curve (in meters) that will be considered part of level 1. Curves with radii larger than this will be considered straight. The default is 175')
 parser.add_argument('--level_1_weight', type=float, help='the weight to give segments that are classified as level 1. Default 1')
 parser.add_argument('--level_2_max_radius', type=int, help='the maximum radius of a curve (in meters) that will be considered part of level 2. The default is 100')
@@ -158,20 +158,29 @@ for file in args.file:
 			for opt_string in args.add_kml:
 				colorize = args.colorize
 				filter = copy.copy(default_filter)
-				opts = ast.literal_eval(opt_string)
-				if 'colorize' in opts:
-					if opts['colorize']:
-						colorize = 1
+				opts = opt_string.split(',')
+				for opt in opts:
+					opt = opt.split('=')
+					key = opt[0]
+					if len(opt) < 2:
+						sys.stderr.write("Key '{}' passed to --add_kml has no value, ignoring.\n".format(key))
+						continue
+					value = opt[1]
+					if key == 'colorize':
+						if int(value):
+							colorize = 1
+						else:
+							colorize = 0
+					elif key == 'min_curvature':
+						filter.min_curvature = float(value)
+					elif key == 'max_curvature':
+						filter.max_curvature = float(value)
+					elif key == 'min_length':
+						filter.min_length = float(value)
+					elif key == 'max_length':
+						filter.max_length = float(value)
 					else:
-						colorize = 0
-				if 'min_curvature' in opts:
-					filter.min_curvature = float(opts['min_curvature'])
-				if 'max_curvature' in opts:
-					filter.max_curvature = float(opts['max_curvature'])
-				if 'min_length' in opts:
-					filter.min_length = float(opts['min_length'])
-				if 'max_length' in opts:
-					filter.max_length = float(opts['max_length'])
+						sys.stderr.write("Ignoring unknown key '{}' passed to --add_kml\n".format(key))
 				
 				if colorize:
 					kml = MultiColorKmlOutput(filter)
