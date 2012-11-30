@@ -1,3 +1,5 @@
+![Vermont Route 17](http://www2.adamfranco.com/curvature/images/Page_Mill_Rd.jpg)
+
 curvature.py
 ============
 
@@ -73,7 +75,7 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   file (after unzipping). 
   
   This file includes all ways in the input file that have a curvature value greater than 1000 
-  and are not marked as unpaved. As mentioned above, a curvature of 300 this means that these 
+  and are not marked as unpaved. As mentioned above, a curvature of 1000 this means that these 
   ways have at least 500 meters of tight curves with a radius of less than 30 meters, 1000 meters 
   of gentle curves with a radius less than 175 meters, or a combination thereof.
   
