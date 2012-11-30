@@ -81,7 +81,7 @@ class WayCollector(object):
 				continue
 			
 			if osm_id in self.coords:
-				self.coords[osm_id] = {'lon': lon, 'lat': lat}
+				self.coords[osm_id] = (lat, lon)
 			
 				# status output
 				if self.verbose:
@@ -99,13 +99,13 @@ class WayCollector(object):
 			if self.min_lat_bound or self.max_lat_bound or self.min_lon_bound or self.min_lat_bound:
 				try:
 					start = self.coords[refs[0]]
-					if self.min_lat_bound and start['lat'] < self.min_lat_bound:
+					if self.min_lat_bound and start[0] < self.min_lat_bound:
 						continue
-					if self.max_lat_bound and start['lat'] > self.max_lat_bound:
+					if self.max_lat_bound and start[0] > self.max_lat_bound:
 						continue
-					if self.min_lon_bound and start['lon'] < self.min_lon_bound:
+					if self.min_lon_bound and start[1] < self.min_lon_bound:
 						continue
-					if self.max_lon_bound and start['lon'] > self.max_lon_bound:
+					if self.max_lon_bound and start[1] > self.max_lon_bound:
 						continue
 				except:
 					continue
@@ -171,7 +171,7 @@ class WayCollector(object):
 		way['length'] = 0.0
 		start = self.coords[way['refs'][0]]
 		end = self.coords[way['refs'][-1]]
-		way['distance'] = distance_on_unit_sphere(start['lat'], start['lon'], end['lat'], end['lon']) * rad_earth_m
+		way['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
 		second = 0
 		third = 0
 		segments = []
@@ -182,7 +182,7 @@ class WayCollector(object):
 				second = first
 				continue
 			
-			first_second_length = distance_on_unit_sphere(first['lat'], first['lon'], second['lat'], second['lon']) * rad_earth_m
+			first_second_length = distance_on_unit_sphere(first[0], first[1], second[0], second[1]) * rad_earth_m
 			way['length'] += first_second_length
 			
 			if not third:
@@ -191,7 +191,7 @@ class WayCollector(object):
 				second_third_length = first_second_length
 				continue
 			
-			first_third_length = distance_on_unit_sphere(first['lat'], first['lon'], third['lat'], third['lon']) * rad_earth_m
+			first_third_length = distance_on_unit_sphere(first[0], first[1], third[0], third[1]) * rad_earth_m
 			# ignore curvature from zero-distance
 			if first_third_length > 0 and first_second_length > 0 and second_third_length > 0:
 				# Circumcircle radius calculation from http://www.mathopenref.com/trianglecircumcircle.html

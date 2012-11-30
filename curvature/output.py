@@ -104,9 +104,9 @@ class SingleColorKmlOutput(KmlOutput):
 			f.write('		<LineString>\n')
 			f.write('			<tessellate>1</tessellate>\n')
 			f.write('			<coordinates>')
-			f.write("%.6f,%6f " %(way['segments'][0]['start']['lon'], way['segments'][0]['start']['lat']))
+			f.write("%.6f,%6f " %(way['segments'][0]['start'][1], way['segments'][0]['start'][0]))
 			for segment in way['segments']:
-				f.write("%.6f,%6f " %(segment['end']['lon'], segment['end']['lat']))
+				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
 			f.write('</coordinates>\n')
 			f.write('		</LineString>\n')
 			f.write('	</Placemark>\n')
@@ -137,8 +137,8 @@ class MultiColorKmlOutput(KmlOutput):
 					f.write('			<LineString>\n')
 					f.write('				<tessellate>1</tessellate>\n')
 					f.write('				<coordinates>')
-					f.write("%.6f,%6f " %(segment['start']['lon'], segment['start']['lat']))
-				f.write("%.6f,%6f " %(segment['end']['lon'], segment['end']['lat']))
+					f.write("%.6f,%6f " %(segment['start'][1], segment['start'][0]))
+				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
 				i = i + 1
 			if i:
 				f.write('</coordinates>\n')
