@@ -22,14 +22,15 @@ segment (between two points) is part of two separate triangles, the radius of th
 at that segment is considered to be the average of the radii for its member sets.
 Now that we have a curve radius for each segment we can categorize each segment into
 ranges of radii from very tight (short radius turn) to very broad or straight (long radius turn).
-Once each segment is categorized its length can be multiplied by a weighting (by default
-zero for straight segments, 1 for broad curves, and up to 2 for the tightest curves).
-The sum of all of these weighting gives us a number for curvature that corresponds
-proportionally to the distance (in meters) that you will be in a turn.*
+Once each segment is categorized its length can be multiplied by a weight to increase the 
+influence of the most curvy segments. By default a weight of 0 is given for straight segments, 
+1 for broad curves, and up to 2 for the tightest curves. The sum of all of the weighted
+lengths gives us a number for the curvature of the whole line that corresponds proportionally
+to the distance (in meters) that you will be in a turn.*
 
-\* If all weights are 1 then the curvature parameter will be exactly the distance
-   in turns. The goal of this project however is to prefer tighter turns, so sharp
-   corners are given an increased weight.
+\* If all weights are 1 then the curvature parameter will be exactly the distance in turns. 
+The goal of this project however is to prefer tighter turns, so sharp corners are given an
+increased weight.
 
 About & License
 ---------------
