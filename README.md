@@ -32,7 +32,7 @@ proportionally to the distance (in meters) that you will be in a turn.*
 About & License
 ---------------
 Author: Adam Franco  
-[https://github.com/adamfranco/curvature](https://github.com/adamfranco/curvature)  
+[https://github.com/adamfranco/curvature](https://github.com/adamfranco/curvature/wiki/)  
 Copyright 2012 Adam Franco  
 License: GNU General Public License Version 3 or later
 
@@ -56,9 +56,9 @@ be found at [adamfranco.com/curvature/](http://www2.adamfranco.com/curvature/).
   
   `./curvature.py -v vermont.osm`
   
-  [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/vermont.c_300.kml)  
-  [vermont-bristol.c_300.kml](http://www2.adamfranco.com/curvature/kml/vermont-bristol.c_300.kml)
-  ([View in Google Maps](http://goo.gl/maps/gSAkq)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
+  [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.kml)  
+  [vermont-bristol.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont-bristol.c_300.kml)
+  ([View in Google Maps](http://goo.gl/maps/T63Kv)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
   
   An additional note: Vermont has approximately [8,000 miles of dirt roads and only 6,000 miles
 of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-dirt-road-reigns.html).
@@ -83,9 +83,9 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   
   `./curvature.py -v --min_curvature 1000 vermont.osm`
   
-  [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/vermont.c_1000.kml)  
-  [vermont-bristol.c_1000.kml](http://www2.adamfranco.com/curvature/kml/vermont-bristol.c_1000.kml)
-  ([View in Google Maps](http://goo.gl/maps/opkRU)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
+  [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.kml)  
+  [vermont-bristol.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont-bristol.c_1000.kml)
+  ([View in Google Maps](http://goo.gl/maps/ZDh9u)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
 
 * Multi-colored KML files generated with a minimum curvature of 300 and 1000 using the
   [vermont.osm](http://download.geofabrik.de/openstreetmap/north-america/us/vermont.osm.bz2) 
@@ -97,10 +97,10 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   
   `./curvature.py -v --colorize --add_kml min_curvature=1000 vermont.osm`
   
-  [vermont.c_300.multicolor.kml](http://www2.adamfranco.com/curvature/kml/vermont.c_300.multicolor.kml) 
-  [vermont.c_1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/vermont.c_1000.multicolor.kml)  
-  [vermont-bristol.c_300.multicolor.kml](http://www2.adamfranco.com/curvature/kml/vermont-bristol.c_300.multicolor.kml)
-  ([View in Google Maps](http://goo.gl/maps/zOYIs)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
+  [vermont.c_300.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.multicolor.kml) 
+  [vermont.c_1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.multicolor.kml)  
+  [vermont-bristol.c_300.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont-bristol.c_300.multicolor.kml)
+  ([View in Google Maps](http://goo.gl/maps/ItFNg)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
 
 * A set of KML files of the roads in the San Francisco Bay area with a minimum curvature 
   of 1000 using the [california.osm](http://download.geofabrik.de/openstreetmap/north-america/us/california.osm.bz2) 
@@ -108,12 +108,12 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   
   `./curvature.py -v --max_lat_bound 38.5 --min_lat_bound 36.5 --min_lon_bound -123.25 --max_lon_bound -121.0 --output_basename california-bay-area --min_curvature 1000 --add_kml colorize=1 california.osm`
   
-   [california-bay-area.1000.kml](http://www2.adamfranco.com/curvature/kml/california-bay-area.1000.kml) ([view in Google Maps](http://goo.gl/maps/q03Ty))  
-   [california-bay-area.1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/california-bay-area.1000.multicolor.kml)
+   [california-bay-area.1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/california-bay-area.1000.kml) ([view in Google Maps](http://goo.gl/maps/uU1R9))  
+   [california-bay-area.1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/california-bay-area.1000.multicolor.kml)
    
    What a smorgasbord!
 
-* More examples can be seen at [adamfranco.com/curvature/](http://www2.adamfranco.com/curvature/)
+* More examples can be seen at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/)
 
 Installation
 ============
