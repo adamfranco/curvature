@@ -93,6 +93,8 @@ class WayCollector(object):
 	def ways_callback(self, ways):
 		# callback method for ways
 		for osmid, tags, refs in ways:
+			
+			# ignore circular ways (Maybe we don't need this)
 			if refs[0] == refs[-1]:
 				continue
 			
@@ -200,7 +202,7 @@ class WayCollector(object):
 				c = first_third_length
 				r = (a * b * c)/math.sqrt(math.fabs((a+b+c)*(b+c-a)*(c+a-b)*(a+b-c)))
 			else:
-				r = 1000
+				r = 100000
 			
 			if not len(segments):
 				# Add the first segment using the first point
@@ -216,6 +218,10 @@ class WayCollector(object):
 			second = first
 			second_third_length = first_second_length
 		
+		# Special case for two-coordinate ways
+		if len(way['refs']) == 2:
+			segments.append({'start': second, 'end': first, 'length': first_second_length, 'radius': 100000})
+			
 		way['segments'] = segments
 
 		# Calculate the curvature as a weighted distance traveled at each curvature.
