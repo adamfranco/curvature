@@ -206,8 +206,9 @@ class WayCollector(object):
 				# Add the first segment using the first point
 				segments.append({'start': third, 'end': second, 'length': second_third_length, 'radius': r})
 			else:
-				# set the radius of the previous segment to the average radius of both circumcircles it's a part of
-				segments[-1]['radius'] = (segments[-1]['radius'] + r) / 2
+				# set the radius of the previous segment to the smaller radius of the two circumcircles it's a part of
+				if segments[-1]['radius'] > r:
+					segments[-1]['radius'] = r
 			# Add our latest segment
 			segments.append({'start': second, 'end': first, 'length': first_second_length, 'radius': r})
 			
