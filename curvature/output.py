@@ -136,7 +136,12 @@ class SingleColorKmlOutput(KmlOutput):
 		if curvature < offset:
 			return 0
 		
-		return int(round(255 * (curvature - offset) / (self.max_curvature - offset))) + 1
+		curvature_pct = (curvature - offset) / (self.max_curvature - offset)
+		# Use the square route of the ratio to give a better differentiation between
+		# lower-curvature ways
+		color_pct = math.sqrt(curvature_pct)
+		level = int(round(255 * color_pct)) + 1		
+		return level
 	
 	def line_style(self, way):
 		return 'lineStyle{}'.format(self.level_for_curvature(way['curvature']))
