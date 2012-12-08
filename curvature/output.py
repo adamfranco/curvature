@@ -1,6 +1,9 @@
 import sys
+import math
 
 class Output(object):
+	max_curvature = 0
+	
 	def __init__(self, filter):
 		self.filter = filter
 	
@@ -10,6 +13,10 @@ class Output(object):
 		
 		# Sort the ways based on curvature
 		ways = sorted(ways, key=lambda k: k['curvature'])
+		
+		for way in ways:
+			if way['curvature'] > self.max_curvature:
+				self.max_curvature = way['curvature']
 		
 		return ways
 		
@@ -92,7 +99,16 @@ class KmlOutput(Output):
 
 class SingleColorKmlOutput(KmlOutput):
 	
+	def get_styles(self):
+		styles = {'lineStyle0':{'color':'F000E010'}} # Straight roads
+		
+		# Add a style for each level in a gradient from yellow to red (00FFFF - 0000FF)
+		for i in range(256):
+			styles['lineStyle{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i)}
+		return styles
+	
 	def _write_ways(self, f, ways):
+		
 		for way in ways:
 			if 'segments' not in way or not len(way['segments']):
 # 				sys.stderr.write("\nError: way has no segments: {} \n".format(way['name']))
@@ -111,8 +127,19 @@ class SingleColorKmlOutput(KmlOutput):
 			f.write('		</LineString>\n')
 			f.write('	</Placemark>\n')
 	
+	def level_for_curvature(self, curvature):
+		if self.filter.min_curvature > 0:
+			offset = self.filter.min_curvature
+		else:
+			offset = 0
+		
+		if curvature < offset:
+			return 0
+		
+		return int(round(255 * (curvature - offset) / (self.max_curvature - offset))) + 1
+	
 	def line_style(self, way):
-		return 'lineStyle4'
+		return 'lineStyle{}'.format(self.level_for_curvature(way['curvature']))
 
 class MultiColorKmlOutput(KmlOutput):
 	def _filename_suffix(self):
