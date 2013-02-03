@@ -212,7 +212,7 @@ class WayCollector(object):
 		
 		# Special case for two-coordinate ways
 		if len(way['refs']) == 2:
-			segments.append({'start': second, 'end': first, 'length': first_second_length, 'radius': 100000})
+			segments.append({'start': self.coords[way['refs'][0]], 'end': self.coords[way['refs'][1]], 'length': first_second_length, 'radius': 100000})
 			
 		way['segments'] = segments
 
@@ -265,6 +265,10 @@ class NoCurvatureWayCollector(WayCollector):
 			
 			third = second
 			second = first
+		
+		# Special case for two-coordinate ways
+		if len(way['refs']) == 2:
+			segments.append({'start': self.coords[way['refs'][0]], 'end': self.coords[way['refs'][1]]})
 		
 		way['segments'] = segments
 
