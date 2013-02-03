@@ -98,12 +98,18 @@ class WayCollector(object):
 			if refs[0] == refs[-1]:
 				continue
 			
-			if 'name' not in tags or tags['name'] == '':
+			if ('name' not in tags or tags['name'] == '') and ('ref' not in tags or tags['ref'] == ''):
 				continue
 			if 'surface' in tags and tags['surface'] in self.ignored_surfaces:
 				continue
 			if 'highway' in tags and tags['highway'] in self.roads:
-				way = {'id': osmid, 'type': tags['highway'], 'name':tags['name'], 'refs': refs}
+				way = {'id': osmid, 'type': tags['highway'], 'refs': refs}
+				if 'name' not in tags or tags['name'] == '':
+					way['name'] = tags['ref']
+				elif 'ref' in tags:
+					way['name'] = unicode('{} ({})').format(tags['name'], tags['ref'])
+				else:
+					way['name'] = tags['name']
 				if 'tiger:county' in tags:
 					way['county'] = tags['tiger:county']
 				else:
