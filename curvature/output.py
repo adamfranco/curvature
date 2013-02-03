@@ -31,6 +31,8 @@ class TabOutput(Output):
 import codecs
 from xml.sax.saxutils import escape
 class KmlOutput(Output):
+	units = 'mi'
+	
 	def _write_header(self, f):
 		self._write_doc_start(f)
 		self._write_styles(f, self.get_styles())
@@ -95,7 +97,10 @@ class KmlOutput(Output):
 		return filename;
 	
 	def get_description(self, way):
-		return 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) 
+		if self.units == 'km':
+			return 'Curvature: %.2f\nDistance: %.2f km\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1000, way['type'], way['surface']) 
+		else:
+			return 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface']) 
 
 class SingleColorKmlOutput(KmlOutput):
 	

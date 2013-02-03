@@ -48,6 +48,7 @@ parser = argparse.ArgumentParser(description='Find the roads that are most twist
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
 parser.add_argument('-t', action='store_true', help='Display tabular output')
 parser.add_argument('--no_kml', action='store_true', help='Do not generate a KML file. By default a KML file is generated with the name of the input file followed by .kml')
+parser.add_argument('--km', action='store_true', help='Output kilometers instead of miles.')
 parser.add_argument('--output_path', type=str, default='.', help='The path under which output files should be written')
 parser.add_argument('--output_basename', type=str, default=None, help='The base of the name for output files. This will be appended with a suffix and extension')
 parser.add_argument('--colorize', action='store_true', help='Colorize KML lines based on the curvature of the road at each segment. Without this option roads will be lines of a single color. For large regions this may make Google Earth run slowly.')
@@ -134,6 +135,8 @@ for file in args.file:
 			kml = MultiColorKmlOutput(default_filter)
 		else:
 			kml = SingleColorKmlOutput(default_filter)
+		if args.km:
+			kml.units = 'km'
 		kml.write(collector.ways, path, basename)
 	
 		if args.add_kml is not None:
@@ -168,6 +171,8 @@ for file in args.file:
 					kml = MultiColorKmlOutput(filter)
 				else:
 					kml = SingleColorKmlOutput(filter)
+				if args.km:
+					kml.units = 'km'
 				kml.write(collector.ways, path, basename)
 	
 if args.v:
