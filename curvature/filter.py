@@ -1,8 +1,8 @@
 
 class WayFilter(object):
-	min_curvature = 300
+	min_curvature = 0
 	max_curvature = 0
-	min_length = 1
+	min_length = 0
 	max_length = 0
 	
 	def filter(self, ways):
