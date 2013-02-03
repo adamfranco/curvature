@@ -98,20 +98,6 @@ class WayCollector(object):
 			if refs[0] == refs[-1]:
 				continue
 			
-			if self.min_lat_bound or self.max_lat_bound or self.min_lon_bound or self.min_lat_bound:
-				try:
-					start = self.coords[refs[0]]
-					if self.min_lat_bound and start[0] < self.min_lat_bound:
-						continue
-					if self.max_lat_bound and start[0] > self.max_lat_bound:
-						continue
-					if self.min_lon_bound and start[1] < self.min_lon_bound:
-						continue
-					if self.max_lon_bound and start[1] > self.max_lon_bound:
-						continue
-				except:
-					continue
-			
 			if 'name' not in tags or tags['name'] == '':
 				continue
 			if 'surface' in tags and tags['surface'] in self.ignored_surfaces:
