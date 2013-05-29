@@ -7,6 +7,7 @@ rad_earth_m = 6373000 # Radius of the earth in meters
 # simple class that handles the parsed OSM data.
 class WayCollector(object):
 	ways = []
+	routes = {}
 	coords = {}
 	num_coords = 0
 	num_ways = 0
@@ -59,6 +60,38 @@ class WayCollector(object):
 		if self.verbose:
 			sys.stderr.write("\ncoordinates loaded {mem:.1f}MB memory used, calculating curvature, each '.' is 1% complete\n".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			sys.stderr.flush()
+		
+		# Join numbered routes end-to-end and add them to the way list.
+		for route, ways in self.routes.iteritems():
+			while len(ways) > 0:
+				base_way = ways.pop()
+				# try to join to the begining or end
+				for i in range(0, len(ways)):
+					unused_ways = []
+					while len(ways) > 0:
+						way = ways.pop()
+						# join to the end of the base in order
+						if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+							base_way['refs'] = base_way['refs'] + way['refs']
+							if base_way['name'] != way['name']:
+								base_way['name'] = route
+						# join to the end of the base in reverse order
+						elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+							way['refs'].reverse()
+							base_way['refs'] = base_way['refs'] + way['refs']
+						# join to the beginning of the base in order
+						if base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+							base_way['refs'] = way['refs'] + base_way['refs']
+						# join to the beginning of the base in reverse order
+						elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+							way['refs'].reverse()
+							base_way['refs'] = way['refs'] + base_way['refs']
+						else:
+							unused_ways.append(way)
+					ways = unused_ways
+				# Add this base way to our ways list
+				self.ways.append(base_way)
+						
 		
 		# Loop through the ways and calculate their curvature
 		self.calculate()
@@ -118,7 +151,14 @@ class WayCollector(object):
 					way['surface'] = tags['surface']
 				else:
 					way['surface'] = 'unknown'
-				self.ways.append(way)
+				
+				if 'ref' in tags:
+					route = tags['ref']
+					if route not in self.routes:
+						self.routes[route] = []
+					self.routes[route].append(way)
+				else:
+					self.ways.append(way)
 				
 				for ref in refs:
 					self.coords[ref] = None
