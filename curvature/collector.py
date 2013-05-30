@@ -221,19 +221,28 @@ class WayCollector(object):
 		for segment in segments:
 			if segment['radius'] < self.level_4_max_radius:
 				segment['curvature_level'] = 4
-				way['curvature'] += segment['length'] * self.level_4_weight
 			elif segment['radius'] < self.level_3_max_radius:
 				segment['curvature_level'] = 3
-				way['curvature'] += segment['length'] * self.level_3_weight
 			elif segment['radius'] < self.level_2_max_radius:
 				segment['curvature_level'] = 2
-				way['curvature'] += segment['length'] * self.level_2_weight
 			elif segment['radius'] < self.level_1_max_radius:
 				segment['curvature_level'] = 1
-				way['curvature'] += segment['length'] * self.level_1_weight
 			else:
 				segment['curvature_level'] = 0
-
+			way['curvature'] += self.get_curvature_for_segment(segment)
+	
+	def get_curvature_for_segment(self, segment):
+		if segment['radius'] < self.level_4_max_radius:
+			return segment['length'] * self.level_4_weight
+		elif segment['radius'] < self.level_3_max_radius:
+			return segment['length'] * self.level_3_weight
+		elif segment['radius'] < self.level_2_max_radius:
+			return segment['length'] * self.level_2_weight
+		elif segment['radius'] < self.level_1_max_radius:
+			return segment['length'] * self.level_1_weight
+		else:
+			return 0
+	
 class NoCurvatureWayCollector(WayCollector):
 	def calculate_distance_and_curvature(self, way):
 		way['distance'] = 0.0
