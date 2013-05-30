@@ -71,6 +71,7 @@ parser.add_argument('--min_lat_bound', type=float, default=None, help='The minim
 parser.add_argument('--max_lat_bound', type=float, default=None, help='The maximum latitude to include.')
 parser.add_argument('--min_lon_bound', type=float, default=None, help='The minimum longitude to include.')
 parser.add_argument('--max_lon_bound', type=float, default=None, help='The maximum longitude to include.')
+parser.add_argument('--straight_segment_split_threshold', type=float, default=1.5, help='If a way has a series of non-curved segments longer than this (miles), the way will be split on that straight section. Use 0 to never split ways. The default is 1.5')
 parser.add_argument('file', type=argparse.FileType('r'), nargs='+', help='the input file. Should be an OSM XML file.')
 args = parser.parse_args()
 
@@ -101,6 +102,7 @@ collector.min_lat_bound = args.min_lat_bound
 collector.max_lat_bound = args.max_lat_bound
 collector.min_lon_bound = args.min_lon_bound
 collector.max_lon_bound = args.max_lon_bound
+collector.straight_segment_split_threshold = args.straight_segment_split_threshold * 1609
 
 # start parsing
 for file in args.file:
