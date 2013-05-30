@@ -1,6 +1,7 @@
 import sys
 import math
 import resource
+import copy
 from imposm.parser import OSMParser
 rad_earth_m = 6373000 # Radius of the earth in meters
 
@@ -142,7 +143,9 @@ class WayCollector(object):
 			else:
 				marker = round(total/100)
 		
-		for way in self.ways:
+		sections = []
+		while len(self.ways):
+			way = self.ways.pop()
 			# status output
 			if self.verbose:
 				i = i + 1
@@ -152,8 +155,12 @@ class WayCollector(object):
 			
 			try:
 				self.calculate_distance_and_curvature(way)
+				way_sections = self.split_way_sections(way)				
+				sections += way_sections
 			except:
 				continue
+		
+		self.ways = sections
 		
 		# status output
 		if self.verbose:
@@ -230,6 +237,62 @@ class WayCollector(object):
 			else:
 				segment['curvature_level'] = 0
 			way['curvature'] += self.get_curvature_for_segment(segment)
+	
+	def split_way_sections(self, way):
+		sections = []
+		curve_start = 0
+		curve_distance = 0
+		straight_start = None
+		straight_distance = 0
+		for index, segment in enumerate(way['segments']):
+			# Reset the straight distance if we have a significant curve
+			if segment['curvature_level']:
+				# Ignore any preceding long straight sections
+				if straight_distance > 2400 or curve_start is None:
+					curve_start = index
+				straight_start = None
+				straight_distance = 0
+				curve_distance += segment['length']
+			# Add to our straight distance
+			else:
+				if straight_start is None:
+					straight_start = index
+				straight_distance += segment['length']
+			
+			# If we are more than about 1.5 miles of straight, split off the last curved part.
+			if straight_distance > 2400 and straight_start > 0 and curve_distance > 0:
+				section = copy.copy(way)
+				section['segments'] = way['segments'][curve_start:straight_start]
+				ref_end = straight_start + 1
+				section['refs'] = way['refs'][curve_start:ref_end]
+				section['curvature'] = 0
+				section['length'] = 0
+				for sect_segment in section['segments']:
+					section['curvature'] += self.get_curvature_for_segment(sect_segment)
+					section['length'] += sect_segment['length']
+				start = self.coords[section['refs'][0]]
+				end = self.coords[section['refs'][-1]]
+				section['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
+				sections.append(section)
+				curve_distance = 0
+				curve_start = None
+		
+		# Add any remaining curved section to the sections
+		if curve_distance > 0:
+			section = copy.copy(way)
+			section['segments'] = way['segments'][curve_start:]
+			section['refs'] = way['refs'][curve_start:]
+			section['curvature'] = 0
+			section['length'] = 0
+			for sect_segment in section['segments']:
+				section['curvature'] += self.get_curvature_for_segment(sect_segment)
+				section['length'] += sect_segment['length']
+			start = self.coords[section['refs'][0]]
+			end = self.coords[section['refs'][-1]]
+			section['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
+			sections.append(section)
+		
+		return sections
 	
 	def get_curvature_for_segment(self, segment):
 		if segment['radius'] < self.level_4_max_radius:
