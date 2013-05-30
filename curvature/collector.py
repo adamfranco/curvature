@@ -29,6 +29,11 @@ class WayCollector(object):
 	level_4_max_radius = 30
 	level_4_weight = 2
 	
+	# sequences of straight segments longer than this (in meters) will cause a way
+	# to be split into multiple sections. If 0, ways will not be split.
+	# 2114 meters ~= 1.5 miles
+	straight_segment_split_threshold = 2414
+	
 	def load_file(self, filename):
 		# Reinitialize if we have a new file
 		ways = []
@@ -241,6 +246,12 @@ class WayCollector(object):
 	
 	def split_way_sections(self, way):
 		sections = []
+		
+		# Special case where ways will never be split
+		if self.straight_segment_split_threshold <= 0:
+			sections.append(way)
+			return sections
+			
 		curve_start = 0
 		curve_distance = 0
 		straight_start = None
@@ -249,7 +260,7 @@ class WayCollector(object):
 			# Reset the straight distance if we have a significant curve
 			if segment['curvature_level']:
 				# Ignore any preceding long straight sections
-				if straight_distance > 2400 or curve_start is None:
+				if straight_distance > self.straight_segment_split_threshold or curve_start is None:
 					curve_start = index
 				straight_start = None
 				straight_distance = 0
@@ -261,7 +272,7 @@ class WayCollector(object):
 				straight_distance += segment['length']
 			
 			# If we are more than about 1.5 miles of straight, split off the last curved part.
-			if straight_distance > 2400 and straight_start > 0 and curve_distance > 0:
+			if straight_distance > self.straight_segment_split_threshold and straight_start > 0 and curve_distance > 0:
 				section = copy.copy(way)
 				section['segments'] = way['segments'][curve_start:straight_start]
 				ref_end = straight_start + 1
