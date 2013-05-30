@@ -222,6 +222,7 @@ class WayCollector(object):
 			segments.append({'start': self.coords[way['refs'][0]], 'end': self.coords[way['refs'][1]], 'length': first_second_length, 'radius': 100000})
 			
 		way['segments'] = segments
+		del way['refs'] # refs are no longer needed now that we have loaded our segments
 
 		# Calculate the curvature as a weighted distance traveled at each curvature.
 		way['curvature'] = 0
@@ -264,14 +265,13 @@ class WayCollector(object):
 				section = copy.copy(way)
 				section['segments'] = way['segments'][curve_start:straight_start]
 				ref_end = straight_start + 1
-				section['refs'] = way['refs'][curve_start:ref_end]
 				section['curvature'] = 0
 				section['length'] = 0
 				for sect_segment in section['segments']:
 					section['curvature'] += self.get_curvature_for_segment(sect_segment)
 					section['length'] += sect_segment['length']
-				start = self.coords[section['refs'][0]]
-				end = self.coords[section['refs'][-1]]
+				start = section['segments'][0]['start']
+				end = section['segments'][-1]['end']
 				section['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
 				sections.append(section)
 				curve_distance = 0
@@ -281,14 +281,13 @@ class WayCollector(object):
 		if curve_distance > 0:
 			section = copy.copy(way)
 			section['segments'] = way['segments'][curve_start:]
-			section['refs'] = way['refs'][curve_start:]
 			section['curvature'] = 0
 			section['length'] = 0
 			for sect_segment in section['segments']:
 				section['curvature'] += self.get_curvature_for_segment(sect_segment)
 				section['length'] += sect_segment['length']
-			start = self.coords[section['refs'][0]]
-			end = self.coords[section['refs'][-1]]
+			start = section['segments'][0]['start']
+			end = section['segments'][-1]['end']
 			section['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
 			sections.append(section)
 		
