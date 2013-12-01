@@ -42,6 +42,7 @@ from curvature.collector import WayCollector
 from curvature.filter import WayFilter
 from curvature.output import TabOutput
 from curvature.output import SingleColorKmlOutput
+from curvature.output import ReducedPointsSingleColorKmlOutput
 from curvature.output import MultiColorKmlOutput
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
@@ -52,6 +53,7 @@ parser.add_argument('--km', action='store_true', help='Output kilometers instead
 parser.add_argument('--output_path', type=str, default='.', help='The path under which output files should be written')
 parser.add_argument('--output_basename', type=str, default=None, help='The base of the name for output files. This will be appended with a suffix and extension')
 parser.add_argument('--colorize', action='store_true', help='Colorize KML lines based on the curvature of the road at each segment. Without this option roads will be lines of a single color. For large regions this may make Google Earth run slowly.')
+parser.add_argument('--limit_points', type=int, default=0, help='The maximum number of points to used to render each line, 0 for all points. The default is 0. Must be 0 or greater than or equal to 2.')
 parser.add_argument('--min_length', type=float, default=1, help='the minimum length of a way that should be included, in miles, 0 for no minimum. The default is 2.0')
 parser.add_argument('--max_length', type=float, default=0, help='the maximum length of a way that should be included, in miles, 0 for no maximum. The default is 0')
 parser.add_argument('--min_curvature', type=float, default=300, help='the minimum curvature of a way that should be included, 0 for no minimum. The default is 300 which catches most twisty roads.')
@@ -77,6 +79,12 @@ args = parser.parse_args()
 
 rad_earth_mi = 3960 # Radius of the earth in miles
 rad_earth_m = 6373000 # Radius of the earth in meters
+
+# Validate our limit_points argument.
+if args.limit_points < 2:
+	if args.limit_points != 0:
+		sys.stderr.write("--limit_points must be 0 or >= 2.\n")
+		exit(2);
 
 # Instantiate our collector
 collector = WayCollector()
@@ -135,6 +143,8 @@ for file in args.file:
 			
 		if args.colorize:
 			kml = MultiColorKmlOutput(default_filter)
+		elif args.limit_points:
+			kml = ReducedPointsSingleColorKmlOutput(default_filter, args.limit_points)
 		else:
 			kml = SingleColorKmlOutput(default_filter)
 		if args.km:
@@ -144,6 +154,7 @@ for file in args.file:
 		if args.add_kml is not None:
 			for opt_string in args.add_kml:
 				colorize = args.colorize
+				limit_points = args.limit_points
 				filter = copy.copy(default_filter)
 				opts = opt_string.split(',')
 				for opt in opts:
@@ -158,6 +169,9 @@ for file in args.file:
 							colorize = 1
 						else:
 							colorize = 0
+					elif key == 'limit_points':
+						if int(value) >= 2:
+							limit_points = int(value)
 					elif key == 'min_curvature':
 						filter.min_curvature = float(value)
 					elif key == 'max_curvature':
@@ -171,6 +185,8 @@ for file in args.file:
 				
 				if colorize:
 					kml = MultiColorKmlOutput(filter)
+				elif limit_points > 0:
+					kml = ReducedPointsSingleColorKmlOutput(filter, limit_points)
 				else:
 					kml = SingleColorKmlOutput(filter)
 				if args.km:
