@@ -157,6 +157,7 @@ for file in args.file:
 				limit_points = args.limit_points
 				filter = copy.copy(default_filter)
 				opts = opt_string.split(',')
+				output_path = path
 				for opt in opts:
 					opt = opt.split('=')
 					key = opt[0]
@@ -180,6 +181,8 @@ for file in args.file:
 						filter.min_length = float(value)
 					elif key == 'max_length':
 						filter.max_length = float(value)
+					elif key == 'output_path':
+						output_path = value
 					else:
 						sys.stderr.write("Ignoring unknown key '{}' passed to --add_kml\n".format(key))
 				
@@ -191,7 +194,7 @@ for file in args.file:
 					kml = SingleColorKmlOutput(filter)
 				if args.km:
 					kml.units = 'km'
-				kml.write(collector.ways, path, basename)
+				kml.write(collector.ways, output_path, basename)
 	
 if args.v:
 	sys.stderr.write("done.\n")
