@@ -73,7 +73,74 @@ class KmlOutput(Output):
 	
 	def _filename_suffix(self):
 		return ''
+	
+	def _write_region(self, f, ways):
+		min_lat = ways[0]['segments'][0]['start'][0]
+		max_lat = ways[0]['segments'][0]['start'][0]
+		min_lon = ways[0]['segments'][0]['start'][1]
+		max_lon = ways[0]['segments'][0]['start'][1]
+		for way in ways:
+			way_max_lat = self.get_way_max_lat(way)
+			if way_max_lat > max_lat:
+				max_lat = way_max_lat
+			way_min_lat = self.get_way_min_lat(way)
+			if way_min_lat < min_lat:
+				min_lat = way_min_lat
+			way_max_lon = self.get_way_max_lon(way)
+			if way_max_lon > max_lon:
+				max_lon = way_max_lon
+			way_min_lon = self.get_way_min_lon(way)
+			if way_min_lon < min_lon:
+				min_lon = way_min_lon
 		
+# 		f.write('	<!--\n')
+# 		f.write('	<Region>\n')
+		f.write('		<LatLonBox>\n')
+		f.write('			<north>%.6f</north>\n' % (max_lat))
+		f.write('			<south>%.6f</south>\n' % (min_lat))
+		# Note that this won't work for regions crossing longitude 180, but this
+		# should only affect the Russian asian file
+		f.write('			<east>%.6f</east>\n' % (max_lon))
+		f.write('			<west>%.6f</west>\n' % (min_lon))
+		f.write('		</LatLonBox>\n')
+# 		f.write('	</Region>\n')
+# 		f.write('	-->\n')
+	
+	def get_way_max_lat(self, way):
+		if 'max_lat' not in way:
+			self.store_way_region(way)
+		return way['max_lat']
+	
+	def get_way_min_lat(self, way):
+		if 'min_lat' not in way:
+			self.store_way_region(way)
+		return way['min_lat']
+	
+	def get_way_max_lon(self, way):
+		if 'max_lon' not in way:
+			self.store_way_region(way)
+		return way['max_lon']
+		
+	def get_way_min_lon(self, way):
+		if 'min_lon' not in way:
+			self.store_way_region(way)
+		return way['min_lon']
+	
+	def store_way_region(self, way):
+		way['max_lat'] = way['segments'][0]['start'][0]
+		way['min_lat'] = way['segments'][0]['start'][0]
+		way['max_lon'] = way['segments'][0]['start'][1]
+		way['min_lon'] = way['segments'][0]['start'][1]
+		for segment in way['segments']:
+			if segment['end'][0] > way['max_lat']:
+				way['max_lat'] = segment['end'][0]
+			if segment['end'][0] < way['min_lat']:
+				way['min_lat'] = segment['end'][0]
+			if segment['end'][1] > way['max_lon']:
+				way['max_lon'] = segment['end'][1]
+			if segment['end'][1] < way['min_lon']:
+				way['min_lon'] = segment['end'][1]
+	
 	def write (self, ways, path, basename):
 		ways = self.filter_and_sort(ways)
 		ways.reverse()
@@ -81,6 +148,7 @@ class KmlOutput(Output):
 		f = codecs.open(path + '/' + self.get_filename(basename), 'w', "utf-8")
 		
 		self._write_header(f)
+		self._write_region(f, ways)
 		self._write_ways(f, ways)
 		self._write_footer(f)
 		f.close()
