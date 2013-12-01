@@ -125,12 +125,15 @@ class SingleColorKmlOutput(KmlOutput):
 			f.write('		<LineString>\n')
 			f.write('			<tessellate>1</tessellate>\n')
 			f.write('			<coordinates>')
-			f.write("%.6f,%6f " %(way['segments'][0]['start'][1], way['segments'][0]['start'][0]))
-			for segment in way['segments']:
-				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
+			self._write_segments(f, way['segments']);
 			f.write('</coordinates>\n')
 			f.write('		</LineString>\n')
 			f.write('	</Placemark>\n')
+	
+	def _write_segments(self, f, segments):
+		f.write("%.6f,%6f " %(segments[0]['start'][1], segments[0]['start'][0]))
+		for segment in segments:
+			f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
 	
 	def level_for_curvature(self, curvature):
 		if self.filter.min_curvature > 0:
