@@ -125,12 +125,15 @@ class SingleColorKmlOutput(KmlOutput):
 			f.write('		<LineString>\n')
 			f.write('			<tessellate>1</tessellate>\n')
 			f.write('			<coordinates>')
-			f.write("%.6f,%6f " %(way['segments'][0]['start'][1], way['segments'][0]['start'][0]))
-			for segment in way['segments']:
-				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
+			self._write_segments(f, way['segments']);
 			f.write('</coordinates>\n')
 			f.write('		</LineString>\n')
 			f.write('	</Placemark>\n')
+	
+	def _write_segments(self, f, segments):
+		f.write("%.6f,%6f " %(segments[0]['start'][1], segments[0]['start'][0]))
+		for segment in segments:
+			f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
 	
 	def level_for_curvature(self, curvature):
 		if self.filter.min_curvature > 0:
@@ -150,6 +153,33 @@ class SingleColorKmlOutput(KmlOutput):
 	
 	def line_style(self, way):
 		return 'lineStyle{}'.format(self.level_for_curvature(way['curvature']))
+
+class ReducedPointsSingleColorKmlOutput(SingleColorKmlOutput):
+	num_points = 2
+	
+	def __init__(self, filter, num_points):
+		super(ReducedPointsSingleColorKmlOutput, self).__init__(filter)
+		num_points = int(num_points)
+		if num_points > self.num_points:
+			self.num_points = num_points
+	
+	def _write_segments(self, f, segments):
+		num_segments = len(segments)
+		interval = math.ceil((num_segments) / (self.num_points - 1))
+		
+		# write the first point
+		f.write("%.6f,%6f " %(segments[0]['start'][1], segments[0]['start'][0]))
+		
+		i = 0
+		j = 0
+		for segment in segments:
+			i = i + 1
+			j = j + 1
+			
+			# Print the last of the interval, plus the last
+			if j == interval or i == num_segments:
+				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
+				j = 0
 
 class MultiColorKmlOutput(KmlOutput):
 	def _filename_suffix(self):
