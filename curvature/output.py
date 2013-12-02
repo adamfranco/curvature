@@ -172,12 +172,23 @@ class KmlOutput(Output):
 
 class SingleColorKmlOutput(KmlOutput):
 	
+	relative_color = False
+	
+	def __init__(self, filter, relative_color):
+		super(SingleColorKmlOutput, self).__init__(filter)
+		self.relative_color = relative_color
+	
 	def get_styles(self):
 		styles = {'lineStyle0':{'color':'F000E010'}} # Straight roads
 		
 		# Add a style for each level in a gradient from yellow to red (00FFFF - 0000FF)
 		for i in range(256):
 			styles['lineStyle{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i)}
+		
+		# Add a style for each level in a gradient from red to magenta (0000FF - FF00FF)
+		for i in range(1, 256):
+			styles['lineStyle{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i)}
+	
 		return styles
 	
 	def _write_ways(self, f, ways):
@@ -203,7 +214,14 @@ class SingleColorKmlOutput(KmlOutput):
 		for segment in segments:
 			f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
 	
+	
 	def level_for_curvature(self, curvature):
+		if self.relative_color:
+			return self.relative_level_for_curvature(curvature)
+		else:
+			return self.absolute_level_for_curvature(curvature)
+	
+	def relative_level_for_curvature(self, curvature):
 		if self.filter.min_curvature > 0:
 			offset = self.filter.min_curvature
 		else:
@@ -213,10 +231,40 @@ class SingleColorKmlOutput(KmlOutput):
 			return 0
 		
 		curvature_pct = (curvature - offset) / (self.max_curvature - offset)
-		# Use the square route of the ratio to give a better differentiation between
-		# lower-curvature ways
-		color_pct = math.sqrt(curvature_pct)
-		level = int(round(255 * color_pct)) + 1		
+		
+		# Map ratio to a logarithmic scale to give a better differentiation 
+		# between lower-curvature ways. 10,000 is max red.
+		# y = 1-1/(10^(x*2))
+		color_pct = 1 - 1/math.pow(10, curvature_pct * 2)
+		
+		level = int(round(510 * color_pct)) + 1		
+		return level
+	
+	def absolute_level_for_curvature(self, curvature):
+		if self.filter.min_curvature > 0:
+			offset = self.filter.min_curvature
+		else:
+			offset = 0
+		
+		if curvature < offset:
+			return 0
+		
+		# Define a global max rather than just the maximum found in the input.
+		# This will cause the color levels to be the same across inputs for the same
+		# filter minimum.
+		max = 40000
+		
+		curvature_pct = min((curvature - offset) / (max - offset), 1)
+		
+		# Map ratio to a logarithmic scale to give a better differentiation 
+		# between lower-curvature ways. 10,000 is max red.
+		# y = 1-1/(10^(x*2))
+		color_pct = 1 - 1/math.pow(10, curvature_pct * 2)
+		
+		level = int(round(510 * color_pct)) + 1
+
+# 		sys.stderr.write("Curvature: {}, curvature_pct: {}, color_pct: {}, level: {}.\n".format(curvature, curvature_pct, color_pct, level))
+		
 		return level
 	
 	def line_style(self, way):
@@ -225,8 +273,8 @@ class SingleColorKmlOutput(KmlOutput):
 class ReducedPointsSingleColorKmlOutput(SingleColorKmlOutput):
 	num_points = 2
 	
-	def __init__(self, filter, num_points):
-		super(ReducedPointsSingleColorKmlOutput, self).__init__(filter)
+	def __init__(self, filter, relative_color, num_points):
+		super(ReducedPointsSingleColorKmlOutput, self).__init__(filter, relative_color)
 		num_points = int(num_points)
 		if num_points > self.num_points:
 			self.num_points = num_points

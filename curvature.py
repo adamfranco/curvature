@@ -54,6 +54,7 @@ parser.add_argument('--output_path', type=str, default='.', help='The path under
 parser.add_argument('--output_basename', type=str, default=None, help='The base of the name for output files. This will be appended with a suffix and extension')
 parser.add_argument('--colorize', action='store_true', help='Colorize KML lines based on the curvature of the road at each segment. Without this option roads will be lines of a single color. For large regions this may make Google Earth run slowly.')
 parser.add_argument('--limit_points', type=int, default=0, help='The maximum number of points to used to render each line, 0 for all points. The default is 0. Must be 0 or greater than or equal to 2.')
+parser.add_argument('--relative_color', action='store_true', help='Make the color-scale relative to the maximum curvature in the input file.')
 parser.add_argument('--min_length', type=float, default=1, help='the minimum length of a way that should be included, in miles, 0 for no minimum. The default is 2.0')
 parser.add_argument('--max_length', type=float, default=0, help='the maximum length of a way that should be included, in miles, 0 for no maximum. The default is 0')
 parser.add_argument('--min_curvature', type=float, default=300, help='the minimum curvature of a way that should be included, 0 for no minimum. The default is 300 which catches most twisty roads.')
@@ -144,9 +145,9 @@ for file in args.file:
 		if args.colorize:
 			kml = MultiColorKmlOutput(default_filter)
 		elif args.limit_points:
-			kml = ReducedPointsSingleColorKmlOutput(default_filter, args.limit_points)
+			kml = ReducedPointsSingleColorKmlOutput(default_filter, args.relative_color, args.limit_points)
 		else:
-			kml = SingleColorKmlOutput(default_filter)
+			kml = SingleColorKmlOutput(default_filter, args.relative_color)
 		if args.km:
 			kml.units = 'km'
 		kml.write(collector.ways, path, basename)
@@ -158,6 +159,7 @@ for file in args.file:
 				filter = copy.copy(default_filter)
 				opts = opt_string.split(',')
 				output_path = path
+				relative_color = args.relative_color
 				for opt in opts:
 					opt = opt.split('=')
 					key = opt[0]
@@ -183,15 +185,20 @@ for file in args.file:
 						filter.max_length = float(value)
 					elif key == 'output_path':
 						output_path = value
+					elif key == 'relative_color':
+						if value.lower() == 'false':
+							relative_color = False
+						else:
+							relative_color = True
 					else:
 						sys.stderr.write("Ignoring unknown key '{}' passed to --add_kml\n".format(key))
 				
 				if colorize:
 					kml = MultiColorKmlOutput(filter)
 				elif limit_points > 0:
-					kml = ReducedPointsSingleColorKmlOutput(filter, limit_points)
+					kml = ReducedPointsSingleColorKmlOutput(filter, relative_color, limit_points)
 				else:
-					kml = SingleColorKmlOutput(filter)
+					kml = SingleColorKmlOutput(filter, relative_color)
 				if args.km:
 					kml.units = 'km'
 				kml.write(collector.ways, output_path, basename)
