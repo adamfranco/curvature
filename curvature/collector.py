@@ -130,10 +130,11 @@ class WayCollector(object):
 					way['surface'] = 'unknown'
 				
 				if 'ref' in tags:
-					route = tags['ref']
-					if route not in self.routes:
-						self.routes[route] = []
-					self.routes[route].append(way)
+					routes = tags['ref'].split(';')
+					for route in routes:
+						if route not in self.routes:
+							self.routes[route] = []
+						self.routes[route].append(way)
 				else:
 					self.ways.append(way)
 				
