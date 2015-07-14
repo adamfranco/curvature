@@ -121,7 +121,7 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
 Installation
 ============
 
-This is a Python script, therefore you need a functional Python environment on your computer. See
+This is a Python script, therefore you need a functional Python 2.7 or later environment on your computer. See
 http://python.org/
 
 curvature.py makes use of the imposm.parser which you can find at

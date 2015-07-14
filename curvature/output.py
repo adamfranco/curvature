@@ -73,7 +73,74 @@ class KmlOutput(Output):
 	
 	def _filename_suffix(self):
 		return ''
+	
+	def _write_region(self, f, ways):
+		min_lat = ways[0]['segments'][0]['start'][0]
+		max_lat = ways[0]['segments'][0]['start'][0]
+		min_lon = ways[0]['segments'][0]['start'][1]
+		max_lon = ways[0]['segments'][0]['start'][1]
+		for way in ways:
+			way_max_lat = self.get_way_max_lat(way)
+			if way_max_lat > max_lat:
+				max_lat = way_max_lat
+			way_min_lat = self.get_way_min_lat(way)
+			if way_min_lat < min_lat:
+				min_lat = way_min_lat
+			way_max_lon = self.get_way_max_lon(way)
+			if way_max_lon > max_lon:
+				max_lon = way_max_lon
+			way_min_lon = self.get_way_min_lon(way)
+			if way_min_lon < min_lon:
+				min_lon = way_min_lon
 		
+# 		f.write('	<!--\n')
+# 		f.write('	<Region>\n')
+		f.write('		<LatLonBox>\n')
+		f.write('			<north>%.6f</north>\n' % (max_lat))
+		f.write('			<south>%.6f</south>\n' % (min_lat))
+		# Note that this won't work for regions crossing longitude 180, but this
+		# should only affect the Russian asian file
+		f.write('			<east>%.6f</east>\n' % (max_lon))
+		f.write('			<west>%.6f</west>\n' % (min_lon))
+		f.write('		</LatLonBox>\n')
+# 		f.write('	</Region>\n')
+# 		f.write('	-->\n')
+	
+	def get_way_max_lat(self, way):
+		if 'max_lat' not in way:
+			self.store_way_region(way)
+		return way['max_lat']
+	
+	def get_way_min_lat(self, way):
+		if 'min_lat' not in way:
+			self.store_way_region(way)
+		return way['min_lat']
+	
+	def get_way_max_lon(self, way):
+		if 'max_lon' not in way:
+			self.store_way_region(way)
+		return way['max_lon']
+		
+	def get_way_min_lon(self, way):
+		if 'min_lon' not in way:
+			self.store_way_region(way)
+		return way['min_lon']
+	
+	def store_way_region(self, way):
+		way['max_lat'] = way['segments'][0]['start'][0]
+		way['min_lat'] = way['segments'][0]['start'][0]
+		way['max_lon'] = way['segments'][0]['start'][1]
+		way['min_lon'] = way['segments'][0]['start'][1]
+		for segment in way['segments']:
+			if segment['end'][0] > way['max_lat']:
+				way['max_lat'] = segment['end'][0]
+			if segment['end'][0] < way['min_lat']:
+				way['min_lat'] = segment['end'][0]
+			if segment['end'][1] > way['max_lon']:
+				way['max_lon'] = segment['end'][1]
+			if segment['end'][1] < way['min_lon']:
+				way['min_lon'] = segment['end'][1]
+	
 	def write (self, ways, path, basename):
 		ways = self.filter_and_sort(ways)
 		ways.reverse()
@@ -81,6 +148,7 @@ class KmlOutput(Output):
 		f = codecs.open(path + '/' + self.get_filename(basename), 'w', "utf-8")
 		
 		self._write_header(f)
+		self._write_region(f, ways)
 		self._write_ways(f, ways)
 		self._write_footer(f)
 		f.close()
@@ -104,12 +172,23 @@ class KmlOutput(Output):
 
 class SingleColorKmlOutput(KmlOutput):
 	
+	relative_color = False
+	
+	def __init__(self, filter, relative_color):
+		super(SingleColorKmlOutput, self).__init__(filter)
+		self.relative_color = relative_color
+	
 	def get_styles(self):
 		styles = {'lineStyle0':{'color':'F000E010'}} # Straight roads
 		
 		# Add a style for each level in a gradient from yellow to red (00FFFF - 0000FF)
 		for i in range(256):
 			styles['lineStyle{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i)}
+		
+		# Add a style for each level in a gradient from red to magenta (0000FF - FF00FF)
+		for i in range(1, 256):
+			styles['lineStyle{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i)}
+	
 		return styles
 	
 	def _write_ways(self, f, ways):
@@ -125,14 +204,24 @@ class SingleColorKmlOutput(KmlOutput):
 			f.write('		<LineString>\n')
 			f.write('			<tessellate>1</tessellate>\n')
 			f.write('			<coordinates>')
-			f.write("%.6f,%6f " %(way['segments'][0]['start'][1], way['segments'][0]['start'][0]))
-			for segment in way['segments']:
-				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
+			self._write_segments(f, way['segments']);
 			f.write('</coordinates>\n')
 			f.write('		</LineString>\n')
 			f.write('	</Placemark>\n')
 	
+	def _write_segments(self, f, segments):
+		f.write("%.6f,%6f " %(segments[0]['start'][1], segments[0]['start'][0]))
+		for segment in segments:
+			f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
+	
+	
 	def level_for_curvature(self, curvature):
+		if self.relative_color:
+			return self.relative_level_for_curvature(curvature)
+		else:
+			return self.absolute_level_for_curvature(curvature)
+	
+	def relative_level_for_curvature(self, curvature):
 		if self.filter.min_curvature > 0:
 			offset = self.filter.min_curvature
 		else:
@@ -142,14 +231,71 @@ class SingleColorKmlOutput(KmlOutput):
 			return 0
 		
 		curvature_pct = (curvature - offset) / (self.max_curvature - offset)
-		# Use the square route of the ratio to give a better differentiation between
-		# lower-curvature ways
-		color_pct = math.sqrt(curvature_pct)
-		level = int(round(255 * color_pct)) + 1		
+		
+		# Map ratio to a logarithmic scale to give a better differentiation 
+		# between lower-curvature ways. 10,000 is max red.
+		# y = 1-1/(10^(x*2))
+		color_pct = 1 - 1/math.pow(10, curvature_pct * 2)
+		
+		level = int(round(510 * color_pct)) + 1		
+		return level
+	
+	def absolute_level_for_curvature(self, curvature):
+		if self.filter.min_curvature > 0:
+			offset = self.filter.min_curvature
+		else:
+			offset = 0
+		
+		if curvature < offset:
+			return 0
+		
+		# Define a global max rather than just the maximum found in the input.
+		# This will cause the color levels to be the same across inputs for the same
+		# filter minimum.
+		max = 40000
+		
+		curvature_pct = min((curvature - offset) / (max - offset), 1)
+		
+		# Map ratio to a logarithmic scale to give a better differentiation 
+		# between lower-curvature ways. 10,000 is max red.
+		# y = 1-1/(10^(x*2))
+		color_pct = 1 - 1/math.pow(10, curvature_pct * 2)
+		
+		level = int(round(510 * color_pct)) + 1
+
+# 		sys.stderr.write("Curvature: {}, curvature_pct: {}, color_pct: {}, level: {}.\n".format(curvature, curvature_pct, color_pct, level))
+		
 		return level
 	
 	def line_style(self, way):
 		return 'lineStyle{}'.format(self.level_for_curvature(way['curvature']))
+
+class ReducedPointsSingleColorKmlOutput(SingleColorKmlOutput):
+	num_points = 2
+	
+	def __init__(self, filter, relative_color, num_points):
+		super(ReducedPointsSingleColorKmlOutput, self).__init__(filter, relative_color)
+		num_points = int(num_points)
+		if num_points > self.num_points:
+			self.num_points = num_points
+	
+	def _write_segments(self, f, segments):
+		num_segments = len(segments)
+		interval = math.ceil((num_segments) / (self.num_points - 1))
+		
+		# write the first point
+		f.write("%.6f,%6f " %(segments[0]['start'][1], segments[0]['start'][0]))
+		
+		i = 0
+		j = 0
+		for segment in segments:
+			i = i + 1
+			j = j + 1
+			
+			# Print the last of the interval, plus the last
+			if j == interval or i == num_segments:
+				f.write("%.6f,%6f " %(segment['end'][1], segment['end'][0]))
+				j = 0
 
 class MultiColorKmlOutput(KmlOutput):
 	def _filename_suffix(self):
@@ -193,6 +339,9 @@ class MultiColorKmlOutput(KmlOutput):
 			f.write('	</Folder>\n')
 
 class SurfaceKmlOutput(SingleColorKmlOutput):
+	def __init__(self, filter):
+		super(SurfaceKmlOutput, self).__init__(filter, False)
+
 	def get_styles(self):
 		return {
 			'unknown':{'color':'F0FFFFFF'},
