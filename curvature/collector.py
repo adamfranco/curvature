@@ -134,7 +134,7 @@ class WayCollector(object):
 					for route in routes:
 						if route not in self.routes:
 							self.routes[route] = []
-						self.routes[route].append(way)
+						self.routes[route].append(copy.copy(way))
 				else:
 					self.ways.append(way)
 				
