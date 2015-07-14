@@ -14,7 +14,7 @@ import copy
 import ast
 import sys
 import argparse
-from curvature.collector import NoCurvatureWayCollector
+from curvature.collector import NonSplittingWayCollector
 from curvature.filter import WayFilter
 from curvature.output import SurfaceKmlOutput
 
@@ -38,7 +38,7 @@ rad_earth_mi = 3960 # Radius of the earth in miles
 rad_earth_m = 6373000 # Radius of the earth in meters
 
 # Instantiate our collector
-collector = NoCurvatureWayCollector()
+collector = NonSplittingWayCollector()
 default_filter = WayFilter()
 
 # Configure settings based on the command-line arguments

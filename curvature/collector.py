@@ -162,7 +162,8 @@ class WayCollector(object):
 				self.calculate_distance_and_curvature(way)
 				way_sections = self.split_way_sections(way)				
 				sections += way_sections
-			except:
+			except Exception as e:
+				sys.stderr.write('error calculating distance & curvature: {}\n'.format(e))
 				continue
 		
 		self.ways = sections
@@ -316,49 +317,13 @@ class WayCollector(object):
 		else:
 			return 0
 	
-class NoCurvatureWayCollector(WayCollector):
-	def calculate_distance_and_curvature(self, way):
-		way['distance'] = 0.0
-		way['curvature'] = 0.0
-		way['length'] = 0.0
-		start = self.coords[way['refs'][0]]
-		end = self.coords[way['refs'][-1]]
-		second = 0
-		third = 0
-		segments = []
-		for ref in way['refs']:
-			first = self.coords[ref]
-			
-			if not second:
-				second = first
-				continue
-			
-			if not third:
-				third = second
-				second = first
-				continue
-						
-			if not len(segments):
-				# Add the first segment using the first point
-				segments.append({'start': third, 'end': second})
-			
-			# Add our latest segment
-			segments.append({'start': second, 'end': first})
-			
-			third = second
-			second = first
-		
-		# Special case for two-coordinate ways
-		if len(way['refs']) == 2:
-			segments.append({'start': self.coords[way['refs'][0]], 'end': self.coords[way['refs'][1]]})
-		
-		way['segments'] = segments
+class NonSplittingWayCollector(WayCollector):
 
-		# Calculate the curvature as a weighted distance traveled at each curvature.
-		way['curvature'] = 0
-		for segment in segments:
-			segment['radius'] = 0
-			segment['curvature_level'] = 0
+	def split_way_sections(self, way):
+		sections = []
+		# Never split sections
+		sections.append(way)
+		return sections
 		
 	
 
