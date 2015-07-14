@@ -68,36 +68,7 @@ class WayCollector(object):
 			sys.stderr.flush()
 		
 		# Join numbered routes end-to-end and add them to the way list.
-		for route, ways in self.routes.iteritems():
-			while len(ways) > 0:
-				base_way = ways.pop()
-				# try to join to the begining or end
-				for i in range(0, len(ways)):
-					unused_ways = []
-					while len(ways) > 0:
-						way = ways.pop()
-						# join to the end of the base in order
-						if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
-							base_way['refs'] = base_way['refs'] + way['refs']
-							if base_way['name'] != way['name']:
-								base_way['name'] = route
-						# join to the end of the base in reverse order
-						elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
-							way['refs'].reverse()
-							base_way['refs'] = base_way['refs'] + way['refs']
-						# join to the beginning of the base in order
-						if base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
-							base_way['refs'] = way['refs'] + base_way['refs']
-						# join to the beginning of the base in reverse order
-						elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
-							way['refs'].reverse()
-							base_way['refs'] = way['refs'] + base_way['refs']
-						else:
-							unused_ways.append(way)
-					ways = unused_ways
-				# Add this base way to our ways list
-				self.ways.append(base_way)
-						
+		self.join_ways()
 		
 		# Loop through the ways and calculate their curvature
 		self.calculate()
@@ -177,6 +148,38 @@ class WayCollector(object):
 						if not self.num_ways % 10000:
 							sys.stderr.write('\n')
 						sys.stderr.flush()
+
+	# Join numbered routes end-to-end and add them to the way list.
+	def join_ways(self):
+		for route, ways in self.routes.iteritems():
+			while len(ways) > 0:
+				base_way = ways.pop()
+				# try to join to the begining or end
+				for i in range(0, len(ways)):
+					unused_ways = []
+					while len(ways) > 0:
+						way = ways.pop()
+						# join to the end of the base in order
+						if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+							base_way['refs'] = base_way['refs'] + way['refs']
+							if base_way['name'] != way['name']:
+								base_way['name'] = route
+						# join to the end of the base in reverse order
+						elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+							way['refs'].reverse()
+							base_way['refs'] = base_way['refs'] + way['refs']
+						# join to the beginning of the base in order
+						if base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+							base_way['refs'] = way['refs'] + base_way['refs']
+						# join to the beginning of the base in reverse order
+						elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+							way['refs'].reverse()
+							base_way['refs'] = way['refs'] + base_way['refs']
+						else:
+							unused_ways.append(way)
+					ways = unused_ways
+				# Add this base way to our ways list
+				self.ways.append(base_way)
 	
 	def calculate(self):
 		# status output
@@ -364,6 +367,12 @@ class NonSplittingWayCollector(WayCollector):
 		# Never split sections
 		sections.append(way)
 		return sections
+	
+	def join_ways(self):
+		# Just add each route-way to the output
+		for route, ways in self.routes.iteritems():
+			for way in ways:
+				self.ways.append(way)
 		
 	
 
