@@ -339,6 +339,9 @@ class MultiColorKmlOutput(KmlOutput):
 			f.write('	</Folder>\n')
 
 class SurfaceKmlOutput(SingleColorKmlOutput):
+	def __init__(self, filter):
+		super(SurfaceKmlOutput, self).__init__(filter, False)
+
 	def get_styles(self):
 		return {
 			'unknown':{'color':'F0FFFFFF'},
