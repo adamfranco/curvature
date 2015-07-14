@@ -155,29 +155,28 @@ class WayCollector(object):
 			while len(ways) > 0:
 				base_way = ways.pop()
 				# try to join to the begining or end
-				for i in range(0, len(ways)):
-					unused_ways = []
-					while len(ways) > 0:
-						way = ways.pop()
-						# join to the end of the base in order
-						if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
-							base_way['refs'] = base_way['refs'] + way['refs']
-							if base_way['name'] != way['name']:
-								base_way['name'] = route
-						# join to the end of the base in reverse order
-						elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
-							way['refs'].reverse()
-							base_way['refs'] = base_way['refs'] + way['refs']
-						# join to the beginning of the base in order
-						if base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
-							base_way['refs'] = way['refs'] + base_way['refs']
-						# join to the beginning of the base in reverse order
-						elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
-							way['refs'].reverse()
-							base_way['refs'] = way['refs'] + base_way['refs']
-						else:
-							unused_ways.append(way)
-					ways = unused_ways
+				unused_ways = []
+				while len(ways) > 0:
+					way = ways.pop()
+					# join to the end of the base in order
+					if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+						base_way['refs'] = base_way['refs'] + way['refs']
+						if base_way['name'] != way['name']:
+							base_way['name'] = route
+					# join to the end of the base in reverse order
+					elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+						way['refs'].reverse()
+						base_way['refs'] = base_way['refs'] + way['refs']
+					# join to the beginning of the base in order
+					if base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+						base_way['refs'] = way['refs'] + base_way['refs']
+					# join to the beginning of the base in reverse order
+					elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+						way['refs'].reverse()
+						base_way['refs'] = way['refs'] + base_way['refs']
+					else:
+						unused_ways.append(way)
+				ways = unused_ways
 				# Add this base way to our ways list
 				self.ways.append(base_way)
 	
