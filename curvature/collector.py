@@ -129,6 +129,12 @@ class WayCollector(object):
 				else:
 					way['surface'] = 'unknown'
 
+				# Add our ways to a route collection if we can match them either
+				# by route-number or alternatively, by name. These route-collections
+				# will later be joined into longer segments so that curvature
+				# calculations can extend over multiple way-segments that might be
+				# split due to bridges, local names, speed limits, or other metadata
+				# changes.
 				if 'ref' in tags:
 					routes = tags['ref'].split(';')
 					for route in routes:
@@ -136,7 +142,12 @@ class WayCollector(object):
 							self.routes[route] = []
 						self.routes[route].append(copy.copy(way))
 				else:
-					self.ways.append(way)
+					if way['name']:
+						if way['name'] not in self.routes:
+							self.routes[way['name']] = []
+						self.routes[way['name']].append(way)
+					else:
+						self.ways.append(way)
 
 				for ref in refs:
 					self.coords[ref] = None
