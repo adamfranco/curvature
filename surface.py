@@ -3,7 +3,7 @@
 # surface.py
 #
 # Generate KML files highlighing road surface based on Open Street Map (OSM) data.
-# 
+#
 # Author: Adam Franco
 # https://github.com/adamfranco/curvature
 # Copyright 2012 Adam Franco
@@ -58,13 +58,13 @@ collector.max_lon_bound = args.max_lon_bound
 for file in args.file:
 	if args.v:
 		sys.stderr.write("Loading {}\n".format(file.name))
-		
+
 	collector.load_file(file.name)
-	
+
 	# Generate KML output
 	if args.v:
 		sys.stderr.write("generating KML output\n")
-	
+
 	if args.output_path is None:
 		path = os.path.dirname(file.name)
 	else:
@@ -75,7 +75,7 @@ for file in args.file:
 		basename = parts[0]
 	else:
 		basename = os.path.basename(args.output_basename)
-		
+
 	kml = SurfaceKmlOutput(default_filter)
 	kml.write(collector.ways, path, basename)
 
@@ -97,9 +97,9 @@ for file in args.file:
 					filter.max_length = float(value)
 				else:
 					sys.stderr.write("Ignoring unknown key '{}' passed to --add_kml\n".format(key))
-			
+
 			kml = SurfaceKmlOutput(filter)
 			kml.write(collector.ways, path, basename)
-	
+
 if args.v:
 	sys.stderr.write("done.\n")

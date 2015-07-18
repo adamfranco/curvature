@@ -4,13 +4,13 @@
 #
 # Find roads that are the most curved or twisty based on Open Street Map (OSM) data.
 #
-# The goal of this script is to help those who enjoy twisty roads (such as 
+# The goal of this script is to help those who enjoy twisty roads (such as
 # motorcycle or driving enthusiasts) to find promising roads that are not well known.
 # It works by calculating a synthetic "curvature" parameter for each road segment
-# (known as a "way" in OSM parlance) that represents how twisty that segment is. 
+# (known as a "way" in OSM parlance) that represents how twisty that segment is.
 # These twisty segments can then be output as KML files that can be viewed in Google Earth
 # or viewed in tabular form.
-# 
+#
 # About the "curvature" parameter:
 # The "curvature" of a way is determined by iterating over every set of three points
 # in the line. Each set of three points form a triangle and that triangle has a circumcircle
@@ -23,11 +23,11 @@
 # zero for straight segments, 1 for broad curves, and up to 2 for the tightest curves).
 # The sum of all of these weighting gives us a number for curvature that corresponds
 # proportionally to the distance (in meters) that you will be in a turn.*
-# 
+#
 # * If all weights are 1 then the curvature parameter will be exactly the distance
 #   in turns. The goal of this project however is to prefer tighter turns, so sharp
 #   corners are given an increased weight.
-# 
+#
 # Author: Adam Franco
 # https://github.com/adamfranco/curvature
 # Copyright 2012 Adam Franco
@@ -118,20 +118,20 @@ collector.straight_segment_split_threshold = args.straight_segment_split_thresho
 for file in args.file:
 	if args.v:
 		sys.stderr.write("Loading {}\n".format(file.name))
-		
+
 	collector.load_file(file.name)
-	
-	
+
+
 	# Output our tabular data
 	if args.t:
 		tab = TabOutput(default_filter)
 		tab.output(collector.ways)
-	
+
 	# Generate KML output
 	if not args.no_kml:
 		if args.v:
 			sys.stderr.write("generating KML output\n")
-		
+
 		if args.output_path is None:
 			path = os.path.dirname(file.name)
 		else:
@@ -144,7 +144,7 @@ for file in args.file:
 			basename = parts[0]
 		else:
 			basename = os.path.basename(args.output_basename)
-			
+
 		if args.colorize:
 			kml = MultiColorKmlOutput(default_filter)
 		elif args.limit_points:
@@ -154,7 +154,7 @@ for file in args.file:
 		if args.km:
 			kml.units = 'km'
 		kml.write(collector.ways, path, basename)
-	
+
 		if args.add_kml is not None:
 			for opt_string in args.add_kml:
 				colorize = args.colorize
@@ -195,7 +195,7 @@ for file in args.file:
 							relative_color = True
 					else:
 						sys.stderr.write("Ignoring unknown key '{}' passed to --add_kml\n".format(key))
-				
+
 				if colorize:
 					kml = MultiColorKmlOutput(filter)
 				elif limit_points > 0:
@@ -205,6 +205,6 @@ for file in args.file:
 				if args.km:
 					kml.units = 'km'
 				kml.write(collector.ways, output_path, basename)
-	
+
 if args.v:
 	sys.stderr.write("done.\n")
