@@ -4,7 +4,7 @@ class WayFilter(object):
 	max_curvature = 0
 	min_length = 0
 	max_length = 0
-	
+
 	def filter(self, ways):
 		if self.min_length > 0:
 			ways = filter(lambda w: w['length'] / 1609 > self.min_length, ways)
@@ -15,5 +15,3 @@ class WayFilter(object):
 		if self.max_curvature > 0:
 			ways = filter(lambda w: w['curvature'] < self.max_curvature, ways)
 		return ways
-		
-	
