@@ -46,7 +46,7 @@ class WayCollector(object):
 
 		# status output
 		if self.verbose:
-			sys.stderr.write("loading ways, each '-' is 100 ways, each row is 10,000 ways\n")
+			sys.stderr.write("\nLoading ways, each '-' is 100 ways, each row is 10,000 ways\n")
 
 		p = OSMParser(ways_callback=self.ways_callback)
 		p.parse(filename)
@@ -83,7 +83,7 @@ class WayCollector(object):
 
 		# status output
 		if self.verbose:
-			sys.stderr.write("calculation complete, {mem:.1f}MB memory used\n".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+			sys.stderr.write("\nCalculation complete, {mem:.1f}MB memory used".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			sys.stderr.flush()
 
 	def coords_callback(self, coords):
@@ -280,7 +280,7 @@ class WayCollector(object):
 				way_sections = self.split_way_sections(way)
 				sections += way_sections
 			except Exception as e:
-				sys.stderr.write('error calculating distance & curvature: {}\n'.format(e))
+				sys.stderr.write('\nerror calculating distance & curvature: {}'.format(e))
 				continue
 
 		self.ways = sections

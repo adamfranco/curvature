@@ -93,7 +93,7 @@ rad_earth_m = 6373000 # Radius of the earth in meters
 # Validate our limit_points argument.
 if args.limit_points < 2:
 	if args.limit_points != 0:
-		sys.stderr.write("--limit_points must be 0 or >= 2.\n")
+		sys.stderr.write("\n--limit_points must be 0 or >= 2.")
 		exit(2);
 
 # Instantiate our collector
@@ -125,7 +125,7 @@ collector.straight_segment_split_threshold = args.straight_segment_split_thresho
 # start parsing
 for file in args.file:
 	if args.v:
-		sys.stderr.write("Loading {}\n".format(file.name))
+		sys.stderr.write("\nLoading {}".format(file.name))
 
 	collector.load_file(file.name)
 
@@ -138,7 +138,7 @@ for file in args.file:
 	# Generate KML output
 	if not args.no_kml:
 		if args.v:
-			sys.stderr.write("generating KML output\n")
+			sys.stderr.write("\ngenerating KML output")
 
 		if args.output_path is None:
 			path = os.path.dirname(file.name)
@@ -175,7 +175,7 @@ for file in args.file:
 					opt = opt.split('=')
 					key = opt[0]
 					if len(opt) < 2:
-						sys.stderr.write("Key '{}' passed to --add_kml has no value, ignoring.\n".format(key))
+						sys.stderr.write("\nKey '{}' passed to --add_kml has no value, ignoring.".format(key))
 						continue
 					value = opt[1]
 					if key == 'colorize':
@@ -202,7 +202,7 @@ for file in args.file:
 						else:
 							relative_color = True
 					else:
-						sys.stderr.write("Ignoring unknown key '{}' passed to --add_kml\n".format(key))
+						sys.stderr.write("\nIgnoring unknown key '{}' passed to --add_kml".format(key))
 
 				if colorize:
 					kml = MultiColorKmlOutput(filter)
@@ -215,4 +215,4 @@ for file in args.file:
 				kml.write(collector.ways, output_path, basename)
 
 if args.v:
-	sys.stderr.write("done.\n")
+	sys.stderr.write("\ndone.\n")

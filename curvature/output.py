@@ -149,8 +149,11 @@ class KmlOutput(Output):
 		f = codecs.open(path + '/' + self.get_filename(basename), 'w', "utf-8")
 
 		self._write_header(f)
-		self._write_region(f, ways)
-		self._write_ways(f, ways)
+		if len(ways) > 1:
+			self._write_region(f, ways)
+			self._write_ways(f, ways)
+		else:
+			sys.stderr.write('\nWarning no ways available for output into {}'.format(self.get_filename(basename)))
 		self._write_footer(f)
 		f.close()
 
