@@ -2,6 +2,7 @@ import sys
 import math
 import resource
 import copy
+import time
 from imposm.parser import OSMParser
 rad_earth_m = 6373000 # Radius of the earth in meters
 
@@ -51,7 +52,7 @@ class WayCollector(object):
 
 		# status output
 		if self.verbose:
-			sys.stderr.write("\n{} ways matched in {} {mem:.1f}MB memory used, {} coordinates will be loaded, each '.' is 1% complete\n".format(len(self.ways), filename, len(self.coords), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+			sys.stderr.write("\n{} ways matched in {} {mem:.1f}MB memory used,\n{} coordinates will be loaded, each '.' is 1% complete\n".format(len(self.ways), filename, len(self.coords), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 
 			total = len(self.coords)
 			if total < 100:
@@ -64,11 +65,17 @@ class WayCollector(object):
 
 		# status output
 		if self.verbose:
-			sys.stderr.write("\ncoordinates loaded {mem:.1f}MB memory used, calculating curvature, each '.' is 1% complete\n".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+			sys.stderr.write("\nCoordinates loaded {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			sys.stderr.flush()
 
-		# Join numbered routes end-to-end and add them to the way list.
+		# Join routes end-to-end and add them to the way list.
 		self.join_ways()
+
+		# status output
+		if self.verbose:
+			sys.stderr.write("\nJoining complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+			sys.stderr.write("\nCalculating curvature, each '.' is 1% complete\n")
+			sys.stderr.flush()
 
 		# Loop through the ways and calculate their curvature
 		self.calculate()
@@ -163,7 +170,26 @@ class WayCollector(object):
 
 	# Join numbered routes end-to-end and add them to the way list.
 	def join_ways(self):
+		# status output
+		if self.verbose:
+			start_time = time.time()
+			i = 0
+			total = len(self.routes)
+			if total < 100:
+				marker = 1
+			else:
+				marker = round(total/100)
+			sys.stderr.write("\n{} routes will be joined, each '.' is 1% complete\n".format(total))
+			sys.stderr.flush()
+
 		for route, ways in self.routes.iteritems():
+			# status output
+			if self.verbose:
+				i = i + 1
+				if not (i % marker):
+					sys.stderr.write('.')
+					sys.stderr.flush()
+
 			while len(ways) > 0:
 				base_way = ways.pop()
 				# Loop through all our ways at least as many times as we have ways
@@ -211,6 +237,8 @@ class WayCollector(object):
 					ways = unused_ways
 				# Add this base way to our ways list
 				self.ways.append(base_way)
+		if self.verbose:
+			sys.stderr.write('\nJoining completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
 
 	def calculate(self):
 		# status output
