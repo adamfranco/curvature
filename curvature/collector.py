@@ -13,6 +13,7 @@ class WayCollector(object):
 	coords = {}
 	num_coords = 0
 	num_ways = 0
+	keep_eliminated = False
 
 	verbose = False
 	min_lat_bound = None
@@ -275,6 +276,7 @@ class WayCollector(object):
 
 			try:
 				self.calculate_distance_and_curvature(way)
+				self.filter_deflections(way)
 				way_sections = self.split_way_sections(way)
 				sections += way_sections
 			except Exception as e:
@@ -359,6 +361,78 @@ class WayCollector(object):
 			else:
 				segment['curvature_level'] = 0
 			way['curvature'] += self.get_curvature_for_segment(segment)
+
+	def filter_deflections(self, way):
+		segments = way['segments']
+		for i, segment in enumerate(segments):
+			# While we are in straight segments, be wary of single-point (two-segment)
+			# deflections from our straight line if the next two segments are followed
+			# by a straight section. E.g. __/\__
+			# We want to differentiate a jog off of an otherwise straight line from a
+			# curve between two straight sections like these:
+			#     __ __    __
+			#   /        /   \
+			self.filter_deflection_of_straight_segments(segments, i, 3)
+
+			# While we are in straight segments, be wary of two/three-point (three/four-segment)
+			# deflections from our straight line if the next two segments are followed
+			# by a straight section. E.g. __/\ _   __
+			#                                   \/
+			# We want to differentiate a jog off of an otherwise straight line from a
+			# curve between two straight sections like these:
+			#     __ __    __
+			#   /        /   \
+			self.filter_deflection_of_straight_segments(segments, i, 4)
+			self.filter_deflection_of_straight_segments(segments, i, 5)
+
+	def filter_deflection_of_straight_segments(self, segments, start_index, look_ahead):
+		if look_ahead < 3:
+			raise ValueError("look_ahead must be 3 or more")
+		try:
+			first_straight = segments[start_index]
+			next_straight = segments[start_index + look_ahead]
+			# if (first_straight['curvature_level'] and not 'eliminated' in first_straight) or (next_straight['curvature_level'] and not 'eliminated' in next_straight):
+			if (first_straight['curvature_level'] and not 'eliminated' in first_straight) or (next_straight['curvature_level'] and not 'eliminated' in next_straight):
+				return
+			heading_a = self.get_segment_heading(first_straight)
+			heading_b = self.get_segment_heading(next_straight)
+			heading_diff = abs(heading_a - heading_b)
+			# Compare the difference in heading to the angle that wold be expected
+			# for a curve just barely meeting our threshold for straight/curved.
+			gap_distance = distance_on_unit_sphere(first_straight['end'][0], first_straight['end'][1], next_straight['start'][0], next_straight['start'][1]) * rad_earth_m
+			min_variance = gap_distance / self.level_1_max_radius
+			if abs(heading_diff) < min_variance:
+				# Mark them as eliminated so that we can show them in the output
+				for i in range(start_index + 1, start_index + look_ahead - 1):
+					if segments[i]['curvature_level']:
+						segments[i]['eliminated'] = True
+				if not self.keep_eliminated:
+					# unset the curvature level of the intermediate segments
+					for i in range(start_index + 1, start_index + look_ahead - 1):
+						segments[i]['curvature_level'] = 0
+		except IndexError:
+			return
+
+	def get_segment_heading(self, segment):
+		return 180 + math.atan2((segment['end'][0] - segment['start'][0]),(segment['end'][1] - segment['start'][1])) * (180 / math.pi)
+
+	def heading_diff(self, initial, final):
+            if initial > 360 or initial < 0 or final > 360 or final < 0:
+				raise ValueError("Initial or final headings are out of bounds, must be 0-360")
+
+            diff = final - initial
+            absDiff = abs(diff)
+
+            if absDiff <= 180:
+				if absDiff == 180:
+					return absDiff
+				else:
+					return diff
+
+            elif final > initial:
+                return absDiff - 360
+            else:
+                return 360 - absDiff
 
 	def split_way_sections(self, way):
 		sections = []
