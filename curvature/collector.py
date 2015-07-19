@@ -195,14 +195,24 @@ class WayCollector(object):
 				# Loop through all our ways at least as many times as we have ways
 				# to be able to catch any that join onto the end after others have
 				# been joined on.
+				j = 0
 				max_loop = len(ways)
-				for i in range(0, max_loop):
+				# Start our first iteration with the "way_modified" flag set to True.
+				# After this first loop, if no ways get added to the base_way,
+				# there is no reason to keep looping until max_loop
+				way_modified = True
+				while way_modified and j < max_loop:
+					j = j + 1
+					# Set our modification flag to False so we can detect changes
+					# to the base_way.
+					way_modified = False
 					unused_ways = []
 					# try to join to the begining or end
 					while len(ways) > 0:
 						way = ways.pop()
 						# join to the end of the base in order
 						if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+							way_modified = True
 							# Drop the matching first-ref in the way so that we don't have a duplicate point.
 							del way['refs'][0]
 							base_way['refs'] = base_way['refs'] + way['refs']
@@ -210,6 +220,7 @@ class WayCollector(object):
 								base_way['name'] = route
 						# join to the end of the base in reverse order
 						elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+							way_modified = True
 							way['refs'].reverse()
 							# Drop the matching first-ref in the way so that we don't have a duplicate point.
 							del way['refs'][0]
@@ -218,6 +229,7 @@ class WayCollector(object):
 								base_way['name'] = route
 						# join to the beginning of the base in order
 						elif base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
+							way_modified = True
 							# Drop the matching last-ref in the way so that we don't have a duplicate point.
 							del way['refs'][-1]
 							base_way['refs'] = way['refs'] + base_way['refs']
@@ -225,6 +237,7 @@ class WayCollector(object):
 								base_way['name'] = route
 						# join to the beginning of the base in reverse order
 						elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
+							way_modified = True
 							way['refs'].reverse()
 							# Drop the matching last-ref in the way so that we don't have a duplicate point.
 							del way['refs'][-1]
