@@ -49,6 +49,7 @@ class KmlOutput(Output):
 			'lineStyle2':{'color':'F000AAFF'}, # Level 2 turns
 			'lineStyle3':{'color':'F00055FF'}, # Level 3 turns
 			'lineStyle4':{'color':'F00000FF'}, # Level 4 turns
+			'elminiated':{'color':'F0000000'}, # Eliminated segments
 		}
 
 
@@ -148,8 +149,11 @@ class KmlOutput(Output):
 		f = codecs.open(path + '/' + self.get_filename(basename), 'w', "utf-8")
 
 		self._write_header(f)
-		self._write_region(f, ways)
-		self._write_ways(f, ways)
+		if len(ways) > 1:
+			self._write_region(f, ways)
+			self._write_ways(f, ways)
+		else:
+			sys.stderr.write('\nWarning no ways available for output into {}'.format(self.get_filename(basename)))
 		self._write_footer(f)
 		f.close()
 
@@ -325,7 +329,10 @@ class MultiColorKmlOutput(KmlOutput):
 						f.write('		</Placemark>\n')
 					# Start a new linestring for this level
 					f.write('		<Placemark>\n')
-					f.write('			<styleUrl>#lineStyle%d</styleUrl>\n' % (current_curvature_level))
+					if 'eliminated' in segment:
+						f.write('			<styleUrl>#elminiated</styleUrl>\n')
+					else:
+						f.write('			<styleUrl>#lineStyle%d</styleUrl>\n' % (current_curvature_level))
 					f.write('			<LineString>\n')
 					f.write('				<tessellate>1</tessellate>\n')
 					f.write('				<coordinates>')
