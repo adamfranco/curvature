@@ -275,7 +275,6 @@ class WayCollector(object):
 				if not (i % marker):
 					sys.stderr.write('.')
 					sys.stderr.flush()
-
 			try:
 				self.calculate_distance_and_curvature(way)
 				self.filter_deflections(way)
@@ -284,12 +283,7 @@ class WayCollector(object):
 			except Exception as e:
 				sys.stderr.write('\nerror calculating distance & curvature: {}'.format(e))
 				continue
-
 		self.ways = sections
-
-		# status output
-		if self.verbose:
-			sys.stderr.write('\n')
 
 	def calculate_distance_and_curvature(self, way):
 		way['distance'] = 0.0
