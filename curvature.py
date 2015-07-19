@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 
 # curvature.py
 #
@@ -45,6 +46,13 @@ from curvature.output import TabOutput
 from curvature.output import SingleColorKmlOutput
 from curvature.output import ReducedPointsSingleColorKmlOutput
 from curvature.output import MultiColorKmlOutput
+import codecs
+
+# Set our output to default to UTF-8
+reload(sys)
+sys.setdefaultencoding('utf-8')
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
