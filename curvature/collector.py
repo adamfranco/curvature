@@ -34,7 +34,7 @@ class WayCollector(object):
 
 	# sequences of straight segments longer than this (in meters) will cause a way
 	# to be split into multiple sections. If 0, ways will not be split.
-	# 2114 meters ~= 1.5 miles
+	# 2414 meters ~= 1.5 miles, 1609 ~= 1 mile
 	straight_segment_split_threshold = 2414
 
 	def load_file(self, filename):
