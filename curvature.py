@@ -77,7 +77,7 @@ parser.add_argument('--level_3_max_radius', type=int, default=60, help='the maxi
 parser.add_argument('--level_3_weight', type=float, default=1.6, help='the weight to give segments that are classified as level 3. Default 1.6')
 parser.add_argument('--level_4_max_radius', type=int, default=30, help='the maximum radius of a curve (in meters) that will be considered part of level 4. The default is 30')
 parser.add_argument('--level_4_weight', type=float, default=2, help='the weight to give segments that are classified as level 4. Default 2')
-parser.add_argument('--ignored_surfaces', type=str, default='dirt,unpaved,gravel,sand,grass,ground', help='a list of the surfaces that should be ignored. The default is dirt,unpaved,gravel,sand,grass,ground')
+parser.add_argument('--ignored_surfaces', type=str, default='dirt,unpaved,gravel,fine_gravel,sand,grass,ground', help='a list of the surfaces that should be ignored. The default is dirt,unpaved,gravel,fine_gravel,sand,grass,ground')
 parser.add_argument('--highway_types', type=str, default='secondary,residential,tertiary,primary,primary_link,motorway,motorway_link,road,trunk,trunk_link,unclassified', help='a list of the highway types that should be included. The default is secondary,residential,tertiary,primary,primary_link,motorway,motorway_link,road,trunk,trunk_link,unclassified')
 parser.add_argument('--min_lat_bound', type=float, default=None, help='The minimum latitude to include.')
 parser.add_argument('--max_lat_bound', type=float, default=None, help='The maximum latitude to include.')
