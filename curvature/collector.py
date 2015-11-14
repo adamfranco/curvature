@@ -69,6 +69,13 @@ class WayCollector(object):
 			sys.stderr.write("\nCoordinates loaded {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			sys.stderr.flush()
 
+		# Calculate Bounding Boxes
+		self.calculate_bboxes()
+
+		# status output
+		if self.verbose:
+			sys.stderr.write("\nBounding-box calculation complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+
 		# Join routes end-to-end and add them to the way list.
 		self.join_ways()
 
@@ -87,6 +94,13 @@ class WayCollector(object):
 			sys.stderr.write("\nCalculation complete, {mem:.1f}MB memory used".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 			sys.stderr.write('\nCalculation completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
 			sys.stderr.flush()
+
+		# Calculate Bounding Boxes
+		self.calculate_final_bboxes()
+
+		# status output
+		if self.verbose:
+			sys.stderr.write("\nBounding-box calculation complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 
 	def coords_callback(self, coords):
 		# callback method for coords
@@ -170,6 +184,85 @@ class WayCollector(object):
 						if not self.num_ways % 10000:
 							sys.stderr.write('\n')
 						sys.stderr.flush()
+
+	# Calculate Bounding boxes for each way
+	def calculate_bboxes(self):
+		# status output
+		if self.verbose:
+			start_time = time.time()
+			i = 0
+			total = len(self.routes)
+			if total < 100:
+				marker = 1
+			else:
+				marker = round(total/100)
+			sys.stderr.write("\n{} routes will have bboxes calculated, each '.' is 1% complete\n".format(total))
+			sys.stderr.flush()
+
+		for route, ways in self.routes.iteritems():
+			# status output
+			if self.verbose:
+				i = i + 1
+				if not (i % marker):
+					sys.stderr.write('.')
+					sys.stderr.flush()
+			for way in ways:
+				self.store_way_region(way)
+
+	def store_way_region(self, way):
+		first = self.coords[way['refs'][0]]
+		way['max_lat'] = first[0]
+		way['min_lat'] = first[0]
+		way['max_lon'] = first[1]
+		way['min_lon'] = first[1]
+		for ref in way['refs']:
+			c = self.coords[ref]
+			if c[0] > way['max_lat']:
+				way['max_lat'] = c[0]
+			if c[0] < way['min_lat']:
+				way['min_lat'] = c[0]
+			if c[1] > way['max_lon']:
+				way['max_lon'] = c[1]
+			if c[1] < way['min_lon']:
+				way['min_lon'] = c[1]
+
+	# Calculate Bounding boxes for each way
+	def calculate_final_bboxes(self):
+		# status output
+		if self.verbose:
+			start_time = time.time()
+			i = 0
+			total = len(self.ways)
+			if total < 100:
+				marker = 1
+			else:
+				marker = round(total/100)
+			sys.stderr.write("\n{} ways will have bboxes calculated, each '.' is 1% complete\n".format(total))
+			sys.stderr.flush()
+
+		for way in self.ways:
+			# status output
+			if self.verbose:
+				i = i + 1
+				if not (i % marker):
+					sys.stderr.write('.')
+					sys.stderr.flush()
+			self.store_way_segments_region(way)
+
+	def store_way_segments_region(self, way):
+		way['max_lat'] = way['segments'][0]['start'][0]
+		way['min_lat'] = way['segments'][0]['start'][0]
+		way['max_lon'] = way['segments'][0]['start'][1]
+		way['min_lon'] = way['segments'][0]['start'][1]
+		for segment in way['segments']:
+			if segment['end'][0] > way['max_lat']:
+				way['max_lat'] = segment['end'][0]
+			if segment['end'][0] < way['min_lat']:
+				way['min_lat'] = segment['end'][0]
+			if segment['end'][1] > way['max_lon']:
+				way['max_lon'] = segment['end'][1]
+			if segment['end'][1] < way['min_lon']:
+				way['min_lon'] = segment['end'][1]
 
 	# Join numbered routes end-to-end and add them to the way list.
 	def join_ways(self):
