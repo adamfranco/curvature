@@ -188,8 +188,8 @@ class KmlOutput(Output):
 			description = 'Curvature: %.2f\nDistance: %.2f mi\n' % (way['curvature'], way['length'] / 1609)
 
 		description = description + 'Type: %s\nSurface: %s\n' % (way['type'], self.get_surfaces(way))
-		description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n\n%s\n' % ('\n'.join(self.get_constituent_list(way)), self.get_all_josm_link(way))
-		return '<div style="min-width: 300px; max-width: 800px;">%s</div>' % (string.replace(description, '\n', '<br/>'))
+		description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n\n%s\n' % (self.get_constituent_list(way), self.get_all_josm_link(way))
+		return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
 
 	def get_surfaces(self, way):
 		if 'constituents' in way:
@@ -205,15 +205,28 @@ class KmlOutput(Output):
 		select = []
 		for c in way['constituents']:
 			select.append('way%d' % c['id'])
-		josm_url ='http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=%s' % (self.get_way_min_lon(way), self.get_way_max_lon(way), self.get_way_max_lat(way), self.get_way_min_lat(way), ','.join(select))
-		return '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit all in JOSM</a>' % (josm_url)
+		josm_url ='http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=%s' % (self.get_way_min_lon(way) - 0.001, self.get_way_max_lon(way) + 0.001, self.get_way_max_lat(way) + 0.001, self.get_way_min_lat(way) - 0.001, ','.join(select))
+		josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit all in JOSM</a>' % (josm_url)
+		coords_lat = ((self.get_way_max_lat(way) - self.get_way_min_lat(way))/2) + self.get_way_min_lat(way)
+		coords_lon = ((self.get_way_max_lon(way) - self.get_way_min_lon(way))/2) + self.get_way_min_lon(way)
+		coords = '<a href="" onclick="if (this.nextSibling.style.display==\'inline\') {this.nextSibling.style.display=\'none\';} else { this.nextSibling.style.display=\'inline\'; this.nextSibling.select() } return false;">coords </a><input type="text" style="display: none;" value="%.5f,%.5f"/>' % (coords_lon, coords_lat)
+		return josm_link + ', ' + coords
 
 	def get_constituent_list(self, way):
-		list = []
+		list = '<table style="width: 100%; text-align: center;">'
+		list += '<tr><th>View</th><th>Surface</th><th>Actions</th></tr>'
 		for c in way['constituents']:
-			josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(c), self.get_way_max_lon(c), self.get_way_max_lat(c), self.get_way_min_lat(c), c['id'])
-			web_edit_url = 'https://www.openstreetmap.org/edit?way=%d#map=16/%.4f/%.4f' % (c['id'], ((self.get_way_max_lat(c) - self.get_way_min_lat(c))/2) + self.get_way_min_lat(c), ((self.get_way_max_lon(c) - self.get_way_min_lon(c))/2) + self.get_way_min_lon(c))
-			list.append('<a href="https://www.openstreetmap.org/way/%d">%d</a> - %s (<a href="%s">Web Edit</a>, <a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit in JOSM</a>)' % (c['id'], c['id'], c['surface'], web_edit_url, josm_url))
+			view_link = '<a href="https://www.openstreetmap.org/way/%d">%d</a>' % (c['id'], c['id'])
+			josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(c) - 0.001, self.get_way_max_lon(c) + 0.001, self.get_way_max_lat(c) + 0.001, self.get_way_min_lat(c) - 0.001, c['id'])
+			josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit in JOSM</a>' % (josm_url)
+			coords_lat = ((self.get_way_max_lat(c) - self.get_way_min_lat(c))/2) + self.get_way_min_lat(c)
+			coords_lon = ((self.get_way_max_lon(c) - self.get_way_min_lon(c))/2) + self.get_way_min_lon(c)
+			web_edit_url = 'https://www.openstreetmap.org/edit?way=%d#map=16/%.4f/%.4f' % (c['id'], coords_lat, coords_lon)
+			web_edit_link = '<a href="%s">Web Edit</a>' % (web_edit_url)
+			coords = '<a href="" onclick="if (this.nextSibling.style.display==\'block\') {this.nextSibling.style.display=\'none\';} else { this.nextSibling.style.display=\'block\'; this.nextSibling.select() } return false;">coords</a><input type="text" style="display: none;" value="%.5f,%.5f"/>' % (coords_lon, coords_lat)
+			list += '<tr><td>%s</td><td>%s</td><td>%s, %s, %s</td></tr>' % (view_link, c['surface'], web_edit_link, josm_link, coords)
+
+		list += '</table>'
 		return list
 
 class SingleColorKmlOutput(KmlOutput):
