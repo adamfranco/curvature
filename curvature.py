@@ -57,7 +57,8 @@ sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
 parser.add_argument('-t', action='store_true', help='Display tabular output')
-parser.add_argument('--no_kml', action='store_true', help='Do not generate a KML file. By default a KML file is generated with the name of the input file followed by .kml')
+parser.add_argument('--no_kml', action='store_true', help='Do not generate a KML/KMZ file. By default a KML/KMZ file is generated with the name of the input file followed by .kml/.kmz')
+parser.add_argument('--no_compress', action='store_true', help='Create a plain KML file instead of a compressed KMZ file.')
 parser.add_argument('--km', action='store_true', help='Output kilometers instead of miles.')
 parser.add_argument('--output_path', type=str, default='.', help='The path under which output files should be written')
 parser.add_argument('--output_basename', type=str, default=None, help='The base of the name for output files. This will be appended with a suffix and extension')
@@ -161,6 +162,7 @@ for file in args.file:
 			kml = SingleColorKmlOutput(default_filter, args.relative_color)
 		if args.km:
 			kml.units = 'km'
+		kml.no_compress = args.no_compress
 		kml.write(collector.ways, path, basename)
 
 		if args.add_kml is not None:
@@ -212,6 +214,7 @@ for file in args.file:
 					kml = SingleColorKmlOutput(filter, relative_color)
 				if args.km:
 					kml.units = 'km'
+				kml.no_compress = args.no_compress
 				kml.write(collector.ways, output_path, basename)
 
 if args.v:

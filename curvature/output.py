@@ -2,6 +2,9 @@ import sys
 import math
 import string
 from collections import Counter
+from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED
+import os
 
 class Output(object):
 	max_curvature = 0
@@ -34,6 +37,7 @@ import codecs
 from xml.sax.saxutils import escape
 class KmlOutput(Output):
 	units = 'mi'
+	no_compress = False
 
 	def _write_header(self, f):
 		self._write_doc_start(f)
@@ -148,18 +152,25 @@ class KmlOutput(Output):
 		ways = self.filter_and_sort(ways)
 		ways.reverse()
 
-		f = codecs.open(path + '/' + self.get_filename(basename), 'w', "utf-8")
+		kml_path = path + '/' + self.get_filename(basename, 'kml')
+		f = codecs.open(kml_path, 'w', "utf-8")
 
 		self._write_header(f)
 		if len(ways) > 1:
 			self._write_region(f, ways)
 			self._write_ways(f, ways)
 		else:
-			sys.stderr.write('\nWarning no ways available for output into {}'.format(self.get_filename(basename)))
+			sys.stderr.write('\nWarning no ways available for output into {}'.format(kml_path))
 		self._write_footer(f)
 		f.close()
 
-	def get_filename(self, basename):
+		if not self.no_compress:
+			with ZipFile(path + '/' + self.get_filename(basename, 'kmz'), 'w', ZIP_DEFLATED) as zip:
+				zip.write(kml_path, 'doc.kml')
+				zip.close()
+			os.remove(kml_path)
+
+	def get_filename(self, basename, extension):
 		filename = basename + '.c_{0:.0f}'.format(self.filter.min_curvature)
 		if self.filter.max_curvature > 0:
 			filename += '-{0:.0f}'.format(self.filter.max_curvature)
@@ -167,7 +178,7 @@ class KmlOutput(Output):
 			filename += '.l_{0:.0f}'.format(self.filter.min_length)
 		if self.filter.max_length > 0:
 			filename += '-{0:.0f}'.format(self.filter.max_length)
-		filename += self._filename_suffix() + '.kml'
+		filename += self._filename_suffix() + '.' + extension
 		return filename;
 
 	def get_description(self, way):
@@ -409,13 +420,13 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
 	def line_style(self, way):
 		return way['surface']
 
-	def get_filename(self, basename):
+	def get_filename(self, basename, extension):
 		filename = basename + '.surfaces'
 		if self.filter.min_length > 0 or self.filter.max_length > 0:
 			filename += '.l_{0:.0f}'.format(self.filter.min_length)
 		if self.filter.max_length > 0:
 			filename += '-{0:.0f}'.format(self.filter.max_length)
-		filename += self._filename_suffix() + '.kml'
+		filename += self._filename_suffix() + '.' + extension
 		return filename;
 
 	def get_description(self, way):
