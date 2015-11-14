@@ -1,5 +1,6 @@
 import sys
 import math
+import string
 from collections import Counter
 
 class Output(object):
@@ -175,9 +176,9 @@ class KmlOutput(Output):
 		else:
 			description = 'Curvature: %.2f\nDistance: %.2f mi\n' % (way['curvature'], way['length'] / 1609)
 
-		description = description + 'Type: %s\nSurface: %s' % (way['type'], self.get_surfaces(way))
-
-		return description
+		description = description + 'Type: %s\nSurface: %s\n' % (way['type'], self.get_surfaces(way))
+		description = description + 'Constituent ways (open/edit in OpenStreetMap):\n%s\n' % ('\n'.join(self.get_constituent_list(way)))
+		return string.replace(description, '\n', '<br/>')
 
 	def get_surfaces(self, way):
 		if 'constituents' in way:
@@ -188,6 +189,12 @@ class KmlOutput(Output):
 			return ', '.join(surface_list)
 		else:
 			return way['surface']
+
+	def get_constituent_list(self, way):
+		list = []
+		for constituent in way['constituents']:
+			list.append('<a href="https://www.openstreetmap.org/way/%d">%d</a> - %s' % (constituent['id'], constituent['id'], constituent['surface']))
+		return list
 
 class SingleColorKmlOutput(KmlOutput):
 
@@ -219,7 +226,7 @@ class SingleColorKmlOutput(KmlOutput):
 			f.write('	<Placemark>\n')
 			f.write('		<styleUrl>#' + self.line_style(way) + '</styleUrl>\n')
 			f.write('		<name>' + escape(way['name']) + '</name>\n')
-			f.write('		<description>' + self.get_description(way) + '</description>\n')
+			f.write('		<description><![CDATA[' + self.get_description(way) + ']]></description>\n')
 			f.write('		<LineString>\n')
 			f.write('			<tessellate>1</tessellate>\n')
 			f.write('			<coordinates>')
