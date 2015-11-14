@@ -1,5 +1,6 @@
 import sys
 import math
+from collections import Counter
 
 class Output(object):
 	max_curvature = 0
@@ -170,9 +171,19 @@ class KmlOutput(Output):
 
 	def get_description(self, way):
 		if self.units == 'km':
-			return 'Curvature: %.2f\nDistance: %.2f km\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1000, way['type'], way['surface'])
+			return 'Curvature: %.2f\nDistance: %.2f km\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1000, way['type'], self.get_surfaces(way))
 		else:
-			return 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], way['surface'])
+			return 'Curvature: %.2f\nDistance: %.2f mi\nType: %s\nSurface: %s' % (way['curvature'], way['length'] / 1609, way['type'], self.get_surfaces(way))
+
+	def get_surfaces(self, way):
+		if 'constituents' in way:
+			surfaces = []
+			for constituent in way['constituents']:
+				surfaces.append(constituent['surface'])
+			surface_list = [surface[0] for surface in Counter(surfaces).most_common()]
+			return ', '.join(surface_list)
+		else:
+			return way['surface']
 
 class SingleColorKmlOutput(KmlOutput):
 

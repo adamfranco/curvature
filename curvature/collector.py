@@ -195,6 +195,7 @@ class WayCollector(object):
 
 			while len(ways) > 0:
 				base_way = ways.pop()
+				base_way['constituents'] = [base_way]
 				# Loop through all our ways at least as many times as we have ways
 				# to be able to catch any that join onto the end after others have
 				# been joined on.
@@ -216,6 +217,7 @@ class WayCollector(object):
 						# join to the end of the base in order
 						if base_way['refs'][-1] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
 							way_modified = True
+							base_way['constituents'].append(way)
 							# Drop the matching first-ref in the way so that we don't have a duplicate point.
 							del way['refs'][0]
 							base_way['refs'] = base_way['refs'] + way['refs']
@@ -224,6 +226,7 @@ class WayCollector(object):
 						# join to the end of the base in reverse order
 						elif base_way['refs'][-1] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
 							way_modified = True
+							base_way['constituents'].append(way)
 							way['refs'].reverse()
 							# Drop the matching first-ref in the way so that we don't have a duplicate point.
 							del way['refs'][0]
@@ -233,6 +236,7 @@ class WayCollector(object):
 						# join to the beginning of the base in order
 						elif base_way['refs'][0] == way['refs'][-1] and way['refs'][0] not in base_way['refs']:
 							way_modified = True
+							base_way['constituents'].append(way)
 							# Drop the matching last-ref in the way so that we don't have a duplicate point.
 							del way['refs'][-1]
 							base_way['refs'] = way['refs'] + base_way['refs']
@@ -241,6 +245,7 @@ class WayCollector(object):
 						# join to the beginning of the base in reverse order
 						elif base_way['refs'][0] == way['refs'][0] and way['refs'][-1] not in base_way['refs']:
 							way_modified = True
+							base_way['constituents'].append(way)
 							way['refs'].reverse()
 							# Drop the matching last-ref in the way so that we don't have a duplicate point.
 							del way['refs'][-1]
