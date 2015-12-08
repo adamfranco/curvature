@@ -371,7 +371,7 @@ class MultiColorKmlOutput(KmlOutput):
 			f.write('	<Folder>\n')
 			f.write('		<styleUrl>#folderStyle</styleUrl>\n')
 			f.write('		<name>' + escape(way['name']) + '</name>\n')
-			f.write('		<description>' + self.get_description(way) + '</description>\n')
+			f.write('		<description><![CDATA[' + self.get_description(way) + ']]></description>\n')
 			current_curvature_level = 0
 			i = 0
 			for segment in way['segments']:
