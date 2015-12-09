@@ -124,10 +124,17 @@ Installation
 This is a Python script, therefore you need a functional Python 2.7 or later environment on your computer. See
 http://python.org/
 
-curvature.py makes use of the imposm.parser which you can find at
-[dev.omniscale.net/imposm.parser](http://dev.omniscale.net/imposm.parser/)
+curvature.py makes use of the `imposm.parser` which you can find at
+[imposm.org](http://imposm.org/docs/imposm.parser/latest/install.html#installation) and installed
+with `pip` or `easy_install`:
 
-Once your Python environment set up and the imposm.parser module installed, just download the
+    pip install imposm.parser
+
+or 
+
+    easy_install imposm.parser
+
+Once your Python environment set up and the `imposm.parser` module installed, just download the
 curvature.py script and run it. There is no installation needed.
 
 Usage
