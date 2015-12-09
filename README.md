@@ -152,6 +152,8 @@ or
 
     easy_install imposm.parser
 
+Curvature Installation
+----------------------
 Once your Python environment set up and the `imposm.parser` module installed, just download the
 curvature.py script and run it:
 
