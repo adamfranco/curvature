@@ -121,9 +121,27 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
 Installation
 ============
 
+Prerequisites
+-------------
+
+*Python*
 This is a Python script, therefore you need a functional Python 2.7 or later environment on your computer. See
 http://python.org/
 
+*Protocol Buffers*
+The `imposm.parser` library (below) utilizes the ["Protocol Buffers" library](https://developers.google.com/protocol-buffers/docs/downloads)
+to read `.pbf` files. You will need to download and install the Protocol Buffers library. This can usually be accomplished with something like:
+
+    cd /usr/local/src/
+    wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
+    tar xzf protobuf-2.6.1.tar.gz
+    cd protobuf-2.6.1
+    ./configure
+    make
+    make check
+    make install
+
+*imposm.parser*
 curvature.py makes use of the `imposm.parser` which you can find at
 [imposm.org](http://imposm.org/docs/imposm.parser/latest/install.html#installation) and installed
 with `pip` or `easy_install`:
@@ -135,7 +153,11 @@ or
     easy_install imposm.parser
 
 Once your Python environment set up and the `imposm.parser` module installed, just download the
-curvature.py script and run it. There is no installation needed.
+curvature.py script and run it:
+
+    git clone https://github.com/adamfranco/curvature.git
+    cd curvature
+    ./curvature.py --help
 
 Usage
 =====
