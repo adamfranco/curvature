@@ -288,7 +288,7 @@ class WayCollector(object):
 
 			while len(ways) > 0:
 				base_way = ways.pop()
-				base_way['constituents'] = [base_way]
+				base_way['constituents'] = [copy.copy(base_way)]
 				# Loop through all our ways at least as many times as we have ways
 				# to be able to catch any that join onto the end after others have
 				# been joined on.
