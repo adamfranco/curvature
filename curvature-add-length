@@ -12,16 +12,11 @@ sys.setdefaultencoding('utf-8')
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
-unpacker = msgpack.Unpacker(use_list=True)
-while True:
-    data = sys.stdin.read()
-    if len(data) == 0:
-        break
-    unpacker.feed(data)
-    for item in unpacker:
-        segments = item['segments']
-        sum = 0
-        for segment in segments:
-            sum += segment['length']
-        item['length'] = sum
-        sys.stdout.write(msgpack.packb(item))
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+for item in unpacker:
+    segments = item['segments']
+    sum = 0
+    for segment in segments:
+        sum += segment['length']
+    item['length'] = sum
+    sys.stdout.write(msgpack.packb(item))

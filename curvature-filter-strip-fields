@@ -23,16 +23,11 @@ sys.setdefaultencoding('utf-8')
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
-unpacker = msgpack.Unpacker(use_list=True)
-while True:
-    data = sys.stdin.read()
-    if len(data) == 0:
-        break
-    unpacker.feed(data)
-    for item in unpacker:
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+for item in unpacker:
 
-        for field in to_strip:
-            if field in item:
-                del item[field]
+    for field in to_strip:
+        if field in item:
+            del item[field]
 
-        sys.stdout.write(msgpack.packb(item))
+    sys.stdout.write(msgpack.packb(item))
