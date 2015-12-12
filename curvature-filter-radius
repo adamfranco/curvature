@@ -7,6 +7,7 @@ import codecs
 import math
 import msgpack
 import argparse
+import pprint
 
 # Set our output to default to UTF-8
 reload(sys)
@@ -60,22 +61,17 @@ if not args.radius:
     sys.stderr.write("Error:   --radius must be specified.\n")
     exit(2);
 
-unpacker = msgpack.Unpacker(use_list=True)
-while True:
-    data = sys.stdin.read()
-    if len(data) == 0:
-        break
-    unpacker.feed(data)
-    for item in unpacker:
-        segments = item['segments']
-        indexes = [i for i, segment
-            in enumerate(segments)
-            if segment['radius'] <= args.radius or i == 0 or i == len(segments) - 1
-        ]
-        item['segments'] = [segments[i] for i in indexes]
-        for i, segment in enumerate(item['segments']):
-            if i + 1 < len(item['segments']):
-                segment['end'] = end = segments[i + 1]['start']
-                start = segment['start']
-                segment['length'] = distance_on_earth(start[0], start[1], end[0], end[1])
-        sys.stdout.write(msgpack.packb(item))
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+for item in unpacker:
+    all_segments = item['segments']
+    indexes = [i for i, segment
+        in enumerate(all_segments)
+        if segment['radius'] <= args.radius or i == 0 or i == len(all_segments) - 1
+    ]
+    item['segments'] = filtered_segments = [all_segments[i] for i in indexes]
+    for i, segment in enumerate(item['segments']):
+        if i + 1 < len(item['segments']):
+            segment['end'] = end = filtered_segments[i + 1]['start']
+            start = segment['start']
+            segment['length'] = distance_on_earth(start[0], start[1], end[0], end[1])
+    sys.stdout.write(msgpack.packb(item))
