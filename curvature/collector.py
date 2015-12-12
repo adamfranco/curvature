@@ -21,8 +21,29 @@ class WayCollector(object):
 	min_lon_bound = None
 	max_lon_bound = None
 
-	roads = 'secondary', 'residential', 'tertiary', 'primary', 'primary_link', 'motorway', 'motorway_link', 'road', 'trunk', 'trunk_link', 'unclassified'
-	ignored_surfaces = 'dirt', 'unpaved', 'gravel', 'sand', 'grass', 'ground'
+	roads = [
+		'motorway',
+		'trunk',
+		'primary',
+		'secondary',
+		'tertiary',
+		'unclassified',
+		'residential',
+		'service',
+		'motorway_link',
+		'trunk_link',
+		'primary_link',
+		'secondary_link',
+		'tertiary_link',
+		'pedestrian',
+		'track',
+		'raceway',
+		'road',
+		'footway',
+		'bridleway',
+		'path',
+		'cycleway'
+	]
 	level_1_max_radius = 175
 	level_1_weight = 1
 	level_2_max_radius = 100
@@ -130,9 +151,6 @@ class WayCollector(object):
 
 			# ignore circular ways (Maybe we don't need this)
 			if refs[0] == refs[-1]:
-				continue
-
-			if 'surface' in tags and tags['surface'] in self.ignored_surfaces:
 				continue
 			if 'highway' in tags and tags['highway'] in self.roads:
 				way = {'id': osmid, 'type': tags['highway'], 'refs': refs}
