@@ -13,12 +13,7 @@ sys.setdefaultencoding('utf-8')
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
-unpacker = msgpack.Unpacker(use_list=True)
-while True:
-    data = sys.stdin.read()
-    if len(data) == 0:
-        break
-    unpacker.feed(data)
-    for item in unpacker:
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(item)
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+for item in unpacker:
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(item)
