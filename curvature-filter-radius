@@ -53,20 +53,27 @@ def distance_on_earth(lat1, long1, lat2, long2):
     return distance_on_unit_sphere(lat1, long1, lat2, long2) * rad_earth_m
 
 
-parser = argparse.ArgumentParser(description='Remove segments with a radius larger or equal to the specified.')
-parser.add_argument('--radius', type=float, help='A number')
+parser = argparse.ArgumentParser(description='Filter segments by radius')
+parser.add_argument('--min', type=float, help='The minimum radius')
+parser.add_argument('--max', type=float, help='The minimum radius')
 args = parser.parse_args()
 
-if not args.radius:
-    sys.stderr.write("Error:   --radius must be specified.\n")
+if not args.min and not args.max:
+    sys.stderr.write("Error: one or more of [--min, --max] options are required\n")
     exit(2);
+
+def select_segment(segment):
+    filter_min = args.min and args.min > segment['radius']
+    filter_max = args.max and args.max < segment['radius']
+    return not (filter_min or filter_max)
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
 for item in unpacker:
     all_segments = item['segments']
+    last_index = len(all_segments) - 1
     indexes = [i for i, segment
         in enumerate(all_segments)
-        if segment['radius'] <= args.radius or i == 0 or i == len(all_segments) - 1
+        if i == 0 or i == last_index or select_segment(segment)
     ]
     item['segments'] = filtered_segments = [all_segments[i] for i in indexes]
     for i, segment in enumerate(item['segments']):
