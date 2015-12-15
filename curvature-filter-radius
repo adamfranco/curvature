@@ -16,9 +16,9 @@ sys.setdefaultencoding('utf-8')
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 # sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
-parser = argparse.ArgumentParser(description='Filter segments by radius')
-parser.add_argument('--min', type=float, help='The minimum radius')
-parser.add_argument('--max', type=float, help='The minimum radius')
+parser = argparse.ArgumentParser(description='Filter segments by curve radius (in meters).')
+parser.add_argument('--min', type=float, help='The minimum radius to include in output.')
+parser.add_argument('--max', type=float, help='The maximum radius to include in output.')
 args = parser.parse_args()
 
 if not args.min and not args.max:
@@ -26,8 +26,8 @@ if not args.min and not args.max:
     exit(2);
 
 def select_segment(segment):
-    filter_min = args.min and args.min > segment['radius']
-    filter_max = args.max and args.max < segment['radius']
+    filter_min = args.min and args.min >= segment['radius']
+    filter_max = args.max and args.max <= segment['radius']
     return not (filter_min or filter_max)
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
