@@ -4,7 +4,7 @@ import resource
 import copy
 import time
 from imposm.parser import OSMParser
-rad_earth_m = 6373000 # Radius of the earth in meters
+from curvature.geomath import distance_on_earth
 
 # simple class that handles the parsed OSM data.
 class WayCollector(object):
@@ -391,7 +391,7 @@ class WayCollector(object):
 		way['length'] = 0.0
 		start = self.coords[way['refs'][0]]
 		end = self.coords[way['refs'][-1]]
-		way['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
+		way['distance'] = distance_on_earth(start[0], start[1], end[0], end[1])
 		second = 0
 		third = 0
 		segments = []
@@ -402,7 +402,7 @@ class WayCollector(object):
 				second = first
 				continue
 
-			first_second_length = distance_on_unit_sphere(first[0], first[1], second[0], second[1]) * rad_earth_m
+			first_second_length = distance_on_earth(first[0], first[1], second[0], second[1])
 			way['length'] += first_second_length
 
 			if not third:
@@ -411,7 +411,7 @@ class WayCollector(object):
 				second_third_length = first_second_length
 				continue
 
-			first_third_length = distance_on_unit_sphere(first[0], first[1], third[0], third[1]) * rad_earth_m
+			first_third_length = distance_on_earth(first[0], first[1], third[0], third[1])
 			# ignore curvature from zero-distance
 			if first_third_length > 0 and first_second_length > 0 and second_third_length > 0:
 				# Circumcircle radius calculation from http://www.mathopenref.com/trianglecircumcircle.html
@@ -495,7 +495,7 @@ class WayCollector(object):
 			heading_diff = abs(heading_a - heading_b)
 			# Compare the difference in heading to the angle that wold be expected
 			# for a curve just barely meeting our threshold for straight/curved.
-			gap_distance = distance_on_unit_sphere(first_straight['end'][0], first_straight['end'][1], next_straight['start'][0], next_straight['start'][1]) * rad_earth_m
+			gap_distance = distance_on_earth(first_straight['end'][0], first_straight['end'][1], next_straight['start'][0], next_straight['start'][1])
 			min_variance = gap_distance / self.level_1_max_radius
 			if abs(heading_diff) < min_variance:
 				# Mark them as eliminated so that we can show them in the output
@@ -569,7 +569,7 @@ class WayCollector(object):
 					section['length'] += sect_segment['length']
 				start = section['segments'][0]['start']
 				end = section['segments'][-1]['end']
-				section['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
+				section['distance'] = distance_on_earth(start[0], start[1], end[0], end[1])
 				sections.append(section)
 				curve_distance = 0
 				curve_start = None
@@ -585,7 +585,7 @@ class WayCollector(object):
 				section['length'] += sect_segment['length']
 			start = section['segments'][0]['start']
 			end = section['segments'][-1]['end']
-			section['distance'] = distance_on_unit_sphere(start[0], start[1], end[0], end[1]) * rad_earth_m
+			section['distance'] = distance_on_earth(start[0], start[1], end[0], end[1])
 			sections.append(section)
 
 		return sections
@@ -615,38 +615,3 @@ class NonSplittingWayCollector(WayCollector):
 		for route, ways in self.routes.iteritems():
 			for way in ways:
 				self.ways.append(way)
-
-
-
-# From http://www.johndcook.com/python_longitude_latitude.html
-def distance_on_unit_sphere(lat1, long1, lat2, long2):
-	if lat1 == lat2	 and long1 == long2:
-		return 0
-
-	# Convert latitude and longitude to
-	# spherical coordinates in radians.
-	degrees_to_radians = math.pi/180.0
-
-	# phi = 90 - latitude
-	phi1 = (90.0 - lat1)*degrees_to_radians
-	phi2 = (90.0 - lat2)*degrees_to_radians
-
-	# theta = longitude
-	theta1 = long1*degrees_to_radians
-	theta2 = long2*degrees_to_radians
-
-	# Compute spherical distance from spherical coordinates.
-
-	# For two locations in spherical coordinates
-	# (1, theta, phi) and (1, theta, phi)
-	# cosine( arc length ) =
-	#	 sin phi sin phi' cos(theta-theta') + cos phi cos phi'
-	# distance = rho * arc length
-
-	cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) +
-		   math.cos(phi1)*math.cos(phi2))
-	arc = math.acos( cos )
-
-	# Remember to multiply arc by the radius of the earth
-	# in your favorite set of units to get length.
-	return arc
