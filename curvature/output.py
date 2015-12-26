@@ -303,6 +303,9 @@ class MultiColorKmlOutput(KmlOutput):
 
 class SurfaceKmlOutput(SingleColorKmlOutput):
 
+	def __init__(self, units):
+		super(SurfaceKmlOutput, self).__init__(units, 0, 4000)
+
 	def get_styles(self):
 		return {
 			'unknown':{'color':'F0FFFFFF'},
