@@ -1,6 +1,25 @@
 import math
 rad_earth_m = 6373000 # Radius of the earth in meters
 
+class Units(object):
+    units = 'm'
+
+    def __init__(self, units):
+        if units in ['mi', 'km', 'm']:
+            self.units = units
+        else:
+            raise ValueError("units must be 'mi', 'km', or 'm'")
+
+    def convert(self, value):
+        if self.units == 'mi':
+            return value / 1609
+        elif self.units == 'km':
+            return value / 1000
+        elif self.units == 'm':
+            return value
+        else:
+            raise ValueError("units must be 'mi', 'km', or 'm'")
+
 def distance_on_earth(lat1, long1, lat2, long2):
     return distance_on_unit_sphere(lat1, long1, lat2, long2) * rad_earth_m
 
