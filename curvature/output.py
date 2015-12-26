@@ -10,6 +10,12 @@ class KmlOutput(object):
 	units = 'mi'
 	no_compress = False
 
+	def __init__(self, units):
+		if units in ['mi', 'km']:
+			self.units = units
+		else:
+			raise ValueError("units must be 'mi' or 'km'")
+
 	def _write_header(self, f):
 		self._write_doc_start(f)
 		self._write_styles(f, self.get_styles())
@@ -184,8 +190,8 @@ class SingleColorKmlOutput(KmlOutput):
 	min_curvature = 0
 	max_curvature = 4000
 
-	def __init__(self, min_curvature, max_curvature):
-		super(SingleColorKmlOutput, self).__init__()
+	def __init__(self, units, min_curvature, max_curvature):
+		super(SingleColorKmlOutput, self).__init__(units)
 		self.min_curvature = min_curvature
 		self.max_curvature = max_curvature
 

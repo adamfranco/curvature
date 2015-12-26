@@ -9,6 +9,7 @@ import argparse
 from curvature.output import SingleColorKmlOutput
 
 parser = argparse.ArgumentParser(description='Output a KML file')
+parser.add_argument('--units', type=str, default='mi', choices=['mi', 'km'], help='Distance units in the output, km or mi Default: mi')
 parser.add_argument('--min_curvature', type=float, default=0, help='The minimum curvature level for color-scale. Default: 0')
 parser.add_argument('--max_curvature', type=float, default=4000, help='The maximum curvature level for color-scale. Default: 4000')
 args = parser.parse_args()
@@ -19,7 +20,7 @@ sys.setdefaultencoding('utf-8')
 sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
-kml = SingleColorKmlOutput(args.min_curvature, args.max_curvature)
+kml = SingleColorKmlOutput(args.units, args.min_curvature, args.max_curvature)
 kml.head(sys.stdout)
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
