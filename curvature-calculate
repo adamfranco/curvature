@@ -52,8 +52,6 @@ sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
-parser.add_argument('--min_length', type=float, default=1, help='the minimum length of a way that should be included, in miles, 0 for no minimum. The default is 2.0')
-parser.add_argument('--max_length', type=float, default=0, help='the maximum length of a way that should be included, in miles, 0 for no maximum. The default is 0')
 parser.add_argument('--level_1_max_radius', type=int, default=175, help='the maximum radius of a curve (in meters) that will be considered part of level 1. Curves with radii larger than this will be considered straight. The default is 175')
 parser.add_argument('--level_1_weight', type=float, default=1, help='the weight to give segments that are classified as level 1. Default 1')
 parser.add_argument('--level_2_max_radius', type=int, default=100, help='the maximum radius of a curve (in meters) that will be considered part of level 2. The default is 100')
@@ -97,7 +95,7 @@ for file in args.file:
 			for c,v in enumerate(way['constituents']):
 				if 'refs' in way['constituents'][c]:
 					del way['constituents'][c]['refs']
-		
+
 		sys.stdout.write(msgpack.packb(way))
 
 if args.v:
