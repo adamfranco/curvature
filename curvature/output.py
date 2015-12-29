@@ -214,7 +214,7 @@ class SingleColorKmlOutput(KmlOutput):
 			return
 		f.write('	<Placemark>\n')
 		f.write('		<styleUrl>#' + self.line_style(way) + '</styleUrl>\n')
-		f.write('		<name>' + escape(way['name']) + '</name>\n')
+		f.write('		<name>' + escape(str(way['name'])) + '</name>\n')
 		f.write('		<description><![CDATA[' + self.get_description(way) + ']]></description>\n')
 		f.write('		<LineString>\n')
 		f.write('			<tessellate>1</tessellate>\n')
@@ -271,7 +271,7 @@ class MultiColorKmlOutput(KmlOutput):
 	def _write_way(self, f, way):
 		f.write('	<Folder>\n')
 		f.write('		<styleUrl>#folderStyle</styleUrl>\n')
-		f.write('		<name>' + escape(way['name']) + '</name>\n')
+		f.write('		<name>' + escape(str(way['name'])) + '</name>\n')
 		f.write('		<description><![CDATA[' + self.get_description(way) + ']]></description>\n')
 		current_curvature_level = 0
 		i = 0
