@@ -533,7 +533,8 @@ class WayCollector(object):
 
 		# Special case where ways will never be split
 		if self.straight_segment_split_threshold <= 0:
-			sections.append(way)
+			if len(way['segments']) > 0:
+				sections.append(way)
 			return sections
 
 		curve_start = 0
