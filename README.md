@@ -39,14 +39,18 @@ Author: Adam Franco
 Copyright 2012 Adam Franco  
 License: GNU General Public License Version 3 or later
 
+Rendered Data
+-------------
+Rendered curvature files generated with this program can be dowloaded from [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/). Files are available for the entire world and are automatically updated approximately every two weeks.
+
 Examples
 --------
 Below are links to some example KML files generated with curvature.py. Additional files can
-be found at [adamfranco.com/curvature/](http://www2.adamfranco.com/curvature/).
+be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/).
 
 * A basic KML file generated with default options using the
-  [vermont.osm](http://download.geofabrik.de/openstreetmap/north-america/us/vermont.osm.bz2)
-  file (after unzipping).
+  [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
+  file.
 
   This file includes all ways in the input file that have a curvature value greater than 300
   and are not marked as unpaved. As mentioned above, a curvature of 300 this means that these
@@ -57,11 +61,9 @@ be found at [adamfranco.com/curvature/](http://www2.adamfranco.com/curvature/).
   in a sea of otherwise bland options. While more curvy roads will also be included, roads
   in the 300-600 range tend to be pleasant rather than exciting.
 
-  `./curvature.py -v vermont.osm`
+  `./curvature.py -v vermont-latest.osm.pbf`
 
-  [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.kml)  
-  [vermont-bristol.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont-bristol.c_300.kml)
-  ([View in Google Maps](http://goo.gl/maps/T63Kv)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
+  [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.kmz)
 
   An additional note: Vermont has approximately [8,000 miles of dirt roads and only 6,000 miles
 of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-dirt-road-reigns.html).
@@ -72,8 +74,8 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   surfaces so that we can better filter our results.
 
 * A basic KML file generated with a minimum curvature of 1000 using the
-  [vermont.osm](http://download.geofabrik.de/openstreetmap/north-america/us/vermont.osm.bz2)
-  file (after unzipping).
+  [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
+  file.
 
   This file includes all ways in the input file that have a curvature value greater than 1000
   and are not marked as unpaved. As mentioned above, a curvature of 1000 this means that these
@@ -84,26 +86,21 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   There will be many roads that are quite fun but don't quite make the cut, but all of the
   roads listed will be very curvy.
 
-  `./curvature.py -v --min_curvature 1000 vermont.osm`
+  `./curvature.py -v --min_curvature 1000 vermont-latest.osm.pbf`
 
-  [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.kml)  
-  [vermont-bristol.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont-bristol.c_1000.kml)
-  ([View in Google Maps](http://goo.gl/maps/ZDh9u)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
+  [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.kmz)
 
-* Multi-colored KML files generated with a minimum curvature of 300 and 1000 using the
-  [vermont.osm](http://download.geofabrik.de/openstreetmap/north-america/us/vermont.osm.bz2)
-  file (after unzipping).
+* Multi-colored KML files generated with a minimum curvature of 1000 using the
+  [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
+  file.
 
-  These files color the ways listed in the first and second examples based on curve radius.
+  This file colors the ways listed in the second example based on curve radius.
   Zoom on corners to see the shading. Green segments do not contribute to the 'curvature' value
   while yellow, orange, and red segments do.
 
-  `./curvature.py -v --colorize --add_kml min_curvature=1000 vermont.osm`
+  `./curvature.py -v --colorize --min_curvature 1000 vermont.osm`
 
-  [vermont.c_300.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.multicolor.kml)
-  [vermont.c_1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.multicolor.kml)  
-  [vermont-bristol.c_300.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont-bristol.c_300.multicolor.kml)
-  ([View in Google Maps](http://goo.gl/maps/ItFNg)) A nice [sub-set](http://www2.adamfranco.com/curvature/osm/vermont-bristol.osm) of this data.
+  [vermont.c_1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.multicolor.kmz)  
 
 * A set of KML files of the roads in the San Francisco Bay area with a minimum curvature
   of 1000 using the [california.osm](http://download.geofabrik.de/openstreetmap/north-america/us/california.osm.bz2)
