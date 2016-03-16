@@ -12,6 +12,7 @@
 import os
 import copy
 import ast
+import re
 import sys
 import argparse
 from curvature.collector import NonSplittingWayCollector
