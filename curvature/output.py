@@ -444,6 +444,3 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
 			filename += '-{0:.0f}'.format(self.filter.max_length)
 		filename += self._filename_suffix() + '.' + extension
 		return filename;
-
-	def get_description(self, way):
-		return 'Type: %s\nSurface: %s' % (way['type'], way['surface'])
