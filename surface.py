@@ -72,6 +72,8 @@ for file in args.file:
 	if args.output_basename is None:
 		basename = os.path.basename(file.name)
 		parts = os.path.splitext(basename)
+		if re.search('\.osm$', parts[0]):
+			parts = os.path.splitext(parts[0])
 		basename = parts[0]
 	else:
 		basename = os.path.basename(args.output_basename)
