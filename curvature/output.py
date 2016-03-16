@@ -203,7 +203,7 @@ class KmlOutput(Output):
 
 	def get_all_josm_link(self, way):
 		select = []
-		for c in way['constituents']:
+		for c in self.get_constituents(way):
 			select.append('way%d' % c['id'])
 		josm_url ='http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=%s' % (self.get_way_min_lon(way) - 0.001, self.get_way_max_lon(way) + 0.001, self.get_way_max_lat(way) + 0.001, self.get_way_min_lat(way) - 0.001, ','.join(select))
 		josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit all in JOSM</a>' % (josm_url)
@@ -215,7 +215,7 @@ class KmlOutput(Output):
 	def get_constituent_list(self, way):
 		list = '<table style="width: 100%; text-align: center;">'
 		list += '<tr><th>View</th><th>Surface</th><th>Actions</th></tr>'
-		for c in way['constituents']:
+		for c in self.get_constituents(way):
 			view_link = '<a href="https://www.openstreetmap.org/way/%d">%d</a>' % (c['id'], c['id'])
 			josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(c) - 0.001, self.get_way_max_lon(c) + 0.001, self.get_way_max_lat(c) + 0.001, self.get_way_min_lat(c) - 0.001, c['id'])
 			josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit in JOSM</a>' % (josm_url)
@@ -228,6 +228,9 @@ class KmlOutput(Output):
 
 		list += '</table>'
 		return list
+
+	def get_constituents(self, way):
+		return way['constituents']
 
 class SingleColorKmlOutput(KmlOutput):
 
@@ -432,6 +435,9 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
 			'mud':{'color':'F00000FF'},
 
 		}
+
+	def get_constituents(self, way):
+		return [way]
 
 	def line_style(self, way):
 		return way['surface']
