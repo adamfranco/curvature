@@ -98,15 +98,15 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   Zoom on corners to see the shading. Green segments do not contribute to the 'curvature' value
   while yellow, orange, and red segments do.
 
-  `./curvature.py -v --colorize --min_curvature 1000 vermont.osm`
+  `./curvature.py -v --colorize --min_curvature 1000 vermont.osm.pbf`
 
   [vermont.c_1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.multicolor.kmz)  
 
 * A set of KML files of the roads in the San Francisco Bay area with a minimum curvature
-  of 1000 using the [california.osm](http://download.geofabrik.de/openstreetmap/north-america/us/california.osm.bz2)
+  of 1000 using the [california.osm.pbf](http://download.geofabrik.de/north-america/us/california-latest.osm.pbf)
   file (after unzipping).
 
-  `./curvature.py -v --max_lat_bound 38.5 --min_lat_bound 36.5 --min_lon_bound -123.25 --max_lon_bound -121.0 --output_basename california-bay-area --min_curvature 1000 --add_kml colorize=1 california.osm`
+  `./curvature.py -v --max_lat_bound 38.5 --min_lat_bound 36.5 --min_lon_bound -123.25 --max_lon_bound -121.0 --output_basename california-bay-area --min_curvature 1000 --add_kml colorize=1 california.osm.pbf`
 
    [california-bay-area.1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/california-bay-area.1000.kml) ([view in Google Maps](http://goo.gl/maps/uU1R9))  
    [california-bay-area.1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/california-bay-area.1000.multicolor.kml)
@@ -172,7 +172,7 @@ This script was developed using downloads of the US state OSM data provided at:
 Once you have downloaded a .osm file that you wish to work with, you can run curvature.py with its
 default options:
 
-<code>./curvature.py -v vermont.osm</code>
+<code>./curvature.py -v vermont.osm.pbf</code>
 
 This will generate a vermont.osm.kml file that includes lines for all of the matched segments.
 
