@@ -1,10 +1,17 @@
 # -*- coding: UTF-8 -*-
 import argparse
+import itertools
 
 class FilterSurface(object):
   def __init__(self, include_surfaces=None, exclude_surfaces=None):
-    self.include_surfaces = include_surfaces
-    self.exclude_surfaces = exclude_surfaces
+    if (include_surfaces is not None and exclude_surfaces is not None):
+      raise RuntimeError("Error: conficting parameters, please pick only one ruleset")
+    if (include_surfaces is not None):
+      self.filter = lambda item: 'surface' in item and item['surface'].split(';')[0] in include_surfaces
+    elif (exclude_surfaces is not None):
+      self.filter = lambda item: 'surface' not in item or item['surface'].split(';')[0] not in exclude_surfaces
+    else:
+      self.filter = lambda item: True
 
   @classmethod
   def parse(cls, argv):
@@ -14,17 +21,16 @@ class FilterSurface(object):
     args = parser.parse_args(argv)
     include_surfaces = filter(None,args.include_surfaces.split(','))
     exclude_surfaces = filter(None,args.exclude_surfaces.split(','))
-    if (len(include_surfaces) > 0 and len(exclude_surfaces) > 0):
-      raise RuntimeError("Error: conficting parameters, please pick only one ruleset")
-    if (len(include_surfaces) > 0):
-      return cls(include_surfaces=include_surfaces)
-    else:
-      return cls(exclude_surfaces=exclude_surfaces)
+    return cls(include_surfaces=include_surfaces, exclude_surfaces=exclude_surfaces)
+
+  def select(item):
+    surface = item['surface'].split(';')[0]
+    if (self.include_surfaces is not None and surface in self.include_surfaces):
+      return True
+    elif (self.exclude_surfaces is not None and surface not in self.exclude_surfaces):
+      return True
+    return False
 
   def process(self, iterable):
-    for item in iterable:
-      surface = item['surface'].split(';')[0]
-      if (self.include_surfaces is not None and surface in self.include_surfaces):
-        yield(item)
-      elif (self.exclude_surfaces is not None and surface not in self.exclude_surfaces):
-        yield(item)
+    return itertools.ifilter(self.filter, iterable)
+      

@@ -23,4 +23,19 @@ def test_filter_surface_no_filter():
     {'surface': 'a'}
   ]
   result = list(FilterSurface().process(data))
+  assert(result == [{'surface': 'a'}])
+
+
+def test_filter_surface_no_surface():
+  data = [
+    {'foo': 'a'}
+  ]
+  result = list(FilterSurface(include_surfaces=['a']).process(data))
   assert(result == [])
+
+def test_filter_surface_exclude_no_surface():
+  data = [
+    {'foo': 'a'}
+  ]
+  result = list(FilterSurface(exclude_surfaces=['a']).process(data))
+  assert(result == [{'foo': 'a'}])
