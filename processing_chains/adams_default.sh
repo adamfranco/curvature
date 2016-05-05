@@ -80,6 +80,7 @@ do
 
 	 # Output a KML file showing only the most twisty roads, those with a curvature
 	 # of 1000 or more.
+   echo "Preparing $filename.c_1000.kmz ..."
 	 # Make a temporary directory.
 	 mkdir $temp_dir/$filename
 	 # Filter and write the KML.
@@ -88,13 +89,14 @@ do
 	 | $script_path/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
 	 > $temp_dir/$filename/doc.kml
 	 # Zip the KML into a KMZ
-	 zip $output_dir/$filename.c_1000.kmz $temp_dir/$filename/doc.kml
+	 zip -q $output_dir/$filename.c_1000.kmz $temp_dir/$filename/doc.kml
 	 # Delete our temporary file.
 	 rm $temp_dir/$filename/doc.kml
 	 rmdir $temp_dir/$filename
 
 	 # Output a KML file showing moderately twisty roads, those with a curvature
 	 # of 300 or more.
+   echo "Preparing $filename.c_300.kmz ..."
 	 # Make a temporary directory.
 	 mkdir $temp_dir/$filename
 	 # Filter and write the KML.
@@ -103,13 +105,14 @@ do
 	 | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
 	 > $temp_dir/$filename/doc.kml
 	 # Zip the KML into a KMZ
-	 zip $output_dir/$filename.c_300.kmz $temp_dir/$filename/doc.kml
+	 zip -q $output_dir/$filename.c_300.kmz $temp_dir/$filename/doc.kml
 	 # Delete our temporary file.
 	 rm $temp_dir/$filename/doc.kml
 	 rmdir $temp_dir/$filename
 
 	 # Output a KML file showing only the most twisty roads, with the curve radii
 	 # colored. We'll only include the most twisty roads (curvature >= 1000).
+   echo "Preparing $filename.c_1000.curves.kmz ..."
 	 # Make a temporary directory.
 	 mkdir $temp_dir/$filename
 	 # Filter and write the KML.
@@ -118,7 +121,7 @@ do
 	 | $script_path/curvature-output-kml-curve-radius \
 	 > $temp_dir/$filename/doc.kml
 	 # Zip the KML into a KMZ
-	 zip $output_dir/$filename.c_1000.curves.kmz $temp_dir/$filename/doc.kml
+	 zip -q $output_dir/$filename.c_1000.curves.kmz $temp_dir/$filename/doc.kml
 	 # Delete our temporary file.
 	 rm $temp_dir/$filename/doc.kml
 	 rmdir $temp_dir/$filename
