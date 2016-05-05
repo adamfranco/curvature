@@ -73,8 +73,8 @@ do
 	# 3. Sort the items by their curvature value.
 	# 3. Save the intermediate data.
 	$script_path/curvature-calculate -v $input_file \
-	 | $script_path/curvature-add-length \
-	 | $script_path/curvature-sort --key curvature --direction DESC \
+	 | $script_path/curvature-pp add_length \
+	 | $script_path/curvature-pp sort --key curvature --direction DESC \
 	 > $temp_dir/$filename.msgpack
 
 	 # Output a KML file showing only the most twisty roads, those with a curvature
@@ -83,7 +83,7 @@ do
 	 mkdir $temp_dir/$filename
 	 # Filter and write the KML.
 	 cat $temp_dir/$filename.msgpack \
-	 | $script_path/curvature-filter-curvature-level --min 1000 \
+	 | $script_path/curvature-pp filter_curvature --min 1000 \
 	 | $script_path/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
 	 > $temp_dir/$filename/doc.kml
 	 # Zip the KML into a KMZ
@@ -98,7 +98,7 @@ do
 	 mkdir $temp_dir/$filename
 	 # Filter and write the KML.
 	 cat $temp_dir/$filename.msgpack \
-	 | $script_path/curvature-filter-curvature-level --min 300 \
+	 | $script_path/curvature-pp filter_curvature --min 300 \
 	 | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
 	 > $temp_dir/$filename/doc.kml
 	 # Zip the KML into a KMZ
@@ -113,7 +113,7 @@ do
 	 mkdir $temp_dir/$filename
 	 # Filter and write the KML.
 	 cat $temp_dir/$filename.msgpack \
-	 | $script_path/curvature-filter-curvature-level --min 1000 \
+	 | $script_path/curvature-pp filter_curvature --min 1000 \
 	 | $script_path/curvature-output-kml-curve-radius \
 	 > $temp_dir/$filename/doc.kml
 	 # Zip the KML into a KMZ
