@@ -33,8 +33,9 @@ usage="$0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
 "
 # Store our the program path.
 pushd `dirname $0` > /dev/null
-script_path=`pwd -P`
+my_path=`pwd -P`
 popd > /dev/null
+script_path=`dirname $my_path`
 
 ##
 # Allow the user to configure our variables via command-line options.
