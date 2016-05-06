@@ -28,7 +28,7 @@
 # Set some default variables:
 temp_dir="/tmp"
 output_dir="."
-verbose=0
+verbose=""
 usage="$0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
 
   -h      Show this help.
@@ -52,7 +52,7 @@ while getopts "h?vt:o:" opt; do
     echo usage >&2
     exit 1
     ;;
-  v)  verbose=1
+  v)  verbose="-v"
     ;;
   o)  output_dir=$OPTARG
     ;;
@@ -78,14 +78,17 @@ do
   # 2. Add 'length' fields to the data.
   # 3. Sort the items by their curvature value.
   # 3. Save the intermediate data.
-  $script_path/curvature-calculate -v $input_file \
+  $script_path/curvature-calculate $verbose $input_file \
     | $script_path/curvature-pp add_length \
     | $script_path/curvature-pp sort --key curvature --direction DESC \
     > $temp_dir/$filename.msgpack
 
   # Output a KML file showing only the most twisty roads, those with a curvature
   # of 1000 or more.
-  echo "Preparing $filename.c_1000.kmz ..."
+  if [[ $verbose == '-v' ]]
+  then
+    echo "Preparing $filename.c_1000.kmz ..."
+  fi
   # Make a temporary directory.
   mkdir $temp_dir/$filename
   # Filter and write the KML.
@@ -101,7 +104,10 @@ do
 
   # Output a KML file showing moderately twisty roads, those with a curvature
   # of 300 or more.
-  echo "Preparing $filename.c_300.kmz ..."
+  if [[ $verbose == '-v' ]]
+  then
+    echo "Preparing $filename.c_300.kmz ..."
+  fi
   # Make a temporary directory.
   mkdir $temp_dir/$filename
   # Filter and write the KML.
@@ -117,7 +123,10 @@ do
 
   # Output a KML file showing only the most twisty roads, with the curve radii
   # colored. We'll only include the most twisty roads (curvature >= 1000).
-  echo "Preparing $filename.c_1000.curves.kmz ..."
+  if [[ $verbose == '-v' ]]
+  then
+    echo "Preparing $filename.c_1000.curves.kmz ..."
+  fi
   # Make a temporary directory.
   mkdir $temp_dir/$filename
   # Filter and write the KML.

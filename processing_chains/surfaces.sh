@@ -28,7 +28,7 @@
 # Set some default variables:
 temp_dir="/tmp"
 output_dir="."
-verbose=0
+verbose=""
 usage="$0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
 
   -h      Show this help.
@@ -52,7 +52,7 @@ while getopts "h?vt:o:" opt; do
     echo usage >&2
     exit 1
     ;;
-  v)  verbose=1
+  v)  verbose="-v"
     ;;
   o)  output_dir=$OPTARG
     ;;
@@ -81,7 +81,7 @@ do
   # 2. Add 'length' fields to the data.
   # 3. Sort the items by their curvature value.
   # 3. Output a KML file showing the surfaces for all roads.
-  $script_path/curvature-calculate --ignored_surfaces '' --straight_segment_split_threshold 0 -v $input_file \
+  $script_path/curvature-calculate --ignored_surfaces '' --straight_segment_split_threshold 0 $verbose $input_file \
     | $script_path/curvature-pp add_length \
     | $script_path/curvature-output-kml-surfaces \
     > $temp_dir/$filename/doc.kml
