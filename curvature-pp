@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+import os
+import sys
+import codecs
+import msgpack
+import importlib
+        
+# Set our output to default to UTF-8
+reload(sys)
+sys.setdefaultencoding('utf-8')
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+
+argv = sys.argv
+file_name = argv.pop(0)
+module_name = argv.pop(0)   
+class_name = ''.join(map(str.capitalize, module_name.split('.').pop().split('_')))
+
+mod = importlib.import_module('curvature.post_processors.' + module_name)
+fl = getattr(mod, class_name)
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+post_processor = fl.parse(argv)
+iterable = post_processor.process(unpacker)
+for item in iterable:
+  sys.stdout.write(msgpack.packb(item))
