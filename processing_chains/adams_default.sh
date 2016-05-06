@@ -30,6 +30,11 @@ temp_dir="/tmp"
 output_dir="."
 verbose=0
 usage="$0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
+
+  -h      Show this help.
+  -v      Verbose mode, print details about progress.
+  -t      Use another directory for temporary files. Default: /tmp/
+  -o      Use anotehr directory for output files. Default: ./
 "
 # Store our the program path.
 pushd `dirname $0` > /dev/null
@@ -42,18 +47,18 @@ script_path=`dirname $my_path`
 ##
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
 while getopts "h?vt:o:" opt; do
-    case "$opt" in
-    h|\?)
-        echo usage >&2
-        exit 1
-        ;;
-    v)  verbose=1
-        ;;
-		o)  output_dir=$OPTARG
-        ;;
-		t)  temp_dir=$OPTARG
-        ;;
-    esac
+  case "$opt" in
+  h|\?)
+    echo usage >&2
+    exit 1
+    ;;
+  v)  verbose=1
+    ;;
+  o)  output_dir=$OPTARG
+    ;;
+  t)  temp_dir=$OPTARG
+    ;;
+  esac
 done
 shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
@@ -64,67 +69,68 @@ shift $((OPTIND-1))
 ##
 for input_file in "$@"
 do
-	# Strip off the file extensions.
-	filename=`basename -s .pbf $input_file`
-	filename=`basename -s .osm $filename`
+  # Strip off the file extensions.
+  filename=`basename -s .pbf $input_file`
+  filename=`basename -s .osm $filename`
 
-	# Take the following processing steps first:
-	# 1. Calculate the curvature
-	# 2. Add 'length' fields to the data.
-	# 3. Sort the items by their curvature value.
-	# 3. Save the intermediate data.
-	$script_path/curvature-calculate -v $input_file \
-	 | $script_path/curvature-pp add_length \
-	 | $script_path/curvature-pp sort --key curvature --direction DESC \
-	 > $temp_dir/$filename.msgpack
+  # Take the following processing steps first:
+  # 1. Calculate the curvature
+  # 2. Add 'length' fields to the data.
+  # 3. Sort the items by their curvature value.
+  # 3. Save the intermediate data.
+  $script_path/curvature-calculate -v $input_file \
+    | $script_path/curvature-pp add_length \
+    | $script_path/curvature-pp sort --key curvature --direction DESC \
+    > $temp_dir/$filename.msgpack
 
-	 # Output a KML file showing only the most twisty roads, those with a curvature
-	 # of 1000 or more.
-   echo "Preparing $filename.c_1000.kmz ..."
-	 # Make a temporary directory.
-	 mkdir $temp_dir/$filename
-	 # Filter and write the KML.
-	 cat $temp_dir/$filename.msgpack \
-	 | $script_path/curvature-pp filter_curvature --min 1000 \
-	 | $script_path/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
-	 > $temp_dir/$filename/doc.kml
-	 # Zip the KML into a KMZ
-	 zip -q $output_dir/$filename.c_1000.kmz $temp_dir/$filename/doc.kml
-	 # Delete our temporary file.
-	 rm $temp_dir/$filename/doc.kml
-	 rmdir $temp_dir/$filename
+  # Output a KML file showing only the most twisty roads, those with a curvature
+  # of 1000 or more.
+  echo "Preparing $filename.c_1000.kmz ..."
+  # Make a temporary directory.
+  mkdir $temp_dir/$filename
+  # Filter and write the KML.
+  cat $temp_dir/$filename.msgpack \
+    | $script_path/curvature-pp filter_curvature --min 1000 \
+    | $script_path/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
+    > $temp_dir/$filename/doc.kml
+  # Zip the KML into a KMZ
+  zip -q $output_dir/$filename.c_1000.kmz $temp_dir/$filename/doc.kml
+  # Delete our temporary file.
+  rm $temp_dir/$filename/doc.kml
+  rmdir $temp_dir/$filename
 
-	 # Output a KML file showing moderately twisty roads, those with a curvature
-	 # of 300 or more.
-   echo "Preparing $filename.c_300.kmz ..."
-	 # Make a temporary directory.
-	 mkdir $temp_dir/$filename
-	 # Filter and write the KML.
-	 cat $temp_dir/$filename.msgpack \
-	 | $script_path/curvature-pp filter_curvature --min 300 \
-	 | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
-	 > $temp_dir/$filename/doc.kml
-	 # Zip the KML into a KMZ
-	 zip -q $output_dir/$filename.c_300.kmz $temp_dir/$filename/doc.kml
-	 # Delete our temporary file.
-	 rm $temp_dir/$filename/doc.kml
-	 rmdir $temp_dir/$filename
+  # Output a KML file showing moderately twisty roads, those with a curvature
+  # of 300 or more.
+  echo "Preparing $filename.c_300.kmz ..."
+  # Make a temporary directory.
+  mkdir $temp_dir/$filename
+  # Filter and write the KML.
+  cat $temp_dir/$filename.msgpack \
+    | $script_path/curvature-pp filter_curvature --min 300 \
+    | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
+    > $temp_dir/$filename/doc.kml
+  # Zip the KML into a KMZ
+  zip -q $output_dir/$filename.c_300.kmz $temp_dir/$filename/doc.kml
+  # Delete our temporary file.
+  rm $temp_dir/$filename/doc.kml
+  rmdir $temp_dir/$filename
 
-	 # Output a KML file showing only the most twisty roads, with the curve radii
-	 # colored. We'll only include the most twisty roads (curvature >= 1000).
-   echo "Preparing $filename.c_1000.curves.kmz ..."
-	 # Make a temporary directory.
-	 mkdir $temp_dir/$filename
-	 # Filter and write the KML.
-	 cat $temp_dir/$filename.msgpack \
-	 | $script_path/curvature-pp filter_curvature --min 1000 \
-	 | $script_path/curvature-output-kml-curve-radius \
-	 > $temp_dir/$filename/doc.kml
-	 # Zip the KML into a KMZ
-	 zip -q $output_dir/$filename.c_1000.curves.kmz $temp_dir/$filename/doc.kml
-	 # Delete our temporary file.
-	 rm $temp_dir/$filename/doc.kml
-	 rmdir $temp_dir/$filename
+  # Output a KML file showing only the most twisty roads, with the curve radii
+  # colored. We'll only include the most twisty roads (curvature >= 1000).
+  echo "Preparing $filename.c_1000.curves.kmz ..."
+  # Make a temporary directory.
+  mkdir $temp_dir/$filename
+  # Filter and write the KML.
+  cat $temp_dir/$filename.msgpack \
+     | $script_path/curvature-pp filter_curvature --min 1000 \
+     | $script_path/curvature-output-kml-curve-radius \
+     > $temp_dir/$filename/doc.kml
+  # Zip the KML into a KMZ
+  zip -q $output_dir/$filename.c_1000.curves.kmz $temp_dir/$filename/doc.kml
+  # Delete our temporary file.
+  rm $temp_dir/$filename/doc.kml
+  rmdir $temp_dir/$filename
 
-	 rm $temp_dir/$filename.msgpack
+
+  rm $temp_dir/$filename.msgpack
 done
