@@ -184,7 +184,7 @@ def test_no_surface_tag_is_paved(raymond_road, surfaces_paved):
     data = [raymond_road]
     expected_result = [copy(raymond_road)]
 
-    result = list(FilterOnlyWaysWithTag(tag='surface', values=surfaces_paved).process(data))
+    result = list(FilterOnlyWaysWithTag(tag='surface', values=surfaces_paved, include_ways_missing_tag=True).process(data))
 
     assert(result == expected_result)
     assert(len(result) == 1)
@@ -196,7 +196,7 @@ def test_no_surface_tag_is_unpaved(raymond_road, surfaces_paved):
                         [ copy(raymond_road[2]),
                           copy(raymond_road[3]) ] ]
 
-    result = list(FilterOnlyWaysWithTag(tag='surface', values=surfaces_paved, skip_ways_missing_tag=True).process(data))
+    result = list(FilterOnlyWaysWithTag(tag='surface', values=surfaces_paved, include_ways_missing_tag=False).process(data))
 
     assert(result == expected_result)
     assert(len(result) == 2)
@@ -209,7 +209,7 @@ def test_alternating_paved_unpaved_with_unpaved_surfaces(barnes_road, surfaces_p
                         [ copy(barnes_road[2]),
                           copy(barnes_road[3]) ] ]
 
-    result = list(FilterOnlyWaysWithTag(tag='surface', values=surfaces_paved).process(data))
+    result = list(FilterOnlyWaysWithTag(tag='surface', values=surfaces_paved, include_ways_missing_tag=True).process(data))
 
     assert(result == expected_result)
     assert(len(result) == 2)
