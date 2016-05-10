@@ -109,41 +109,33 @@ def old_mountain_road():
 @pytest.fixture
 def barnes_road():
     return [
-        { 'id': 100000,
-          'tags': {   'highway': 'residential',
-                      'name': 'Raymond Road',
+        { 'id': 300000,
+          'tags': {   'highway': 'unclassified',
+                      'name': 'Barnes Road',
                       'surface': 'asphalt'},
           'coords': [],   # Not used in this component, leaving empty for simplicity.
           'refs': []    # Not used in this component, leaving empty for simplicity.
         },
-        { 'id': 100001,
+        { 'id': 300001,
           'tags': {   'highway': 'unclassified',
-                      'name': 'Raymond Road'},
+                      'name': 'Barnes Road',
+                      'surface': 'gravel'},
           'coords': [],   # Not used in this component, leaving empty for simplicity.
           'refs': []    # Not used in this component, leaving empty for simplicity.
         },
-        { 'id': 100002,
+        { 'id': 300002,
           'tags': {   'highway': 'unclassified',
-                      'name': 'Raymond Road',
-                      'surface': 'concrete',
-                      'bridge': 'yes',
-                      'layer': 1},
+                      'name': 'Barnes Road'},
           'coords': [],   # Not used in this component, leaving empty for simplicity.
           'refs': []    # Not used in this component, leaving empty for simplicity.
         },
         { 'id': 100004,
           'tags': {   'highway': 'unclassified',
-                      'name': 'Raymond Road',
+                      'name': 'Barnes Road',
                       'surface': 'asphalt'},
           'coords': [],   # Not used in this component, leaving empty for simplicity.
           'refs': []    # Not used in this component, leaving empty for simplicity.
-        },
-        { 'id': 100005,
-          'tags': {   'highway': 'tertiary',
-                      'name': 'Raymond Road',},
-          'coords': [],   # Not used in this component, leaving empty for simplicity.
-          'refs': []    # Not used in this component, leaving empty for simplicity.
-        },
+        }
     ]
 
 @pytest.fixture
@@ -207,3 +199,33 @@ def test_no_surface_tag_unpaved_group(raymond_road, surfaces_unpaved):
     assert(result == expected_result)
     assert(len(result) == 1)
     assert(len(result[0]) == 5)
+
+def test_alternating_paved_unpaved_with_paved_group(barnes_road, surfaces_paved):
+    data = [barnes_road]
+    expected_result = [ [ copy(barnes_road[0]) ],
+                        [ copy(barnes_road[1]) ],
+                        [ copy(barnes_road[2]),
+                          copy(barnes_road[3]) ] ]
+
+    result = list(SplitCollectionsOnTag(tag='surface', group=surfaces_paved).process(data))
+
+    assert(result == expected_result)
+    assert(len(result) == 3)
+    assert(len(result[0]) == 1)
+    assert(len(result[1]) == 1)
+    assert(len(result[2]) == 2)
+
+def test_alternating_paved_unpaved_with_unpaved_group(barnes_road, surfaces_unpaved):
+    data = [barnes_road]
+    expected_result = [ [ copy(barnes_road[0]) ],
+                        [ copy(barnes_road[1]) ],
+                        [ copy(barnes_road[2]),
+                          copy(barnes_road[3]) ] ]
+
+    result = list(SplitCollectionsOnTag(tag='surface', group=surfaces_unpaved, exclude_ways_missing_tag=True).process(data))
+
+    assert(result == expected_result)
+    assert(len(result) == 3)
+    assert(len(result[0]) == 1)
+    assert(len(result[1]) == 1)
+    assert(len(result[2]) == 2)
