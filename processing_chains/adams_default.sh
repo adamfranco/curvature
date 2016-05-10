@@ -78,7 +78,11 @@ do
   # 2. Add 'length' fields to the data.
   # 3. Sort the items by their curvature value.
   # 3. Save the intermediate data.
-  $script_path/curvature-calculate $verbose $input_file \
+  $script_path/curvature-collect --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' $verbose $input_file \
+    | $script_path/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
+    | $script_path/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
+    | $script_path/curvature-pp add_segments \
+    | $script_path/curvature-pp add_curvature \
     | $script_path/curvature-pp add_length \
     | $script_path/curvature-pp sort --key curvature --direction DESC \
     > $temp_dir/$filename.msgpack
