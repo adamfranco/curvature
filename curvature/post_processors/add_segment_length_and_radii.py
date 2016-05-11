@@ -66,13 +66,15 @@ class AddSegmentLengthAndRadii(object):
             # Note that 1 is the first segment since we've already incremented i above.
             if i == 1:
                 first_segment['radius'] = r
-            # Otherwise, set the radius of the previous segment to the smaller radius of the two circumcircles it's a part of
+            # Otherwise, set the radius of the previous segment to the smaller radius of the two circumcircles it's a part of.
+            # An alternative implementation would be to average the radii or do some sort
+            # of weighted average, but I think I chose to use the shorter radius as curves
+            # are often followed by long straight-aways, and this method seemed to work well
+            # with the data.
             else:
                 if first_segment['radius'] > r:
                     first_segment['radius'] = r
 
-            first_segment['radius_b'] = r
             # If there is a second segment, set its initial radius to that of this first triangle.
             if second_segment:
                 second_segment['radius'] = r
-                second_segment['radius_a'] = r
