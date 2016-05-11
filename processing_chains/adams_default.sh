@@ -82,7 +82,8 @@ do
     | $script_path/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
     | $script_path/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
     | $script_path/curvature-pp add_segments \
-    | $script_path/curvature-pp add_curvature \
+    | $script_path/curvature-pp add_segment_curvature \
+    | $script_path/curvature-pp filter_segment_deflections \
     | $script_path/curvature-pp add_length \
     | $script_path/curvature-pp sort --key curvature --direction DESC \
     > $temp_dir/$filename.msgpack
