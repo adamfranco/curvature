@@ -22,19 +22,24 @@ class AddSegmentCurvature(object):
                 if 'segments' not in way:
                     raise ValueError('Required "segments" not found in way. Add them with `curvature-pp add_segments` before using this processor.')
                 for segment in way['segments']:
-                    segment['curvature'] = self.curvature_for_segment(segment)
+                    self.add_curvature_to_segment(segment)
             yield(collection)
 
-    def curvature_for_segment(self, segment):
+    def add_curvature_to_segment(self, segment):
         if 'length' not in segment or 'radius' not in segment:
             raise ValueError('Required "length" or "radius" not found in segment. Add them with `curvature-pp add_segment_length_and_radii` before using this processor.')
         if segment['radius'] < self.level_4_max_radius:
-            return segment['length'] * self.level_4_weight
+            segment['curvature_level'] = 4
+            segment['curvature'] = segment['length'] * self.level_4_weight
         elif segment['radius'] < self.level_3_max_radius:
-            return segment['length'] * self.level_3_weight
+            segment['curvature_level'] = 3
+            segment['curvature'] =  segment['length'] * self.level_3_weight
         elif segment['radius'] < self.level_2_max_radius:
-            return segment['length'] * self.level_2_weight
+            segment['curvature_level'] = 2
+            segment['curvature'] =  segment['length'] * self.level_2_weight
         elif segment['radius'] < self.level_1_max_radius:
-            return segment['length'] * self.level_1_weight
+            segment['curvature_level'] = 1
+            segment['curvature'] =  segment['length'] * self.level_1_weight
         else:
-            return 0
+            segment['curvature_level'] = 0
+            segment['curvature'] =  0
