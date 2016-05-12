@@ -11,14 +11,14 @@ def test_add_length():
 		'length': 5,
 	}
 	item = {
-		'segments': 
+		'segments':
 		[
 			first,
 			second,
 			third,
 		]
 	}
-	data = [item]
+	data = [[item]]
 	result = list(AddLength().process(data))
-	result_item = result[0]
+	result_item = result[0][0]
 	assert(result_item['length'] == 11)
