@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+import os
+import sys
+import codecs
+import msgpack
+import argparse
+from curvature.output import SurfaceKmlOutput
+
+parser = argparse.ArgumentParser(description='Output a KML file with segments colored by surface type.')
+parser.add_argument('--units', type=str, default='mi', choices=['mi', 'km'], help='Distance units in the output, km or mi Default: mi')
+args = parser.parse_args()
+
+# Set our output to default to UTF-8
+reload(sys)
+sys.setdefaultencoding('utf-8')
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+
+kml = SurfaceKmlOutput(args.units)
+kml.head(sys.stdout)
+
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+for item in unpacker:
+    kml.write_way(sys.stdout, item)
+
+kml.foot(sys.stdout)
