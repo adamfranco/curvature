@@ -22,7 +22,7 @@ class AddSegmentLengthAndRadii(object):
         # Special case: If only one segment, just use a static large 'straight'
         # radius, there is no curve.
         if len(segments) == 1:
-            segments[0]['radius'] == 1000000
+            segments[0]['radius'] = 1000000
 
         i = 0
         while i < len(segments):
