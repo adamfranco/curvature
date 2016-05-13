@@ -18,6 +18,8 @@ import argparse
 from curvature.collector import WayCollector
 import codecs
 import msgpack
+import time
+import resource
 
 # Set our output to default to UTF-8
 reload(sys)
@@ -45,8 +47,21 @@ for file in args.file:
         sys.stderr.write("\nLoading {}".format(file.name))
 
     collector.load_file(file.name)
+    if args.v:
+        total = len(collector.collections)
+        sys.stderr.write("\nStreaming data for {} collections. Each '.' is 1% complete\n".format(total))
+        if total < 100:
+            marker = 1
+        else:
+            marker = round(total/100)
+        i = 0
+        start_time = time.time()
     for collection in collector.collections:
         sys.stdout.write(msgpack.packb(collection))
+        if args.v:
+            i += 1
+            if not i % marker:
+                sys.stderr.write('.')
 
 if args.v:
-    sys.stderr.write("\ndone.\n")
+    sys.stderr.write('\nStreaming completed in {time:.1f} seconds. {mem:.1f}MB memory used.\n'.format(time=(time.time() - start_time), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))

@@ -61,7 +61,6 @@ class WayCollector(object):
         # status output
         if self.verbose:
             sys.stderr.write("\nJoining complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
-            sys.stderr.write("\nCalculating curvature, each '.' is 1% complete\n")
             sys.stderr.flush()
 
     def coords_callback(self, coords):
