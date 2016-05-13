@@ -88,6 +88,7 @@ do
     | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
     | $script_path/curvature-pp add_way_length \
     | $script_path/curvature-pp add_way_curvature \
+    | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
     | $script_path/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
     > $temp_dir/$filename.msgpack
 
@@ -120,7 +121,6 @@ do
   mkdir $temp_dir/$filename
   # Filter and write the KML.
   cat $temp_dir/$filename.msgpack \
-    | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
     | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
     > $temp_dir/$filename/doc.kml
   # Zip the KML into a KMZ
