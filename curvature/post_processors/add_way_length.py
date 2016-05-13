@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-class AddLength(object):
+class AddWayLength(object):
 	@classmethod
 	def parse(cls, argv):
 		return cls()
