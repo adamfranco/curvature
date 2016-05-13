@@ -218,6 +218,7 @@ class WayCollector(object):
                         elif collection[-1]['refs'][-1] == way['refs'][-1] and way['refs'][0] not in collection_refs:
                             collection_modified = True
                             way['refs'].reverse()
+                            way['coords'].reverse()
                             collection.append(way)
                             collection_refs = collection_refs + way['refs']
 
@@ -225,14 +226,15 @@ class WayCollector(object):
                         elif collection[0]['refs'][0] == way['refs'][-1] and way['refs'][0] not in collection_refs:
                             collection_modified = True
                             collection.insert(0, way)
-                            collection_refs = collection_refs + way['refs']
+                            collection_refs =  way['refs'] + collection_refs
 
                         # join to the beginning of the base in reverse order
                         elif collection[0]['refs'][0] == way['refs'][0] and way['refs'][-1] not in collection_refs:
                             collection_modified = True
                             way['refs'].reverse()
+                            way['coords'].reverse()
                             collection.insert(0, way)
-                            collection_refs = collection_refs + way['refs']
+                            collection_refs = way['refs'] + collection_refs
                         else:
                             unused_ways.append(way)
                     # Continue on joining the rest of the ways in this route.
