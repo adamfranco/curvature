@@ -17,6 +17,9 @@ class WayCollector(object):
 
     roads = []
 
+    def __init__(self, parser_class=OSMParser):
+        self.parser_class = parser_class
+
     def load_file(self, filename):
         # Reinitialize if we have a new file
         collections = []
@@ -28,7 +31,7 @@ class WayCollector(object):
         if self.verbose:
             sys.stderr.write("\nLoading ways, each '-' is 100 ways, each row is 10,000 ways\n")
 
-        p = OSMParser(ways_callback=self.ways_callback)
+        p = self.parser_class(ways_callback=self.ways_callback)
         p.parse(filename)
 
         # status output
@@ -41,7 +44,7 @@ class WayCollector(object):
             else:
                 self.coords_marker = round(total/100)
 
-        p = OSMParser(coords_callback=self.coords_callback)
+        p = self.parser_class(coords_callback=self.coords_callback)
         p.parse(filename)
 
         # status output
