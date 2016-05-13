@@ -2,7 +2,7 @@
 import math
 from curvature.geomath import distance_on_earth
 
-class AddSegmentLengthAndRadii(object):
+class AddSegmentLengthAndRadius(object):
 
     @classmethod
     def parse(cls, argv):

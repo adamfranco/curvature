@@ -1,5 +1,5 @@
 import pytest
-from curvature.post_processors.add_segment_length_and_radii import AddSegmentLengthAndRadii
+from curvature.post_processors.add_segment_length_and_radius import AddSegmentLengthAndRadius
 from copy import copy
 
 @pytest.fixture
@@ -91,7 +91,7 @@ def south_union_street_b():
 def test_add_to_a(south_union_street_a):
     data = [[south_union_street_a]]
 
-    result = list(AddSegmentLengthAndRadii().process(data))
+    result = list(AddSegmentLengthAndRadius().process(data))
     segments = result[0][0]['segments']
 
     # [{'end': [44.47606690000014, -73.20894139999983],
@@ -138,7 +138,7 @@ def test_add_to_a(south_union_street_a):
 def test_add_segments_to_both(south_union_street):
     data = [south_union_street]
 
-    result = list(AddSegmentLengthAndRadii().process(data))
+    result = list(AddSegmentLengthAndRadius().process(data))
 
     segments_a = result[0][0]['segments']
     # A
