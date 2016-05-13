@@ -99,7 +99,7 @@ do
   mkdir $temp_dir/$filename
   # Filter and write the KML.
   cat $temp_dir/$filename.msgpack \
-    | $script_path/curvature-pp filter_curvature --min 1000 \
+    | $script_path/curvature-pp filter_collections_by_curvature --min 1000 \
     | $script_path/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
     > $temp_dir/$filename/doc.kml
   # Zip the KML into a KMZ
@@ -118,7 +118,7 @@ do
   mkdir $temp_dir/$filename
   # Filter and write the KML.
   cat $temp_dir/$filename.msgpack \
-    | $script_path/curvature-pp filter_curvature --min 300 \
+    | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
     | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
     > $temp_dir/$filename/doc.kml
   # Zip the KML into a KMZ
@@ -137,7 +137,7 @@ do
   mkdir $temp_dir/$filename
   # Filter and write the KML.
   cat $temp_dir/$filename.msgpack \
-     | $script_path/curvature-pp filter_curvature --min 1000 \
+     | $script_path/curvature-pp filter_collections_by_curvature --min 1000 \
      | $script_path/curvature-output-kml-curve-radius \
      > $temp_dir/$filename/doc.kml
   # Zip the KML into a KMZ

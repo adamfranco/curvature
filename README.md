@@ -69,7 +69,7 @@ be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature
   in the 300-600 range tend to be pleasant rather than exciting.
 
       cat vermont.msgpack \
-        | ./curvature-pp filter_curvature --min 300 \
+        | ./curvature-pp filter_collections_by_curvature --min 300 \
         | ./curvature-output-kml --min_curvature 300 --max_curvature 20000 \
         > vermont.c_300.kml
 
@@ -97,7 +97,7 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   roads listed will be very curvy.
 
       cat vermont.msgpack \
-        | ./curvature-pp filter_curvature --min 1000 \
+        | ./curvature-pp filter_collections_by_curvature --min 1000 \
         | ./curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
         > vermont.c_1000.kml
 
@@ -112,7 +112,7 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   while yellow, orange, and red segments do.
 
       cat vermont.msgpack \
-        | ./curvature-pp filter_curvature --min 1000 \
+        | ./curvature-pp filter_collections_by_curvature --min 1000 \
         | ./curvature-output-kml-curve-radius \
         > vermont.c_1000.curves.kml
 
