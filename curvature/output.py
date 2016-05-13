@@ -55,24 +55,25 @@ class KmlOutput(object):
         f.write('</Document>\n')
         f.write('</kml>\n')
 
-    def _record_bbox(self, way):
-        if not hasattr(self, 'min_lat') and 'segments' in way and len(way['segments']):
-            self.min_lat = way['segments'][0]['start'][0]
-            self.max_lat = way['segments'][0]['start'][0]
-            self.min_lon = way['segments'][0]['start'][1]
-            self.max_lon = way['segments'][0]['start'][1]
-        way_max_lat = self.get_way_max_lat(way)
-        if way_max_lat > self.max_lat:
-            self.max_lat = way_max_lat
-        way_min_lat = self.get_way_min_lat(way)
-        if way_min_lat < self.min_lat:
-            self.min_lat = way_min_lat
-        way_max_lon = self.get_way_max_lon(way)
-        if way_max_lon > self.max_lon:
-            self.max_lon = way_max_lon
-        way_min_lon = self.get_way_min_lon(way)
-        if way_min_lon < self.min_lon:
-            self.min_lon = way_min_lon
+    def _record_collection_bbox(self, collection):
+        for way in collection:
+            if not hasattr(self, 'min_lat') and 'segments' in way and len(way['segments']):
+                self.min_lat = way['segments'][0]['start'][0]
+                self.max_lat = way['segments'][0]['start'][0]
+                self.min_lon = way['segments'][0]['start'][1]
+                self.max_lon = way['segments'][0]['start'][1]
+            way_max_lat = self.get_way_max_lat(way)
+            if way_max_lat > self.max_lat:
+                self.max_lat = way_max_lat
+            way_min_lat = self.get_way_min_lat(way)
+            if way_min_lat < self.min_lat:
+                self.min_lat = way_min_lat
+            way_max_lon = self.get_way_max_lon(way)
+            if way_max_lon > self.max_lon:
+                self.max_lon = way_max_lon
+            way_min_lon = self.get_way_min_lon(way)
+            if way_min_lon < self.min_lon:
+                self.min_lon = way_min_lon
 
     def _write_region(self, f):
         if not hasattr(self, 'max_lat'):
@@ -111,6 +112,38 @@ class KmlOutput(object):
             self.store_way_region(way)
         return way['min_lon']
 
+    def get_collection_max_lat(self, collection):
+        max = self.get_way_max_lat(collection[0])
+        for i in range(1, len(collection)):
+            way_max = self.get_way_max_lat(collection[i])
+            if way_max > max:
+                max = way_max
+        return max
+
+    def get_collection_min_lat(self, collection):
+        min = self.get_way_min_lat(collection[0])
+        for i in range(1, len(collection)):
+            way_min = self.get_way_min_lat(collection[i])
+            if way_min < min:
+                min = way_min
+        return min
+
+    def get_collection_max_lon(self, collection):
+        max = self.get_way_max_lon(collection[0])
+        for i in range(1, len(collection)):
+            way_max = self.get_way_max_lon(collection[i])
+            if way_max > max:
+                max = way_max
+        return max
+
+    def get_collection_min_lon(self, collection):
+        min = self.get_way_min_lon(collection[0])
+        for i in range(1, len(collection)):
+            way_min = self.get_way_min_lon(collection[i])
+            if way_min < min:
+                min = way_min
+        return min
+
     def store_way_region(self, way):
         way['max_lat'] = way['segments'][0]['start'][0]
         way['min_lat'] = way['segments'][0]['start'][0]
@@ -129,22 +162,121 @@ class KmlOutput(object):
     def head (self, f):
         self._write_header(f)
 
-    def write_way(self, f, way):
-        self._record_bbox(way)
-        self._write_way(f, way)
+    def write_collection(self, f, collection):
+        self._record_collection_bbox(collection)
+        self._write_collection(f, collection)
 
     def foot (self, f):
         self._write_region(f)
         self._write_footer(f)
 
-    def get_description(self, way):
-        if self.units == 'km':
-            description = 'Curvature: %.2f\nDistance: %.2f km\n' % (way['curvature'], way['length'] / 1000)
-        else:
-            description = 'Curvature: %.2f\nDistance: %.2f mi\n' % (way['curvature'], way['length'] / 1609)
+    def get_collection_segments(self, collection):
+        segments = []
+        for way in collection:
+            for segment in way['segments']:
+                segments.append(segment)
+        return segments
 
-        description = description + 'Type: %s\nSurface: %s\n' % (way['type'], self.get_surfaces(way))
-        description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n\n%s\n' % (self.get_constituent_list(way), self.get_all_josm_link(way))
+    def get_collection_curvature(self, collection):
+        total = 0
+        for way in collection:
+            total += self.get_way_curvature(way)
+        return total
+
+    def get_way_curvature(self, way):
+        # Use an already-summed value if it exists on the way.
+        if 'curvature' in way:
+            return way['curvature']
+        # If not, sum the values of the segments
+        else:
+            total = 0
+            for segment in way['segments']:
+                total += segment['curvature']
+            return total
+
+    def get_collection_length(self, collection):
+        total = 0
+        for way in collection:
+            total += self.get_way_length(way)
+        return total
+
+    def get_way_length(self, way):
+        # Use an already-summed value if it exists on the way.
+        if 'length' in way:
+            return way['length']
+        # If not, sum the values of the segments
+        else:
+            total = 0
+            for segment in way['segments']:
+                total += segment['length']
+            return total
+
+    def get_length_weighted_collection_tags(self, collection, tag, value_if_empty=None):
+        values = {}
+        for way in collection:
+            if tag in way['tags']:
+                value = way['tags'][tag]
+            elif value_if_empty:
+                value = value_if_empty
+            else:
+                value = None
+            if value != None:
+                if not value in values:
+                    values[value] = 0
+                values[value] += self.get_way_length(way)
+        return sorted(values, key=values.__getitem__, reverse=True)
+
+    def get_shared_collection_refs(self, collection):
+        # If the first way doesn't have a ref tag, there is no way there will
+        # be one shared by all ways.
+        if not 'ref' in collection[0]['tags']:
+            return set()
+
+        # Beginning with the refs on our first way, check each way to find the refs
+        # that are common to all.
+        shared_refs = set(collection[0]['tags']['ref'].split(';'))
+        for i in range(1, len(collection)):
+            # If the any way doesn't have a ref tag, there is no way there will
+            # be one shared by all ways.
+            if not 'ref' in collection[i]['tags']:
+                return set()
+
+            # Reduce our shared_refs set to only those also in the next way.
+            shared_refs = shared_refs & set(collection[i]['tags']['ref'].split(';'))
+            # No need to look further if we have no shared_refs
+            if not shared_refs:
+                return shared_refs
+        return shared_refs
+
+    def get_collection_name(self, collection):
+        names = self.get_length_weighted_collection_tags(collection, 'name')
+        # See if we have any shared route-numbers.
+        refs = self.get_shared_collection_refs(collection)
+        if refs:
+            ref = ' / '.join(refs)
+        else:
+            ref = None
+        if names and ref:
+            return unicode('{} ({})').format(names[0], ref)
+        elif ref:
+            return unicode('{}').format(ref)
+        elif names:
+            return unicode('{}').format(names[0])
+        else:
+            return '{}'.format(collection[0]['id'])
+
+    def get_collection_description(self, collection):
+        curvature = self.get_collection_curvature(collection)
+        length = self.get_collection_length(collection)
+        if self.units == 'km':
+            description = 'Curvature: %.2f\nDistance: %.2f km\n' % (curvature, length / 1000)
+        else:
+            description = 'Curvature: %.2f\nDistance: %.2f mi\n' % (curvature, length / 1609)
+
+        highway_tags = self.get_length_weighted_collection_tags(collection, 'highway')
+        surface_tags = self.get_length_weighted_collection_tags(collection, 'surface', 'unknown')
+        description = description + 'Type: %s\nSurface: %s\n' % (', '.join(highway_tags), ', '.join(surface_tags))
+        description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n\n%s\n' % (self.get_constituent_list(collection), self.get_all_josm_link(collection))
         return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
 
     def get_surfaces(self, way):
@@ -157,36 +289,37 @@ class KmlOutput(object):
         else:
             return way['surface']
 
-    def get_all_josm_link(self, way):
+    def get_all_josm_link(self, collection):
         select = []
-        for c in self.get_constituents(way):
-            select.append('way%d' % c['id'])
-        josm_url ='http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=%s' % (self.get_way_min_lon(way) - 0.001, self.get_way_max_lon(way) + 0.001, self.get_way_max_lat(way) + 0.001, self.get_way_min_lat(way) - 0.001, ','.join(select))
+        for way in collection:
+            select.append('way%d' % way['id'])
+        josm_url ='http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=%s' % (self.get_collection_min_lon(collection) - 0.001, self.get_collection_max_lon(collection) + 0.001, self.get_collection_max_lat(collection) + 0.001, self.get_collection_min_lat(collection) - 0.001, ','.join(select))
         josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit all in JOSM</a>' % (josm_url)
-        coords_lat = ((self.get_way_max_lat(way) - self.get_way_min_lat(way))/2) + self.get_way_min_lat(way)
-        coords_lon = ((self.get_way_max_lon(way) - self.get_way_min_lon(way))/2) + self.get_way_min_lon(way)
+        coords_lat = ((self.get_collection_max_lat(collection) - self.get_collection_min_lat(collection))/2) + self.get_collection_min_lat(collection)
+        coords_lon = ((self.get_collection_max_lon(collection) - self.get_collection_min_lon(collection))/2) + self.get_collection_min_lon(collection)
         coords = '<a href="" onclick="if (this.nextSibling.style.display==\'inline\') {this.nextSibling.style.display=\'none\';} else { this.nextSibling.style.display=\'inline\'; this.nextSibling.select() } return false;">coords </a><input type="text" style="display: none;" value="%.5f,%.5f"/>' % (coords_lon, coords_lat)
         return josm_link + ', ' + coords
 
-    def get_constituent_list(self, way):
+    def get_constituent_list(self, collection):
         list = '<table style="width: 100%; text-align: center;">'
         list += '<tr><th>View</th><th>Surface</th><th>Actions</th></tr>'
-        for c in self.get_constituents(way):
-            view_link = '<a href="https://www.openstreetmap.org/way/%d">%d</a>' % (c['id'], c['id'])
-            josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(c) - 0.001, self.get_way_max_lon(c) + 0.001, self.get_way_max_lat(c) + 0.001, self.get_way_min_lat(c) - 0.001, c['id'])
+        for way in collection:
+            view_link = '<a href="https://www.openstreetmap.org/way/%d">%d</a>' % (way['id'], way['id'])
+            josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(way) - 0.001, self.get_way_max_lon(way) + 0.001, self.get_way_max_lat(way) + 0.001, self.get_way_min_lat(way) - 0.001, way['id'])
             josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit in JOSM</a>' % (josm_url)
-            coords_lat = ((self.get_way_max_lat(c) - self.get_way_min_lat(c))/2) + self.get_way_min_lat(c)
-            coords_lon = ((self.get_way_max_lon(c) - self.get_way_min_lon(c))/2) + self.get_way_min_lon(c)
-            web_edit_url = 'https://www.openstreetmap.org/edit?way=%d#map=16/%.4f/%.4f' % (c['id'], coords_lat, coords_lon)
+            coords_lat = ((self.get_way_max_lat(way) - self.get_way_min_lat(way))/2) + self.get_way_min_lat(way)
+            coords_lon = ((self.get_way_max_lon(way) - self.get_way_min_lon(way))/2) + self.get_way_min_lon(way)
+            web_edit_url = 'https://www.openstreetmap.org/edit?way=%d#map=16/%.4f/%.4f' % (way['id'], coords_lat, coords_lon)
             web_edit_link = '<a href="%s">Web Edit</a>' % (web_edit_url)
             coords = '<a href="" onclick="if (this.nextSibling.style.display==\'block\') {this.nextSibling.style.display=\'none\';} else { this.nextSibling.style.display=\'block\'; this.nextSibling.select() } return false;">coords</a><input type="text" style="display: none;" value="%.5f,%.5f"/>' % (coords_lon, coords_lat)
-            list += '<tr><td>%s</td><td>%s</td><td>%s, %s, %s</td></tr>' % (view_link, c['surface'], web_edit_link, josm_link, coords)
+            if 'surface' in way['tags']:
+                surface = way['tags']['surface']
+            else:
+                surface = 'unknown'
+            list += '<tr><td>%s</td><td>%s</td><td>%s, %s, %s</td></tr>' % (view_link, surface, web_edit_link, josm_link, coords)
 
         list += '</table>'
         return list
-
-    def get_constituents(self, way):
-        return way['constituents']
 
 class SingleColorKmlOutput(KmlOutput):
 
@@ -211,18 +344,19 @@ class SingleColorKmlOutput(KmlOutput):
 
         return styles
 
-    def _write_way(self, f, way):
-        if 'segments' not in way or not len(way['segments']):
+    def _write_collection(self, f, collection):
+        segments = self.get_collection_segments(collection)
+        if not len(segments):
 # 				sys.stderr.write("\nError: way has no segments: {} \n".format(way['name']))
             return
         f.write('	<Placemark>\n')
-        f.write('		<styleUrl>#' + self.line_style(way) + '</styleUrl>\n')
-        f.write('		<name>' + escape(str(way['name'])) + '</name>\n')
-        f.write('		<description><![CDATA[' + self.get_description(way) + ']]></description>\n')
+        f.write('		<styleUrl>#' + self.get_collection_line_style(collection) + '</styleUrl>\n')
+        f.write('		<name>' + escape(self.get_collection_name(collection)) + '</name>\n')
+        f.write('		<description><![CDATA[' + self.get_collection_description(collection) + ']]></description>\n')
         f.write('		<LineString>\n')
         f.write('			<tessellate>1</tessellate>\n')
         f.write('			<coordinates>')
-        self._write_segments(f, way['segments']);
+        self._write_segments(f, segments);
         f.write('</coordinates>\n')
         f.write('		</LineString>\n')
         f.write('	</Placemark>\n')
@@ -257,8 +391,9 @@ class SingleColorKmlOutput(KmlOutput):
 
         return level
 
-    def line_style(self, way):
-        return 'lineStyle{}'.format(self.level_for_curvature(way['curvature']))
+    def get_collection_line_style(self, collection):
+        return 'lineStyle{}'.format(
+            self.level_for_curvature(self.get_collection_curvature(collection)))
 
 
 class MultiColorKmlOutput(KmlOutput):
