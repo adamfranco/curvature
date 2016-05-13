@@ -37,16 +37,16 @@ collector = WayCollector()
 # Configure settings based on the command-line arguments
 collector.verbose = args.v
 if args.highway_types:
-	collector.roads = args.highway_types.split(',')
+    collector.roads = args.highway_types.split(',')
 
 # start parsing
 for file in args.file:
-	if args.v:
-		sys.stderr.write("\nLoading {}".format(file.name))
+    if args.v:
+        sys.stderr.write("\nLoading {}".format(file.name))
 
-	collector.load_file(file.name)
-	for collection in collector.collections:
-		sys.stdout.write(msgpack.packb(collection))
+    collector.load_file(file.name)
+    for collection in collector.collections:
+        sys.stdout.write(msgpack.packb(collection))
 
 if args.v:
-	sys.stderr.write("\ndone.\n")
+    sys.stderr.write("\ndone.\n")
