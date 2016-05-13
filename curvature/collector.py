@@ -1,7 +1,7 @@
 import sys
 import math
 import resource
-import copy
+from copy import copy
 import time
 from imposm.parser import OSMParser
 
@@ -216,11 +216,14 @@ class WayCollector(object):
                             collection_refs = collection_refs + way['refs']
                         # join to the end of the base in reverse order
                         elif collection[-1]['refs'][-1] == way['refs'][-1] and way['refs'][0] not in collection_refs:
+                            # Make a copy of the way before modifying it as it may be
+                            # a member of other routes that will be joined in a different sequence.
+                            way_copy = copy(way)
+                            way_copy['refs'] = list(reversed(way_copy['refs']))
+                            way_copy['coords'] = list(reversed(way_copy['coords']))
                             collection_modified = True
-                            way['refs'].reverse()
-                            way['coords'].reverse()
-                            collection.append(way)
-                            collection_refs = collection_refs + way['refs']
+                            collection.append(way_copy)
+                            collection_refs = collection_refs + way_copy['refs']
 
                         # join to the beginning of the base in order
                         elif collection[0]['refs'][0] == way['refs'][-1] and way['refs'][0] not in collection_refs:
@@ -230,11 +233,14 @@ class WayCollector(object):
 
                         # join to the beginning of the base in reverse order
                         elif collection[0]['refs'][0] == way['refs'][0] and way['refs'][-1] not in collection_refs:
+                            # Make a copy of the way before modifying it as it may be
+                            # a member of other routes that will be joined in a different sequence.
+                            way_copy = copy(way)
                             collection_modified = True
-                            way['refs'].reverse()
-                            way['coords'].reverse()
-                            collection.insert(0, way)
-                            collection_refs = way['refs'] + collection_refs
+                            way_copy['refs'] = list(reversed(way_copy['refs']))
+                            way_copy['coords'] = list(reversed(way_copy['coords']))
+                            collection.insert(0, way_copy)
+                            collection_refs = way_copy['refs'] + collection_refs
                         else:
                             unused_ways.append(way)
                     # Continue on joining the rest of the ways in this route.
