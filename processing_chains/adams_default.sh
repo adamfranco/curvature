@@ -86,7 +86,7 @@ do
     | $script_path/curvature-pp filter_segment_deflections \
     | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
     | $script_path/curvature-pp add_way_length \
-    | $script_path/curvature-pp sort --key curvature --direction DESC \
+    | $script_path/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
     > $temp_dir/$filename.msgpack
 
   # Output a KML file showing only the most twisty roads, those with a curvature
