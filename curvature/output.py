@@ -478,8 +478,15 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
     def get_constituents(self, way):
         return [way]
 
-    def line_style(self, way):
-        return way['surface']
+    def get_collection_line_style(self, collection):
+        if 'surface' in collection[0]['tags']:
+            return collection[0]['tags']['surface']
+        else:
+            return 'unknown'
+
+    def _write_collection(self, f, collection):
+        for way in collection:
+            super(SurfaceKmlOutput, self)._write_collection(f, [way])
 
     def get_filename(self, basename, extension):
         filename = basename + '.surfaces'

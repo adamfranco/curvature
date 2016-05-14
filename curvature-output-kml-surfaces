@@ -22,7 +22,7 @@ kml = SurfaceKmlOutput(args.units)
 kml.head(sys.stdout)
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
-for item in unpacker:
-    kml.write_way(sys.stdout, item)
+for collection in unpacker:
+    kml.write_collection(sys.stdout, collection)
 
 kml.foot(sys.stdout)
