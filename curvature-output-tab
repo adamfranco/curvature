@@ -20,10 +20,31 @@ sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
 units = Units(args.units)
 
-sys.stdout.write("Curvature	Length (%s)\tDistance (%s)\tId\tName\tCounty\n" % (args.units, args.units))
+sys.stdout.write("Curvature\tLength (%s)\tId\tName\tCounty\tHighway\n" % (args.units))
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
-for item in unpacker:
-    sys.stdout.write("%d\t%9.2f\t%9.2f\t%10s\t%25s\t%20s\n" % (item['curvature'], units.convert(item['length']), units.convert(item['distance']), item['id'], item['name'], item['county']))
+for collection in unpacker:
+    for way in collection:
+        if 'curvature' in way:
+            curvature = way['curvature']
+        else:
+            curvature = 0
+        if 'length' in way:
+            length = way['length']
+        else:
+            length = 0
+        if 'name' in way['tags']:
+            name = way['tags']['name']
+        else:
+            name = ''
+        if 'highway' in way['tags']:
+            highway = way['tags']['highway']
+        else:
+            highway = ''
+        if 'county' in way['tags']:
+            county = way['tags']['county']
+        else:
+            county = ''
+        sys.stdout.write("%d\t%9.2f\t%10s\t%25s\t%20s\t%20s\n" % (curvature, units.convert(length), way['id'], name, highway, county))
 
 sys.stdout.write("\n")
