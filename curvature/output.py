@@ -488,6 +488,19 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
         for way in collection:
             super(SurfaceKmlOutput, self)._write_collection(f, [way])
 
+    def get_collection_description(self, collection):
+        if 'highway' in collection[0]['tags']:
+            highway = collection[0]['tags']['highway']
+        else:
+            highway = ''
+        if 'surface' in collection[0]['tags']:
+            surface = collection[0]['tags']['surface']
+        else:
+            surface = 'unknown'
+        description = 'Type: %s\nSurface: %s\n' % (highway, surface)
+        description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n' % (self.get_constituent_list(collection))
+        return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
+
     def get_filename(self, basename, extension):
         filename = basename + '.surfaces'
         if self.filter.min_length > 0 or self.filter.max_length > 0:

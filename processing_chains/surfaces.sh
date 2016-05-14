@@ -81,8 +81,9 @@ do
   # 2. Add 'length' fields to the data.
   # 3. Sort the items by their curvature value.
   # 3. Output a KML file showing the surfaces for all roads.
-  $script_path/curvature-calculate --ignored_surfaces '' --straight_segment_split_threshold 0 $verbose $input_file \
-    | $script_path/curvature-pp add_length \
+  $script_path/curvature-collect --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' $verbose $input_file \
+    | $script_path/curvature-pp add_segments \
+    | $script_path/curvature-pp add_segment_length_and_radius \
     | $script_path/curvature-output-kml-surfaces \
     > $temp_dir/$filename/doc.kml
   # Zip the KML into a KMZ

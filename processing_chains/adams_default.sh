@@ -74,8 +74,14 @@ do
   filename=`basename -s .osm $filename`
 
   # Take the following processing steps first:
-  # 1. Calculate the curvature
-  # 2. Add 'length' fields to the data.
+  # 1. Collect the highway ways and their points into collections.
+  # 2. Filter out unpaved ways and highway types we aren't interested in.
+  # 3. Add segments and their lengths & radii.
+  # 4. Calculate the curvature and filter curvature values for "deflections" (noisy data)
+  # 5. Split our collections on long straight-aways (longer than 1.5 miles) to avoid
+  #    highlighting long straight roads with infrequent curvy-sections.
+  # 6. Sum the length and curvature of the sections in each way for reuse.
+  # 7. Filter out collections not meeting our minimum curvature thresholds.
   # 3. Sort the items by their curvature value.
   # 3. Save the intermediate data.
   $script_path/curvature-collect --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' $verbose $input_file \
