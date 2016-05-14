@@ -41,6 +41,7 @@ pushd `dirname $0` > /dev/null
 my_path=`pwd -P`
 popd > /dev/null
 script_path=`dirname $my_path`
+script_path="${script_path}/bin"
 
 ##
 # Allow the user to configure our variables via command-line options.
