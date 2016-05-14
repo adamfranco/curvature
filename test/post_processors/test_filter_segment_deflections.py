@@ -1,6 +1,6 @@
 import pytest
 from curvature.post_processors.filter_segment_deflections import FilterSegmentDeflections
-from curvature.post_processors.add_segment_length_and_radii import AddSegmentLengthAndRadii
+from curvature.post_processors.add_segment_length_and_radius import AddSegmentLengthAndRadius
 from curvature.post_processors.add_segment_curvature import AddSegmentCurvature
 from copy import copy
 
