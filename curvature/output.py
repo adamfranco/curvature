@@ -406,14 +406,16 @@ class MultiColorKmlOutput(KmlOutput):
         f.write('		</ListStyle>\n')
         f.write('	</Style>\n')
 
-    def _write_way(self, f, way):
+    def _write_collection(self, f, collection):
+        segments = self.get_collection_segments(collection)
+
         f.write('	<Folder>\n')
         f.write('		<styleUrl>#folderStyle</styleUrl>\n')
-        f.write('		<name>' + escape(str(way['name'])) + '</name>\n')
-        f.write('		<description><![CDATA[' + self.get_description(way) + ']]></description>\n')
+        f.write('		<name>' + escape(self.get_collection_name(collection)) + '</name>\n')
+        f.write('		<description><![CDATA[' + self.get_collection_description(collection) + ']]></description>\n')
         current_curvature_level = 0
         i = 0
-        for segment in way['segments']:
+        for segment in segments:
             if segment['curvature_level'] != current_curvature_level or not i:
                 current_curvature_level = segment['curvature_level']
                 # Close the open LineString
