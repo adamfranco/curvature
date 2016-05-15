@@ -20,12 +20,14 @@ class WayCollector(object):
     def __init__(self, parser_class=OSMParser):
         self.parser_class = parser_class
 
-    def load_file(self, filename):
+    def parse(self, filename, callback):
         # Reinitialize if we have a new file
         collections = []
         coords = {}
         num_coords = 0
         num_ways = 0
+        if self.verbose:
+            sys.stderr.write("\nLoading {}".format(file.name))
 
         # status output
         if self.verbose:
@@ -65,6 +67,23 @@ class WayCollector(object):
         if self.verbose:
             sys.stderr.write("\nJoining complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
             sys.stderr.flush()
+
+        if self.verbose:
+            total = len(self.collections)
+            sys.stderr.write("\nStreaming data for {} collections. Each '.' is 1% complete\n".format(total))
+            if total < 100:
+                marker = 1
+            else:
+                marker = round(total/100)
+            i = 0
+            start_time = time.time()
+
+        for collection in self.collections:
+            callback(collection)
+            if self.verbose:
+                i += 1
+                if not i % marker:
+                    sys.stderr.write('.')
 
     def coords_callback(self, coords):
         # callback method for coords
