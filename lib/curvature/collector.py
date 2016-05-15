@@ -20,6 +20,7 @@ class WayCollector(object):
     def __init__(self, parser_class=OSMParser):
         self.parser_class = parser_class
 
+    # Parse an input file and pass each resulting collection to the callback function.
     def parse(self, filename, callback):
         # Reinitialize if we have a new file
         collections = []
@@ -68,6 +69,7 @@ class WayCollector(object):
             sys.stderr.write("\nJoining complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
             sys.stderr.flush()
 
+        # status output
         if self.verbose:
             total = len(self.collections)
             sys.stderr.write("\nStreaming data for {} collections. Each '.' is 1% complete\n".format(total))
@@ -78,8 +80,10 @@ class WayCollector(object):
             i = 0
             start_time = time.time()
 
+        # Send our collected data to our callback function.
         for collection in self.collections:
             callback(collection)
+            # status output
             if self.verbose:
                 i += 1
                 if not i % marker:
