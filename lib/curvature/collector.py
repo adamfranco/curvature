@@ -88,6 +88,8 @@ class WayCollector(object):
                 i += 1
                 if not i % marker:
                     sys.stderr.write('.')
+        if self.verbose:
+            sys.stderr.write('\nStreaming completed in {time:.1f} seconds. {mem:.1f}MB memory used.\n'.format(time=(time.time() - start_time), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
 
     def coords_callback(self, coords):
         # callback method for coords

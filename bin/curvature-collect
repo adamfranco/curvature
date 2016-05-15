@@ -53,6 +53,3 @@ for file in args.file:
         sys.stderr.write("\nLoading {}".format(file.name))
 
     collector.parse(file.name, output)
-
-if args.v:
-    sys.stderr.write('\nStreaming completed in {time:.1f} seconds. {mem:.1f}MB memory used.\n'.format(time=(time.time() - start_time), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
