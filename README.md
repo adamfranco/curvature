@@ -1,11 +1,11 @@
 ![Vermont Route 17](http://www2.adamfranco.com/curvature/images/Page_Mill_Rd.jpg)
 
-curvature.py
+Curvature
 ============
 
 Find roads that are the most curved or twisty based on [Open Street Map](http://www.openstreetmap.org/) (OSM) data.
 
-The goal of this script is to help those who enjoy twisty roads (such as
+The goal of this program is to help those who enjoy twisty roads (such as
 motorcycle or driving enthusiasts) to find promising roads that are not well known.
 It works by calculating a synthetic "curvature" parameter for each road segment
 (known as a "way" in OSM parlance) that represents how twisty that segment is.
@@ -45,12 +45,19 @@ Rendered curvature files generated with this program can be dowloaded from [adam
 
 Examples
 --------
-Below are links to some example KML files generated with curvature.py. Additional files can
+Below are links to some example KML files generated with Curvature. Additional files can
 be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/).
 
-* A basic KML file generated with default options using the
+* Pre-processing the [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf) file.
+
+      ./curvature-calculate -v vermont-latest.osm.pbf \
+        | ./curvature-pp add_length \
+        | ./curvature-pp sort --key curvature --direction DESC \
+        > vermont.msgpack
+
+* A basic KML file generated with a minimum curvature of 300 using the pre-processed
   [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
-  file.
+  file (above).
 
   This file includes all ways in the input file that have a curvature value greater than 300
   and are not marked as unpaved. As mentioned above, a curvature of 300 this means that these
@@ -61,7 +68,10 @@ be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature
   in a sea of otherwise bland options. While more curvy roads will also be included, roads
   in the 300-600 range tend to be pleasant rather than exciting.
 
-  `./curvature.py -v vermont-latest.osm.pbf`
+      cat vermont.msgpack \
+        | ./curvature-pp filter_collections_by_curvature --min 300 \
+        | ./curvature-output-kml --min_curvature 300 --max_curvature 20000 \
+        > vermont.c_300.kml
 
   [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.kmz)
 
@@ -73,9 +83,9 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   Head to [openstreetmap.org](http://www.openstreetmap.org/) and help tag roads with appropriate
   surfaces so that we can better filter our results.
 
-* A basic KML file generated with a minimum curvature of 1000 using the
+* A basic KML file generated with a minimum curvature of 1000 using the pre-processed
   [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
-  file.
+  file (above).
 
   This file includes all ways in the input file that have a curvature value greater than 1000
   and are not marked as unpaved. As mentioned above, a curvature of 1000 this means that these
@@ -86,32 +96,32 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   There will be many roads that are quite fun but don't quite make the cut, but all of the
   roads listed will be very curvy.
 
-  `./curvature.py -v --min_curvature 1000 vermont-latest.osm.pbf`
+      cat vermont.msgpack \
+        | ./curvature-pp filter_collections_by_curvature --min 1000 \
+        | ./curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
+        > vermont.c_1000.kml
 
   [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.kmz)
 
-* Multi-colored KML files generated with a minimum curvature of 1000 using the
+* Multi-colored KML files generated with a minimum curvature of 1000 using the pre-processed
   [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
-  file.
+  file (above).
 
   This file colors the ways listed in the second example based on curve radius.
   Zoom on corners to see the shading. Green segments do not contribute to the 'curvature' value
   while yellow, orange, and red segments do.
 
-  `./curvature.py -v --colorize --min_curvature 1000 vermont.osm.pbf`
+      cat vermont.msgpack \
+        | ./curvature-pp filter_collections_by_curvature --min 1000 \
+        | ./curvature-output-kml-curve-radius \
+        > vermont.c_1000.curves.kml
 
-  [vermont.c_1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.multicolor.kmz)  
+  [vermont.c_1000.curves.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.curves.kmz)  
 
-* A set of KML files of the roads in the San Francisco Bay area with a minimum curvature
-  of 1000 using the [california.osm.pbf](http://download.geofabrik.de/north-america/us/california-latest.osm.pbf)
-  file (after unzipping).
+* All of the commands above, combined into a single script `processing_chains/adams_defaults.sh`:
 
-  `./curvature.py -v --max_lat_bound 38.5 --min_lat_bound 36.5 --min_lon_bound -123.25 --max_lon_bound -121.0 --output_basename california-bay-area --min_curvature 1000 --add_kml colorize=1 california.osm.pbf`
-
-   [california-bay-area.1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/california-bay-area.1000.kml) ([view in Google Maps](http://goo.gl/maps/uU1R9))  
-   [california-bay-area.1000.multicolor.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/california-bay-area.1000.multicolor.kml)
-
-   What a smorgasbord!
+      mv vermont-latest.osm.pbf vermont.osm.pbf
+      ./processing_chains/adams_defaults.sh -v vermont.osm.pbf
 
 * More examples can be seen at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/)
 
@@ -139,28 +149,39 @@ to read `.pbf` files. You will need to download and install the Protocol Buffers
     make install
 
 *imposm.parser*
-curvature.py makes use of the `imposm.parser` which you can find at
+curvature makes use of the `imposm.parser` which you can find at
 [imposm.org](http://imposm.org/docs/imposm.parser/latest/install.html#installation) and installed
 with `pip` or `easy_install`:
 
     pip install imposm.parser
 
-or 
+or
 
     easy_install imposm.parser
 
+*msgpack*
+curvature makes use of `msgpack` which you can find at
+[python.org](https://pypi.python.org/pypi/msgpack-python) and installed
+with `pip` or `easy_install`:
+
+    pip install msgpack-python
+
+or
+
+    easy_install msgpack-python
+
 Curvature Installation
 ----------------------
-Once your Python environment set up and the `imposm.parser` module installed, just download the
-curvature.py script and run it:
+Once your Python environment set up and the `imposm.parser` and `msgpack-python` modules are installed, just download
+Curvature and run it:
 
     git clone https://github.com/adamfranco/curvature.git
     cd curvature
-    ./curvature.py --help
+    ./curvature-calculate --help
 
 Usage
 =====
-curvature.py works with Open Street Map (OSM) XML data files. While you can export these from a
+Curvature works with Open Street Map (OSM) XML data files. While you can export these from a
 small area directly from [openstreetmap.org](http://www.openstreetmap.org/) , you are limited to a
 small area with a limited number of points so that you don't overwhelm the OSM system. A better
 alternative is to download daily exports of OSM data for your region from
@@ -169,16 +190,15 @@ alternative is to download daily exports of OSM data for your region from
 This script was developed using downloads of the US state OSM data provided at:
 [download.geofabrik.de/openstreetmap](http://download.geofabrik.de/openstreetmap/north-america/us/)
 
-Once you have downloaded a .osm file that you wish to work with, you can run curvature.py with its
-default options:
+Once you have downloaded a .osm file that you wish to work with, you can run one of the the predefined processing changes with their default options:
 
-<code>./curvature.py -v vermont.osm.pbf</code>
+    ./processing_chains/adams_defaults.sh -v vermont.osm.pbf
 
-This will generate a vermont.osm.kml file that includes lines for all of the matched segments.
+This will generate a set of compressed KMZ files that includes lines for all of the matched segments.
 
 Use
 
-<code>./curvature.py -h</code>
+    ./processing_chains/adams_defaults.sh -h
 
 for more options.
 
@@ -186,10 +206,10 @@ Basic KML Output
 ----------
 Open the KML files in Google Earth. GoogleEarth can become overloaded with giant KML files, so the
 default mode is to generate a single placemark for each matching way that has a single-color
-line-string. On a reasonably modern compter even large files such as roads with curvature greater
+line-string. On a reasonably modern computer even large files such as roads with curvature greater
 than 300 in California can be rendered when formatted in this way.
 
-Colored KML Output
+Colored-curves KML Output
 --------------------
 Additionally, this script allows rendering of ways as a sequence of segments color-coded based on
 the curvature of each segment. These 'colorized' KML files provide a neat look at the radius of turns and are especially useful when tuning the radii and weights for each level to adjust which ways are matched. The color-coding is as follows: straight segments are green and the four levels of curves are color-coded from yellow to red with decreasing turn radii.
@@ -200,10 +220,9 @@ can easily handle smaller areas like Vermont with a curvature of 300, but larger
 California) may need to be trimmed down with a bounding box if you wish to make usable multicolor
 KML files.
 
-Multiple KML Outputs
+Building your own processing scripts
 --------------------
-Since KML generation is a tiny fraction of the overall execution time, you can use the `--add_kml` option to generate multiple KML files with different curvature limits, length limits, and color settings from the same parsing and calculation pass. Only curvature and length filters can be passed to `--add_kml` since road-surface and bounding-box filters are applied in the initial parsing pass. Still, the `--add_kml` option can allow you to generate several KML files at a time.
+The processing-chains in `curvature/processing_chains/` are just a few examples of ways to use this
+program. You can easily pipe output from one filter to the next to modify the data stream to your liking.
 
-Tabular Output
---------------
-You can pass the `-t` option (and optionally the `--no_kml` option) to output a tabular listing of the matching ways rather than generating KML files.
+@todo *Add more detail on writing filters and processing sequences.*

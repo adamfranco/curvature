@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+# curvature-collect
+#
+# Collect highway ways & their coordinates in the OSM file and sort them into ordered
+# lists of ways that make up a "road", joined by ref/name.
+#
+#
+# Author: Adam Franco
+# https://github.com/adamfranco/curvature
+# Copyright 2012 Adam Franco
+# License: GNU General Public License Version 3 or later
+
+import os
+import sys
+
+# Add our parent folder to our path
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lib'))
+
+import argparse
+from curvature.collector import WayCollector
+import codecs
+import msgpack
+import time
+import resource
+
+# Set our output to default to UTF-8
+reload(sys)
+sys.setdefaultencoding('utf-8')
+# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+
+parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
+parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
+parser.add_argument('--highway_types', type=str, default='', help='a list of the highway types that should be included. The default is empty, which will include a ways with a \'highway\' tag.')
+parser.add_argument('file', type=argparse.FileType('r'), nargs='+', help='the input file. Should be an OSM XML file or PBF file.')
+args = parser.parse_args()
+
+# Instantiate our collector
+collector = WayCollector()
+
+# Configure settings based on the command-line arguments
+collector.verbose = args.v
+if args.highway_types:
+    collector.roads = args.highway_types.split(',')
+
+# start parsing
+for file in args.file:
+    if args.v:
+        sys.stderr.write("\nLoading {}".format(file.name))
+
+    collector.load_file(file.name)
+    if args.v:
+        total = len(collector.collections)
+        sys.stderr.write("\nStreaming data for {} collections. Each '.' is 1% complete\n".format(total))
+        if total < 100:
+            marker = 1
+        else:
+            marker = round(total/100)
+        i = 0
+        start_time = time.time()
+    for collection in collector.collections:
+        sys.stdout.write(msgpack.packb(collection))
+        if args.v:
+            i += 1
+            if not i % marker:
+                sys.stderr.write('.')
+
+if args.v:
+    sys.stderr.write('\nStreaming completed in {time:.1f} seconds. {mem:.1f}MB memory used.\n'.format(time=(time.time() - start_time), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
