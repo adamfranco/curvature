@@ -138,9 +138,7 @@ class WayCollector(object):
         # Add to joinable-ways.
         for route, ways in self.routes.iteritems():
             for way in ways:
-                way['coords'] = []
-                for ref in way['refs']:
-                    way['coords'].append(self.coords[ref])
+                way['coords'] = map(lambda ref: self.coords[ref], way['refs'])
             # status output
             if self.verbose:
                 i = i + 1
@@ -151,9 +149,7 @@ class WayCollector(object):
         # Add to un-joinable ways.
         for collection in self.collections:
             for way in collection:
-                way['coords'] = []
-                for ref in way['refs']:
-                    way['coords'].append(self.coords[ref])
+                way['coords'] = map(lambda ref: self.coords[ref], way['refs'])
             # status output
             if self.verbose:
                 i = i + 1
