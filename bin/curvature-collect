@@ -49,7 +49,4 @@ def output(collection):
     sys.stdout.write(msgpack.packb(collection))
 # start parsing
 for file in args.file:
-    if args.v:
-        sys.stderr.write("\nLoading {}".format(file.name))
-
     collector.parse(file.name, output)

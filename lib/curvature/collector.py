@@ -12,84 +12,50 @@ class WayCollector(object):
     coords = {}
     num_coords = 0
     num_ways = 0
-
     verbose = False
-
     roads = []
 
     def __init__(self, parser_class=OSMParser):
         self.parser_class = parser_class
 
-    # Parse an input file and pass each resulting collection to the callback function.
+    def log(self, msg):
+        if self.verbose:
+            sys.stderr.write("{}\t{mem:.1f}MB\n".format(msg, mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+            sys.stderr.flush()
+
     def parse(self, filename, callback):
         # Reinitialize if we have a new file
         collections = []
         coords = {}
         num_coords = 0
         num_ways = 0
-        if self.verbose:
-            sys.stderr.write("\nLoading {}".format(file.name))
-
-        # status output
-        if self.verbose:
-            sys.stderr.write("\nLoading ways, each '-' is 100 ways, each row is 10,000 ways\n")
+        start_time = time.time()
+        self.log("Loading {}".format(filename))
+        self.log("Loading ways, each '-' is 100 ways, each row is 10,000 ways")
 
         p = self.parser_class(ways_callback=self.ways_callback)
         p.parse(filename)
 
-        # status output
-        if self.verbose:
-            sys.stderr.write("\nWays matched in {} {mem:.1f}MB memory used,\n{} coordinates will be loaded, each '.' is 1% complete\n".format(filename, len(self.coords), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+        self.log("\nWays matched in {}".format(filename))
+        self.log("{} coordinates will be loaded, each '.' is 1% complete".format(len(self.coords)))
 
-            total = len(self.coords)
-            if total < 100:
-                self.coords_marker = 1
-            else:
-                self.coords_marker = round(total/100)
+        total = len(self.coords)
+        if total < 100:
+            self.coords_marker = 1
+        else:
+            self.coords_marker = round(total/100)
 
         p = self.parser_class(coords_callback=self.coords_callback)
         p.parse(filename)
-
-        # status output
-        if self.verbose:
-            sys.stderr.write("\nCoordinates loaded {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
-            sys.stderr.flush()
-
+        self.log("\nCoordinates loaded")
         self.apply_coordinates()
-
-        # status output
-        if self.verbose:
-            sys.stderr.write("\nApplying coordinates to ways complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
-
-        # Join routes end-to-end and add them to the way list.
+        self.log("\nApplying coordinates to ways complete")
         self.join_ways()
-
-        # status output
-        if self.verbose:
-            sys.stderr.write("\nJoining complete. {mem:.1f}MB memory used.".format(mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
-            sys.stderr.flush()
-
-        # status output
-        if self.verbose:
-            total = len(self.collections)
-            sys.stderr.write("\nStreaming data for {} collections. Each '.' is 1% complete\n".format(total))
-            if total < 100:
-                marker = 1
-            else:
-                marker = round(total/100)
-            i = 0
-            start_time = time.time()
 
         # Send our collected data to our callback function.
         for collection in self.collections:
             callback(collection)
-            # status output
-            if self.verbose:
-                i += 1
-                if not i % marker:
-                    sys.stderr.write('.')
-        if self.verbose:
-            sys.stderr.write('\nStreaming completed in {time:.1f} seconds. {mem:.1f}MB memory used.\n'.format(time=(time.time() - start_time), mem=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576))
+        self.log('Streaming completed in {time:.1f}'.format(time=(time.time() - start_time)))
 
     def coords_callback(self, coords):
         # callback method for coords
@@ -153,16 +119,14 @@ class WayCollector(object):
     # Add the coordinates to each way.
     def apply_coordinates(self):
         # status output
-        if self.verbose:
-            start_time = time.time()
-            i = 0
-            total = len(self.routes) + len(self.collections)
-            if total < 100:
-                marker = 1
-            else:
-                marker = round(total/100)
-            sys.stderr.write("\n{} routes & ways have their coordinates added. Each '.' is 1% complete\n".format(total))
-            sys.stderr.flush()
+        start_time = time.time()
+        i = 0
+        total = len(self.routes) + len(self.collections)
+        if total < 100:
+            marker = 1
+        else:
+            marker = round(total/100)
+        self.log("{} routes & ways have their coordinates added. Each '.' is 1% complete".format(total))
 
         # Add to joinable-ways.
         for route, route_data in self.routes.iteritems():
@@ -192,16 +156,14 @@ class WayCollector(object):
     # Join numbered/named routes end-to-end and add them to the way list.
     def join_ways(self):
         # status output
-        if self.verbose:
-            start_time = time.time()
-            i = 0
-            total = len(self.routes)
-            if total < 100:
-                marker = 1
-            else:
-                marker = round(total/100)
-            sys.stderr.write("\n{} routes will be joined, each '.' is 1% complete\n".format(total))
-            sys.stderr.flush()
+        start_time = time.time()
+        i = 0
+        total = len(self.routes)
+        if total < 100:
+            marker = 1
+        else:
+            marker = round(total/100)
+        self.log("{} routes will be joined, each '.' is 1% complete".format(total))
 
         for route, route_data in self.routes.iteritems():
             # Sort ways by OSM id so that joining always happens in the same order
@@ -278,5 +240,4 @@ class WayCollector(object):
                     ways = unused_ways
                 # Add this base way to our ways list
                 self.collections.append(collection)
-        if self.verbose:
-            sys.stderr.write('\nJoining completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
+        self.log('\nJoining completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
