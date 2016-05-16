@@ -8,7 +8,7 @@ class AddSegments(object):
 
     def process(self, iterable):
         for collection in iterable:
-            for way in collection:
+            for way in collection['ways']:
                 way['segments'] = []
                 i = 0
                 for coord in way['coords']:

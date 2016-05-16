@@ -99,10 +99,13 @@ def test_collector_road_a():
     collections = []
     collector.parse('doesnt_exist.pbf', callback=lambda collection: collections.append(collection))
     assert len(collections) == 1
-    assert len(collections[0]) == 5
+    assert len(collections[0]['ways']) == 5
+    assert collections[0]['join_type'] == 'name'
+    assert collections[0]['join_data'] == 'Road A'
+
 
     # Joining happened in ascending order.
-    if collections[0][0]['id'] == 10004:
+    if collections[0]['ways'][0]['id'] == 10004:
         expected_asc= [{'coords': [(-73.00009, 43.70009),
                                   (-73.0001, 43.7001),
                                   (-73.00011, 43.70011),
@@ -139,7 +142,7 @@ def test_collector_road_a():
                         'refs': [21, 22, 23, 24],
                         'tags': {'highway': 'unclassified', 'name': 'Road A'}}
                     ]
-        assert collections[0] == expected_asc, "If joined in ascending order, collection must match."
+        assert collections[0]['ways'] == expected_asc, "If joined in ascending order, collection must match."
     # joining happened in descending order
     else:
         expected_desc= [{'coords': [(-73.00024, 43.70024),
@@ -178,4 +181,4 @@ def test_collector_road_a():
                        'refs': [12, 11, 10, 9],
                        'tags': {'highway': 'unclassified', 'name': 'Road A'}}]
 
-        assert collections[0] == expected_desc, "If joined in descending order, collection must match."
+        assert collections[0]['ways'] == expected_desc, "If joined in descending order, collection must match."

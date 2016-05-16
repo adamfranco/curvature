@@ -14,7 +14,7 @@ class FilterSegmentDeflections(object):
     def process(self, iterable):
         for collection in iterable:
             all_segments = []
-            for way in collection:
+            for way in collection['ways']:
                 if 'segments' not in way:
                     raise ValueError('Required "segments" not found in way. Add them with `curvature-pp add_segments` before using this processor.')
                 all_segments = all_segments + way['segments']

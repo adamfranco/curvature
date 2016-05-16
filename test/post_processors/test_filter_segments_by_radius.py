@@ -30,9 +30,9 @@ def test_filter_radius_min():
             fourth,
         ]
     }
-    data = [[item]]
+    data = [{'ways': [item]}]
     result = list(FilterSegmentsByRadius(min=5).process(data))
-    result_item = result[0][0]
+    result_item = result[0]['ways'][0]
     assert([entry['radius'] for entry in result_item['segments']] == [2, 5, 1])
     assert(first['end'] == third['start'])
 
@@ -66,8 +66,8 @@ def test_filter_radius_max():
             fourth,
         ]
     }
-    data = [[item]]
+    data = [{'ways': [item]}]
     result = list(FilterSegmentsByRadius(max=4).process(data))
-    result_item = result[0][0]
+    result_item = result[0]['ways'][0]
     assert([entry['radius'] for entry in result_item['segments']] == [2, 4, 1])
     assert(second['end'] == fourth['start'])

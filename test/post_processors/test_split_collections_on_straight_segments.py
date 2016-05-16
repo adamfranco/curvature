@@ -136,7 +136,7 @@ def test_short_and_straight(road):
         segment['curvature_level'] = 0
         segment['curvature'] = 0
         segment['length'] = 100
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     expected_result = copy(data) # No changes expected.
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert(result == expected_result)
@@ -146,7 +146,7 @@ def test_long_and_straight(road):
         segment['curvature_level'] = 0
         segment['curvature'] = 0
         segment['length'] = 1000
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     expected_result = copy(data) # No changes expected.
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert(result == expected_result)
@@ -156,7 +156,7 @@ def test_short_and_curvy(road):
         segment['curvature_level'] = 1
         segment['curvature'] = 100
         segment['length'] = 100
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     expected_result = copy(data) # No changes expected.
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert(result == expected_result)
@@ -166,84 +166,84 @@ def test_long_and_curvy(road):
         segment['curvature_level'] = 1
         segment['curvature'] = 1000
         segment['length'] = 1000
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     expected_result = copy(data) # No changes expected.
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert(result == expected_result)
 
 def test_straight_in_the_middle(road):
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     road_copy = copy(road)
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert len(result) == 3, "The road should have been split into 3 collections"
 
     # Verify that the way id and tags are kept.
-    assert result[0][0]['id'] == 1000
-    assert result[1][0]['id'] == 1000
-    assert result[2][0]['id'] == 1000
-    assert result[0][0]['tags'] == {'name': 'Road A', 'highway': 'unclassified'}
-    assert result[1][0]['tags'] == {'name': 'Road A', 'highway': 'unclassified'}
-    assert result[2][0]['tags'] == {'name': 'Road A', 'highway': 'unclassified'}
+    assert result[0]['ways'][0]['id'] == 1000
+    assert result[1]['ways'][0]['id'] == 1000
+    assert result[2]['ways'][0]['id'] == 1000
+    assert result[0]['ways'][0]['tags'] == {'name': 'Road A', 'highway': 'unclassified'}
+    assert result[1]['ways'][0]['tags'] == {'name': 'Road A', 'highway': 'unclassified'}
+    assert result[2]['ways'][0]['tags'] == {'name': 'Road A', 'highway': 'unclassified'}
 
     # First collection should have 1 way with 4 segments & 5 coords/refs.
-    assert len(result[0][0]['segments']) == 4, "The first collection should have 4 segments"
-    assert len(result[0][0]['refs']) == 5, "The first collection should have 5 refs"
-    assert len(result[0][0]['coords']) == 5, "The first collection should have 5 coords"
-    assert result[0][0]['segments'][3] == road_copy['segments'][3]
-    assert result[0][0]['refs'][4] == road_copy['refs'][4]
-    assert result[0][0]['coords'][4] == road_copy['coords'][4]
+    assert len(result[0]['ways'][0]['segments']) == 4, "The first collection should have 4 segments"
+    assert len(result[0]['ways'][0]['refs']) == 5, "The first collection should have 5 refs"
+    assert len(result[0]['ways'][0]['coords']) == 5, "The first collection should have 5 coords"
+    assert result[0]['ways'][0]['segments'][3] == road_copy['segments'][3]
+    assert result[0]['ways'][0]['refs'][4] == road_copy['refs'][4]
+    assert result[0]['ways'][0]['coords'][4] == road_copy['coords'][4]
     # Ensure internal consistancy between coords and segement start/end.
-    assert result[0][0]['coords'][0] == result[0][0]['segments'][0]['start']
-    assert result[0][0]['coords'][1] == result[0][0]['segments'][0]['end']
-    assert result[0][0]['coords'][1] == result[0][0]['segments'][1]['start']
-    assert result[0][0]['coords'][2] == result[0][0]['segments'][1]['end']
-    assert result[0][0]['coords'][2] == result[0][0]['segments'][2]['start']
-    assert result[0][0]['coords'][3] == result[0][0]['segments'][2]['end']
-    assert result[0][0]['coords'][3] == result[0][0]['segments'][3]['start']
-    assert result[0][0]['coords'][4] == result[0][0]['segments'][3]['end']
+    assert result[0]['ways'][0]['coords'][0] == result[0]['ways'][0]['segments'][0]['start']
+    assert result[0]['ways'][0]['coords'][1] == result[0]['ways'][0]['segments'][0]['end']
+    assert result[0]['ways'][0]['coords'][1] == result[0]['ways'][0]['segments'][1]['start']
+    assert result[0]['ways'][0]['coords'][2] == result[0]['ways'][0]['segments'][1]['end']
+    assert result[0]['ways'][0]['coords'][2] == result[0]['ways'][0]['segments'][2]['start']
+    assert result[0]['ways'][0]['coords'][3] == result[0]['ways'][0]['segments'][2]['end']
+    assert result[0]['ways'][0]['coords'][3] == result[0]['ways'][0]['segments'][3]['start']
+    assert result[0]['ways'][0]['coords'][4] == result[0]['ways'][0]['segments'][3]['end']
 
     # Second collection should have 1 way with 2 segments & 3 coords/refs.
-    assert len(result[1][0]['segments']) == 2, "The second collection should have 2 segments"
-    assert len(result[1][0]['refs']) == 3, "The second collection should have 3 refs"
-    assert len(result[1][0]['coords']) == 3, "The second collection should have 3 coords"
+    assert len(result[1]['ways'][0]['segments']) == 2, "The second collection should have 2 segments"
+    assert len(result[1]['ways'][0]['refs']) == 3, "The second collection should have 3 refs"
+    assert len(result[1]['ways'][0]['coords']) == 3, "The second collection should have 3 coords"
     # Ensure internal consistancy between coords and segement start/end.
-    assert result[1][0]['coords'][0] == result[1][0]['segments'][0]['start']
-    assert result[1][0]['coords'][1] == result[1][0]['segments'][0]['end']
-    assert result[1][0]['coords'][1] == result[1][0]['segments'][1]['start']
-    assert result[1][0]['coords'][2] == result[1][0]['segments'][1]['end']
+    assert result[1]['ways'][0]['coords'][0] == result[1]['ways'][0]['segments'][0]['start']
+    assert result[1]['ways'][0]['coords'][1] == result[1]['ways'][0]['segments'][0]['end']
+    assert result[1]['ways'][0]['coords'][1] == result[1]['ways'][0]['segments'][1]['start']
+    assert result[1]['ways'][0]['coords'][2] == result[1]['ways'][0]['segments'][1]['end']
     # Check the absolute segement, coords, and refs against our source data.
-    assert result[1][0]['segments'][0] == road_copy['segments'][4]
-    assert result[1][0]['segments'][1] == road_copy['segments'][5]
-    assert result[1][0]['refs'][0] == road_copy['refs'][4]
-    assert result[1][0]['refs'][1] == road_copy['refs'][5]
-    assert result[1][0]['refs'][2] == road_copy['refs'][6]
-    assert result[1][0]['coords'][0] == road_copy['coords'][4]
-    assert result[1][0]['coords'][1] == road_copy['coords'][5]
-    assert result[1][0]['coords'][2] == road_copy['coords'][6]
+    assert result[1]['ways'][0]['segments'][0] == road_copy['segments'][4]
+    assert result[1]['ways'][0]['segments'][1] == road_copy['segments'][5]
+    assert result[1]['ways'][0]['refs'][0] == road_copy['refs'][4]
+    assert result[1]['ways'][0]['refs'][1] == road_copy['refs'][5]
+    assert result[1]['ways'][0]['refs'][2] == road_copy['refs'][6]
+    assert result[1]['ways'][0]['coords'][0] == road_copy['coords'][4]
+    assert result[1]['ways'][0]['coords'][1] == road_copy['coords'][5]
+    assert result[1]['ways'][0]['coords'][2] == road_copy['coords'][6]
 
     # Third collection should have 1 way with 3 segments & 4 coords/refs.
-    assert len(result[2][0]['segments']) == 3, "The third collection should have 3 segments"
-    assert len(result[2][0]['refs']) == 4, "The third collection should have 4 refs"
-    assert len(result[2][0]['coords']) == 4, "The third collection should have 4 coords"
+    assert len(result[2]['ways'][0]['segments']) == 3, "The third collection should have 3 segments"
+    assert len(result[2]['ways'][0]['refs']) == 4, "The third collection should have 4 refs"
+    assert len(result[2]['ways'][0]['coords']) == 4, "The third collection should have 4 coords"
     # Ensure internal consistancy between coords and segement start/end.
-    assert result[2][0]['coords'][0] == result[2][0]['segments'][0]['start']
-    assert result[2][0]['coords'][1] == result[2][0]['segments'][0]['end']
-    assert result[2][0]['coords'][1] == result[2][0]['segments'][1]['start']
-    assert result[2][0]['coords'][2] == result[2][0]['segments'][1]['end']
-    assert result[2][0]['coords'][2] == result[2][0]['segments'][2]['start']
-    assert result[2][0]['coords'][3] == result[2][0]['segments'][2]['end']
+    assert result[2]['ways'][0]['coords'][0] == result[2]['ways'][0]['segments'][0]['start']
+    assert result[2]['ways'][0]['coords'][1] == result[2]['ways'][0]['segments'][0]['end']
+    assert result[2]['ways'][0]['coords'][1] == result[2]['ways'][0]['segments'][1]['start']
+    assert result[2]['ways'][0]['coords'][2] == result[2]['ways'][0]['segments'][1]['end']
+    assert result[2]['ways'][0]['coords'][2] == result[2]['ways'][0]['segments'][2]['start']
+    assert result[2]['ways'][0]['coords'][3] == result[2]['ways'][0]['segments'][2]['end']
     # Check the absolute segement, coords, and refs against our source data.
-    assert result[2][0]['segments'][0] == road_copy['segments'][6]
-    assert result[2][0]['segments'][1] == road_copy['segments'][7]
-    assert result[2][0]['segments'][2] == road_copy['segments'][8]
-    assert result[2][0]['refs'][0] == road_copy['refs'][6]
-    assert result[2][0]['refs'][1] == road_copy['refs'][7]
-    assert result[2][0]['refs'][2] == road_copy['refs'][8]
-    assert result[2][0]['refs'][3] == road_copy['refs'][9]
-    assert result[2][0]['coords'][0] == road_copy['coords'][6]
-    assert result[2][0]['coords'][1] == road_copy['coords'][7]
-    assert result[2][0]['coords'][2] == road_copy['coords'][8]
-    assert result[2][0]['coords'][3] == road_copy['coords'][9]
+    assert result[2]['ways'][0]['segments'][0] == road_copy['segments'][6]
+    assert result[2]['ways'][0]['segments'][1] == road_copy['segments'][7]
+    assert result[2]['ways'][0]['segments'][2] == road_copy['segments'][8]
+    assert result[2]['ways'][0]['refs'][0] == road_copy['refs'][6]
+    assert result[2]['ways'][0]['refs'][1] == road_copy['refs'][7]
+    assert result[2]['ways'][0]['refs'][2] == road_copy['refs'][8]
+    assert result[2]['ways'][0]['refs'][3] == road_copy['refs'][9]
+    assert result[2]['ways'][0]['coords'][0] == road_copy['coords'][6]
+    assert result[2]['ways'][0]['coords'][1] == road_copy['coords'][7]
+    assert result[2]['ways'][0]['coords'][2] == road_copy['coords'][8]
+    assert result[2]['ways'][0]['coords'][3] == road_copy['coords'][9]
 
 def test_leading_straightaway(road):
     # Make the first segment a long straight away
@@ -252,31 +252,31 @@ def test_leading_straightaway(road):
     road['segments'][0]['curvature'] = 0
     road['segments'][0]['curvature_level'] = 0
 
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     road_copy = copy(road)
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert len(result) == 4, "The road should have been split into 4 collections"
 
     # First section
-    assert len(result[0][0]['segments']) == 2, "The first collection should have 2 segments"
-    assert result[0][0]['segments'][0] == road_copy['segments'][0]
-    assert result[0][0]['segments'][1] == road_copy['segments'][1]
+    assert len(result[0]['ways'][0]['segments']) == 2, "The first collection should have 2 segments"
+    assert result[0]['ways'][0]['segments'][0] == road_copy['segments'][0]
+    assert result[0]['ways'][0]['segments'][1] == road_copy['segments'][1]
 
     # second section
-    assert len(result[1][0]['segments']) == 2, "The second collection should have 2 segments"
-    assert result[1][0]['segments'][0] == road_copy['segments'][2]
-    assert result[1][0]['segments'][1] == road_copy['segments'][3]
+    assert len(result[1]['ways'][0]['segments']) == 2, "The second collection should have 2 segments"
+    assert result[1]['ways'][0]['segments'][0] == road_copy['segments'][2]
+    assert result[1]['ways'][0]['segments'][1] == road_copy['segments'][3]
 
     # third section
-    assert len(result[2][0]['segments']) == 2, "The third collection should have 2 segments"
-    assert result[2][0]['segments'][0] == road_copy['segments'][4]
-    assert result[2][0]['segments'][1] == road_copy['segments'][5]
+    assert len(result[2]['ways'][0]['segments']) == 2, "The third collection should have 2 segments"
+    assert result[2]['ways'][0]['segments'][0] == road_copy['segments'][4]
+    assert result[2]['ways'][0]['segments'][1] == road_copy['segments'][5]
 
     # fourth section
-    assert len(result[3][0]['segments']) == 3, "The fourth collection should have 3 segments"
-    assert result[3][0]['segments'][0] == road_copy['segments'][6]
-    assert result[3][0]['segments'][1] == road_copy['segments'][7]
-    assert result[3][0]['segments'][2] == road_copy['segments'][8]
+    assert len(result[3]['ways'][0]['segments']) == 3, "The fourth collection should have 3 segments"
+    assert result[3]['ways'][0]['segments'][0] == road_copy['segments'][6]
+    assert result[3]['ways'][0]['segments'][1] == road_copy['segments'][7]
+    assert result[3]['ways'][0]['segments'][2] == road_copy['segments'][8]
 
 def test_trailing_short_straightaway(road):
     # Make the first segment a long straight away
@@ -285,28 +285,28 @@ def test_trailing_short_straightaway(road):
     road['segments'][8]['curvature'] = 0
     road['segments'][8]['curvature_level'] = 0
 
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     road_copy = copy(road)
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert len(result) == 3, "The road should have been split into 3 collections"
 
     # First section
-    assert len(result[0][0]['segments']) == 4, "The first collection should have 4 segments"
-    assert result[0][0]['segments'][0] == road_copy['segments'][0]
-    assert result[0][0]['segments'][1] == road_copy['segments'][1]
-    assert result[0][0]['segments'][2] == road_copy['segments'][2]
-    assert result[0][0]['segments'][3] == road_copy['segments'][3]
+    assert len(result[0]['ways'][0]['segments']) == 4, "The first collection should have 4 segments"
+    assert result[0]['ways'][0]['segments'][0] == road_copy['segments'][0]
+    assert result[0]['ways'][0]['segments'][1] == road_copy['segments'][1]
+    assert result[0]['ways'][0]['segments'][2] == road_copy['segments'][2]
+    assert result[0]['ways'][0]['segments'][3] == road_copy['segments'][3]
 
     # second section
-    assert len(result[1][0]['segments']) == 2, "The second collection should have 2 segments"
-    assert result[1][0]['segments'][0] == road_copy['segments'][4]
-    assert result[1][0]['segments'][1] == road_copy['segments'][5]
+    assert len(result[1]['ways'][0]['segments']) == 2, "The second collection should have 2 segments"
+    assert result[1]['ways'][0]['segments'][0] == road_copy['segments'][4]
+    assert result[1]['ways'][0]['segments'][1] == road_copy['segments'][5]
 
     # third section
-    assert len(result[2][0]['segments']) == 3, "The third collection should have 3 segments"
-    assert result[2][0]['segments'][0] == road_copy['segments'][6]
-    assert result[2][0]['segments'][1] == road_copy['segments'][7]
-    assert result[2][0]['segments'][2] == road_copy['segments'][8]
+    assert len(result[2]['ways'][0]['segments']) == 3, "The third collection should have 3 segments"
+    assert result[2]['ways'][0]['segments'][0] == road_copy['segments'][6]
+    assert result[2]['ways'][0]['segments'][1] == road_copy['segments'][7]
+    assert result[2]['ways'][0]['segments'][2] == road_copy['segments'][8]
 
 def test_trailing_long_straightaway(road):
     # Make the first segment a long straight away
@@ -315,31 +315,31 @@ def test_trailing_long_straightaway(road):
     road['segments'][8]['curvature'] = 0
     road['segments'][8]['curvature_level'] = 0
 
-    data = [[road]]
+    data = [{'join_type': 'none', 'ways': [road]}]
     road_copy = copy(road)
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert len(result) == 4, "The road should have been split into 4 collections"
 
     # First section
-    assert len(result[0][0]['segments']) == 4, "The first collection should have 4 segments"
-    assert result[0][0]['segments'][0] == road_copy['segments'][0]
-    assert result[0][0]['segments'][1] == road_copy['segments'][1]
-    assert result[0][0]['segments'][2] == road_copy['segments'][2]
-    assert result[0][0]['segments'][3] == road_copy['segments'][3]
+    assert len(result[0]['ways'][0]['segments']) == 4, "The first collection should have 4 segments"
+    assert result[0]['ways'][0]['segments'][0] == road_copy['segments'][0]
+    assert result[0]['ways'][0]['segments'][1] == road_copy['segments'][1]
+    assert result[0]['ways'][0]['segments'][2] == road_copy['segments'][2]
+    assert result[0]['ways'][0]['segments'][3] == road_copy['segments'][3]
 
     # second section
-    assert len(result[1][0]['segments']) == 2, "The second collection should have 2 segments"
-    assert result[1][0]['segments'][0] == road_copy['segments'][4]
-    assert result[1][0]['segments'][1] == road_copy['segments'][5]
+    assert len(result[1]['ways'][0]['segments']) == 2, "The second collection should have 2 segments"
+    assert result[1]['ways'][0]['segments'][0] == road_copy['segments'][4]
+    assert result[1]['ways'][0]['segments'][1] == road_copy['segments'][5]
 
     # third section
-    assert len(result[2][0]['segments']) == 2, "The third collection should have 2 segments"
-    assert result[2][0]['segments'][0] == road_copy['segments'][6]
-    assert result[2][0]['segments'][1] == road_copy['segments'][7]
+    assert len(result[2]['ways'][0]['segments']) == 2, "The third collection should have 2 segments"
+    assert result[2]['ways'][0]['segments'][0] == road_copy['segments'][6]
+    assert result[2]['ways'][0]['segments'][1] == road_copy['segments'][7]
 
     # fourth section
-    assert len(result[3][0]['segments']) == 1, "The fourth collection should have 1 segments"
-    assert result[3][0]['segments'][0] == road_copy['segments'][8]
+    assert len(result[3]['ways'][0]['segments']) == 1, "The fourth collection should have 1 segments"
+    assert result[3]['ways'][0]['segments'][0] == road_copy['segments'][8]
 
 def test_trailing_short_straightaway_with_second_straight_way(road, road_b):
     # Make the first segment a long straight away
@@ -354,41 +354,41 @@ def test_trailing_short_straightaway_with_second_straight_way(road, road_b):
         segment['curvature'] = 0
         segment['length'] = 1000
 
-    data = [[road, road_b]]
+    data = [{'join_type': 'magic', 'ways': [road, road_b]}]
     road_copy = copy(road)
     road_b_copy = copy(road_b)
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert len(result) == 4, "The road should have been split into 4 collections"
 
     # First section
-    assert len(result[0][0]['segments']) == 4, "The first collection should have 4 segments"
-    assert result[0][0]['segments'][0] == road_copy['segments'][0]
-    assert result[0][0]['segments'][1] == road_copy['segments'][1]
-    assert result[0][0]['segments'][2] == road_copy['segments'][2]
-    assert result[0][0]['segments'][3] == road_copy['segments'][3]
+    assert len(result[0]['ways'][0]['segments']) == 4, "The first collection should have 4 segments"
+    assert result[0]['ways'][0]['segments'][0] == road_copy['segments'][0]
+    assert result[0]['ways'][0]['segments'][1] == road_copy['segments'][1]
+    assert result[0]['ways'][0]['segments'][2] == road_copy['segments'][2]
+    assert result[0]['ways'][0]['segments'][3] == road_copy['segments'][3]
 
     # second section
-    assert len(result[1][0]['segments']) == 2, "The second collection should have 2 segments"
-    assert result[1][0]['segments'][0] == road_copy['segments'][4]
-    assert result[1][0]['segments'][1] == road_copy['segments'][5]
+    assert len(result[1]['ways'][0]['segments']) == 2, "The second collection should have 2 segments"
+    assert result[1]['ways'][0]['segments'][0] == road_copy['segments'][4]
+    assert result[1]['ways'][0]['segments'][1] == road_copy['segments'][5]
 
     # third section
-    assert len(result[2][0]['segments']) == 2, "The third collection should have 2 segments"
-    assert result[2][0]['segments'][0] == road_copy['segments'][6]
-    assert result[2][0]['segments'][1] == road_copy['segments'][7]
+    assert len(result[2]['ways'][0]['segments']) == 2, "The third collection should have 2 segments"
+    assert result[2]['ways'][0]['segments'][0] == road_copy['segments'][6]
+    assert result[2]['ways'][0]['segments'][1] == road_copy['segments'][7]
 
     # fourth section
-    assert len(result[3]) == 2, "The fourth collection should have 2 ways"
-    assert len(result[3][0]['segments']) == 1, "The fourth collection's first way should have 1 segment"
-    assert result[3][0]['segments'][0] == road_copy['segments'][8]
-    assert len(result[3][1]['segments']) == 4, "The fourth collection's second way should have 4 segments"
-    assert result[3][1]['segments'][0] == road_b_copy['segments'][0]
-    assert result[3][1]['segments'][1] == road_b_copy['segments'][1]
-    assert result[3][1]['segments'][2] == road_b_copy['segments'][2]
-    assert result[3][1]['segments'][3] == road_b_copy['segments'][3]
+    assert len(result[3]['ways']) == 2, "The fourth collection should have 2 ways"
+    assert len(result[3]['ways'][0]['segments']) == 1, "The fourth collection's first way should have 1 segment"
+    assert result[3]['ways'][0]['segments'][0] == road_copy['segments'][8]
+    assert len(result[3]['ways'][1]['segments']) == 4, "The fourth collection's second way should have 4 segments"
+    assert result[3]['ways'][1]['segments'][0] == road_b_copy['segments'][0]
+    assert result[3]['ways'][1]['segments'][1] == road_b_copy['segments'][1]
+    assert result[3]['ways'][1]['segments'][2] == road_b_copy['segments'][2]
+    assert result[3]['ways'][1]['segments'][3] == road_b_copy['segments'][3]
 
-    assert result[3][1]['coords'][0] == road_b_copy['coords'][0]
-    assert result[3][1]['coords'][-1] == road_b_copy['coords'][-1]
+    assert result[3]['ways'][1]['coords'][0] == road_b_copy['coords'][0]
+    assert result[3]['ways'][1]['coords'][-1] == road_b_copy['coords'][-1]
 
 def test_trailing_short_straightaway_with_second_way(road, road_b):
     # Make the first segment a long straight away
@@ -397,39 +397,39 @@ def test_trailing_short_straightaway_with_second_way(road, road_b):
     road['segments'][8]['curvature'] = 0
     road['segments'][8]['curvature_level'] = 0
 
-    data = [[road, road_b]]
+    data = [{'join_type': 'magic', 'ways': [road, road_b]}]
     road_copy = copy(road)
     road_b_copy = copy(road_b)
     result = list(SplitCollectionsOnStraightSegments().process(data))
     assert len(result) == 5, "The road should have been split into 5 collections"
 
     # First section
-    assert len(result[0][0]['segments']) == 4, "The first collection should have 4 segments"
-    assert result[0][0]['segments'][0] == road_copy['segments'][0]
-    assert result[0][0]['segments'][1] == road_copy['segments'][1]
-    assert result[0][0]['segments'][2] == road_copy['segments'][2]
-    assert result[0][0]['segments'][3] == road_copy['segments'][3]
+    assert len(result[0]['ways'][0]['segments']) == 4, "The first collection should have 4 segments"
+    assert result[0]['ways'][0]['segments'][0] == road_copy['segments'][0]
+    assert result[0]['ways'][0]['segments'][1] == road_copy['segments'][1]
+    assert result[0]['ways'][0]['segments'][2] == road_copy['segments'][2]
+    assert result[0]['ways'][0]['segments'][3] == road_copy['segments'][3]
 
     # second section
-    assert len(result[1][0]['segments']) == 2, "The second collection should have 2 segments"
-    assert result[1][0]['segments'][0] == road_copy['segments'][4]
-    assert result[1][0]['segments'][1] == road_copy['segments'][5]
+    assert len(result[1]['ways'][0]['segments']) == 2, "The second collection should have 2 segments"
+    assert result[1]['ways'][0]['segments'][0] == road_copy['segments'][4]
+    assert result[1]['ways'][0]['segments'][1] == road_copy['segments'][5]
 
     # third section
-    assert len(result[2][0]['segments']) == 2, "The third collection should have 2 segments"
-    assert result[2][0]['segments'][0] == road_copy['segments'][6]
-    assert result[2][0]['segments'][1] == road_copy['segments'][7]
+    assert len(result[2]['ways'][0]['segments']) == 2, "The third collection should have 2 segments"
+    assert result[2]['ways'][0]['segments'][0] == road_copy['segments'][6]
+    assert result[2]['ways'][0]['segments'][1] == road_copy['segments'][7]
 
     # fourth section
-    assert len(result[3]) == 2, "The fourth collection should have 2 ways"
-    assert len(result[3][0]['segments']) == 1, "The fourth collection's first way should have 1 segment"
-    assert result[3][0]['segments'][0] == road_copy['segments'][8]
-    assert len(result[3][1]['segments']) == 2, "The fourth collection's second way should have 2 segments"
-    assert result[3][1]['segments'][0] == road_b_copy['segments'][0]
-    assert result[3][1]['segments'][1] == road_b_copy['segments'][1]
+    assert len(result[3]['ways']) == 2, "The fourth collection should have 2 ways"
+    assert len(result[3]['ways'][0]['segments']) == 1, "The fourth collection's first way should have 1 segment"
+    assert result[3]['ways'][0]['segments'][0] == road_copy['segments'][8]
+    assert len(result[3]['ways'][1]['segments']) == 2, "The fourth collection's second way should have 2 segments"
+    assert result[3]['ways'][1]['segments'][0] == road_b_copy['segments'][0]
+    assert result[3]['ways'][1]['segments'][1] == road_b_copy['segments'][1]
 
     # fifth section
-    assert len(result[4]) == 1, "The fifth collection should have 1 way"
-    assert len(result[4][0]['segments']) == 2, "The fifth collection's way should have 2 segments"
-    assert result[4][0]['segments'][0] == road_b_copy['segments'][2]
-    assert result[4][0]['segments'][1] == road_b_copy['segments'][3]
+    assert len(result[4]['ways']) == 1, "The fifth collection should have 1 way"
+    assert len(result[4]['ways'][0]['segments']) == 2, "The fifth collection's way should have 2 segments"
+    assert result[4]['ways'][0]['segments'][0] == road_b_copy['segments'][2]
+    assert result[4]['ways'][0]['segments'][1] == road_b_copy['segments'][3]

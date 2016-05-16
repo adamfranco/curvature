@@ -4,7 +4,7 @@ from copy import copy
 
 @pytest.fixture
 def south_union_street():
-    return [south_union_street_a(), south_union_street_b()]
+    return {'join_type': 'name', 'ways': [south_union_street_a(), south_union_street_b()]}
 
 @pytest.fixture
 def south_union_street_a():
@@ -89,10 +89,10 @@ def south_union_street_b():
 
 
 def test_add_to_a(south_union_street_a):
-    data = [[south_union_street_a]]
+    data = [{'ways': [south_union_street_a]}]
 
     result = list(AddSegmentLengthAndRadius().process(data))
-    segments = result[0][0]['segments']
+    segments = result[0]['ways'][0]['segments']
 
     # [{'end': [44.47606690000014, -73.20894139999983],
     #    'length': 133.9951171255431,
@@ -140,7 +140,7 @@ def test_add_segments_to_both(south_union_street):
 
     result = list(AddSegmentLengthAndRadius().process(data))
 
-    segments_a = result[0][0]['segments']
+    segments_a = result[0]['ways'][0]['segments']
     # A
     # [{'end': [44.47606690000014, -73.20894139999983],
     #    'length': 133.9951171255431,
@@ -183,7 +183,7 @@ def test_add_segments_to_both(south_union_street):
     # This last segment of the first way should now be just in the middle of the sequence.
     assert(1515 <= segments_a[3]['radius'] <= 6052)
 
-    segments_b = result[0][1]['segments']
+    segments_b = result[0]['ways'][1]['segments']
     # B
     # [{'end': [44.477370500000326, -73.20903419999996],
     #    'length': 9.17384496193589,

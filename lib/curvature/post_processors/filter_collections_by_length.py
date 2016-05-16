@@ -16,15 +16,19 @@ class FilterCollectionsByLength(object):
 
     def process(self, iterable):
         for collection in iterable:
-            length = 0
-            for way in collection:
-                # Use an already-summed length value if it exists on the way.
-                if 'length' in way:
-                    length += way['length']
-                # If not, sum the length of the segments
-                else:
-                    for segment in way['segments']:
-                        length += segment['length']
+            # Use an already-summed length value if it exists on the collection.
+            if 'length' in collection:
+                length = collection['length']
+            else:
+                length = 0
+                for way in collection['ways']:
+                    # Use an already-summed length value if it exists on the way.
+                    if 'length' in way:
+                        length += way['length']
+                    # If not, sum the length of the segments
+                    else:
+                        for segment in way['segments']:
+                            length += segment['length']
 
             if self.min is not None:
                 if length < self.min:

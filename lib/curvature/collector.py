@@ -124,15 +124,19 @@ class WayCollector(object):
                     routes = tags['ref'].split(';')
                     for route in routes:
                         if route not in self.routes:
-                            self.routes[route] = []
-                        self.routes[route].append(way)
+                            self.routes[route] = {  'join_type': 'ref',
+                                                    'join_data': route,
+                                                    'ways': []}
+                        self.routes[route]['ways'].append(way)
                 else:
                     if 'name' in tags and tags['name'] != '':
                         if tags['name'] not in self.routes:
-                            self.routes[tags['name']] = []
-                        self.routes[tags['name']].append(way)
+                            self.routes[tags['name']] = {   'join_type': 'name',
+                                                            'join_data': tags['name'],
+                                                            'ways': []}
+                        self.routes[tags['name']]['ways'].append(way)
                     else:
-                        self.collections.append([way])
+                        self.collections.append({'join_type': 'none', 'ways': [way]})
 
                 for ref in refs:
                     self.coords[ref] = None
@@ -161,8 +165,8 @@ class WayCollector(object):
             sys.stderr.flush()
 
         # Add to joinable-ways.
-        for route, ways in self.routes.iteritems():
-            for way in ways:
+        for route, route_data in self.routes.iteritems():
+            for way in route_data['ways']:
                 way['coords'] = map(lambda ref: self.coords[ref], way['refs'])
             # status output
             if self.verbose:
@@ -173,7 +177,7 @@ class WayCollector(object):
 
         # Add to un-joinable ways.
         for collection in self.collections:
-            for way in collection:
+            for way in collection['ways']:
                 way['coords'] = map(lambda ref: self.coords[ref], way['refs'])
             # status output
             if self.verbose:
@@ -199,7 +203,8 @@ class WayCollector(object):
             sys.stderr.write("\n{} routes will be joined, each '.' is 1% complete\n".format(total))
             sys.stderr.flush()
 
-        for route, ways in self.routes.iteritems():
+        for route, route_data in self.routes.iteritems():
+            ways = route_data['ways']
             # status output
             if self.verbose:
                 i = i + 1
@@ -208,10 +213,12 @@ class WayCollector(object):
                     sys.stderr.flush()
 
             while len(ways) > 0:
-                collection = [ways.pop()]
+                collection = {  'join_type': route_data['join_type'],
+                                'join_data': route_data['join_data'],
+                                'ways': [ways.pop()] }
                 # A list of all refs added to a collection. Checking this list will
                 # prevent creating non-linar forking structures.
-                collection_refs = [collection[0]['refs']]
+                collection_refs = [collection['ways'][0]['refs']]
                 # Loop through all our ways at least as many times as we have ways
                 # to be able to catch any that join onto the end after others have
                 # been joined on.
@@ -231,36 +238,36 @@ class WayCollector(object):
                     while len(ways) > 0:
                         way = ways.pop()
                         # join to the end of the base in order
-                        if collection[-1]['refs'][-1] == way['refs'][0] and way['refs'][-1] not in collection_refs:
+                        if collection['ways'][-1]['refs'][-1] == way['refs'][0] and way['refs'][-1] not in collection_refs:
                             collection_modified = True
-                            collection.append(way)
+                            collection['ways'].append(way)
                             collection_refs = collection_refs + way['refs']
                         # join to the end of the base in reverse order
-                        elif collection[-1]['refs'][-1] == way['refs'][-1] and way['refs'][0] not in collection_refs:
+                        elif collection['ways'][-1]['refs'][-1] == way['refs'][-1] and way['refs'][0] not in collection_refs:
                             # Make a copy of the way before modifying it as it may be
                             # a member of other routes that will be joined in a different sequence.
                             way_copy = copy(way)
                             way_copy['refs'] = list(reversed(way_copy['refs']))
                             way_copy['coords'] = list(reversed(way_copy['coords']))
                             collection_modified = True
-                            collection.append(way_copy)
+                            collection['ways'].append(way_copy)
                             collection_refs = collection_refs + way_copy['refs']
 
                         # join to the beginning of the base in order
-                        elif collection[0]['refs'][0] == way['refs'][-1] and way['refs'][0] not in collection_refs:
+                        elif collection['ways'][0]['refs'][0] == way['refs'][-1] and way['refs'][0] not in collection_refs:
                             collection_modified = True
-                            collection.insert(0, way)
+                            collection['ways'].insert(0, way)
                             collection_refs =  way['refs'] + collection_refs
 
                         # join to the beginning of the base in reverse order
-                        elif collection[0]['refs'][0] == way['refs'][0] and way['refs'][-1] not in collection_refs:
+                        elif collection['ways'][0]['refs'][0] == way['refs'][0] and way['refs'][-1] not in collection_refs:
                             # Make a copy of the way before modifying it as it may be
                             # a member of other routes that will be joined in a different sequence.
                             way_copy = copy(way)
                             collection_modified = True
                             way_copy['refs'] = list(reversed(way_copy['refs']))
                             way_copy['coords'] = list(reversed(way_copy['coords']))
-                            collection.insert(0, way_copy)
+                            collection['ways'].insert(0, way_copy)
                             collection_refs = way_copy['refs'] + collection_refs
                         else:
                             unused_ways.append(way)

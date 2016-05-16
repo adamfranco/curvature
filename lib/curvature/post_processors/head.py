@@ -15,8 +15,8 @@ class Head(object):
 
     def process(self, iterable):
         idx = 0
-        for item in iterable:
+        for collection in iterable:
             if idx >= self.num:
                 break
-            yield(item)
+            yield(collection)
             idx += 1

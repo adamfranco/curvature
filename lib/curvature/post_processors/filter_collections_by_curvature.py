@@ -16,15 +16,19 @@ class FilterCollectionsByCurvature(object):
 
     def process(self, iterable):
         for collection in iterable:
-            curvature = 0
-            for way in collection:
-                # Use an already-summed curvature value if it exists on the way.
-                if 'curvature' in way:
-                    curvature += way['curvature']
-                # If not, sum the curvature of the segments
-                else:
-                    for segment in way['segments']:
-                        curvature += segment['curvature']
+            # Use an already-summed curvature value if it exists on the collection.
+            if 'curvature' in collection:
+                curvature = collection['curvature']
+            else:
+                curvature = 0
+                for way in collection['ways']:
+                    # Use an already-summed curvature value if it exists on the way.
+                    if 'curvature' in way:
+                        curvature += way['curvature']
+                    # If not, sum the curvature of the segments
+                    else:
+                        for segment in way['segments']:
+                            curvature += segment['curvature']
 
             if self.min is not None:
                 if curvature < self.min:

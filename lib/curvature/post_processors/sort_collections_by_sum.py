@@ -26,8 +26,13 @@ class SortCollectionsBySum(object):
             yield(collection)
 
     def sum_for_collection(self, collection):
+        # Use an already-summed value if it exists on the way.
+        if self.key in collection:
+            return collection[self.key]
+
+        # Add up the values from the ways
         total = 0
-        for way in collection:
+        for way in collection['ways']:
             # Use an already-summed value if it exists on the way.
             if self.key in way:
                 total += way[self.key]

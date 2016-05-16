@@ -56,7 +56,7 @@ class KmlOutput(object):
         f.write('</kml>\n')
 
     def _record_collection_bbox(self, collection):
-        for way in collection:
+        for way in collection['ways']:
             if not hasattr(self, 'min_lat') and 'segments' in way and len(way['segments']):
                 self.min_lat = way['segments'][0]['start'][0]
                 self.max_lat = way['segments'][0]['start'][0]
@@ -113,33 +113,33 @@ class KmlOutput(object):
         return way['min_lon']
 
     def get_collection_max_lat(self, collection):
-        max = self.get_way_max_lat(collection[0])
-        for i in range(1, len(collection)):
-            way_max = self.get_way_max_lat(collection[i])
+        max = self.get_way_max_lat(collection['ways'][0])
+        for i in range(1, len(collection['ways'])):
+            way_max = self.get_way_max_lat(collection['ways'][i])
             if way_max > max:
                 max = way_max
         return max
 
     def get_collection_min_lat(self, collection):
-        min = self.get_way_min_lat(collection[0])
-        for i in range(1, len(collection)):
-            way_min = self.get_way_min_lat(collection[i])
+        min = self.get_way_min_lat(collection['ways'][0])
+        for i in range(1, len(collection['ways'])):
+            way_min = self.get_way_min_lat(collection['ways'][i])
             if way_min < min:
                 min = way_min
         return min
 
     def get_collection_max_lon(self, collection):
-        max = self.get_way_max_lon(collection[0])
-        for i in range(1, len(collection)):
-            way_max = self.get_way_max_lon(collection[i])
+        max = self.get_way_max_lon(collection['ways'][0])
+        for i in range(1, len(collection['ways'])):
+            way_max = self.get_way_max_lon(collection['ways'][i])
             if way_max > max:
                 max = way_max
         return max
 
     def get_collection_min_lon(self, collection):
-        min = self.get_way_min_lon(collection[0])
-        for i in range(1, len(collection)):
-            way_min = self.get_way_min_lon(collection[i])
+        min = self.get_way_min_lon(collection['ways'][0])
+        for i in range(1, len(collection['ways'])):
+            way_min = self.get_way_min_lon(collection['ways'][i])
             if way_min < min:
                 min = way_min
         return min
@@ -172,14 +172,18 @@ class KmlOutput(object):
 
     def get_collection_segments(self, collection):
         segments = []
-        for way in collection:
-            for segment in way['segments']:
-                segments.append(segment)
+        try:
+            for way in collection['ways']:
+                for segment in way['segments']:
+                    segments.append(segment)
+        except TypeError as t:
+            sys.stderr.write('No ways in {}'.format(collection))
+            raise
         return segments
 
     def get_collection_curvature(self, collection):
         total = 0
-        for way in collection:
+        for way in collection['ways']:
             total += self.get_way_curvature(way)
         return total
 
@@ -196,7 +200,7 @@ class KmlOutput(object):
 
     def get_collection_length(self, collection):
         total = 0
-        for way in collection:
+        for way in collection['ways']:
             total += self.get_way_length(way)
         return total
 
@@ -213,7 +217,7 @@ class KmlOutput(object):
 
     def get_length_weighted_collection_tags(self, collection, tag, value_if_empty=None):
         values = {}
-        for way in collection:
+        for way in collection['ways']:
             if tag in way['tags']:
                 value = way['tags'][tag]
             elif value_if_empty:
@@ -229,20 +233,20 @@ class KmlOutput(object):
     def get_shared_collection_refs(self, collection):
         # If the first way doesn't have a ref tag, there is no way there will
         # be one shared by all ways.
-        if not 'ref' in collection[0]['tags']:
+        if not 'ref' in collection['ways'][0]['tags']:
             return set()
 
         # Beginning with the refs on our first way, check each way to find the refs
         # that are common to all.
-        shared_refs = set(collection[0]['tags']['ref'].split(';'))
-        for i in range(1, len(collection)):
+        shared_refs = set(collection['ways'][0]['tags']['ref'].split(';'))
+        for i in range(1, len(collection['ways'])):
             # If the any way doesn't have a ref tag, there is no way there will
             # be one shared by all ways.
-            if not 'ref' in collection[i]['tags']:
+            if not 'ref' in collection['ways'][i]['tags']:
                 return set()
 
             # Reduce our shared_refs set to only those also in the next way.
-            shared_refs = shared_refs & set(collection[i]['tags']['ref'].split(';'))
+            shared_refs = shared_refs & set(collection['ways'][i]['tags']['ref'].split(';'))
             # No need to look further if we have no shared_refs
             if not shared_refs:
                 return shared_refs
@@ -263,7 +267,7 @@ class KmlOutput(object):
         elif names:
             return unicode('{}').format(names[0])
         else:
-            return '{}'.format(collection[0]['id'])
+            return '{}'.format(collection['ways'][0]['id'])
 
     def get_collection_description(self, collection):
         curvature = self.get_collection_curvature(collection)
@@ -291,7 +295,7 @@ class KmlOutput(object):
 
     def get_all_josm_link(self, collection):
         select = []
-        for way in collection:
+        for way in collection['ways']:
             select.append('way%d' % way['id'])
         josm_url ='http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=%s' % (self.get_collection_min_lon(collection) - 0.001, self.get_collection_max_lon(collection) + 0.001, self.get_collection_max_lat(collection) + 0.001, self.get_collection_min_lat(collection) - 0.001, ','.join(select))
         josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit all in JOSM</a>' % (josm_url)
@@ -303,7 +307,7 @@ class KmlOutput(object):
     def get_constituent_list(self, collection):
         list = '<table style="width: 100%; text-align: center;">'
         list += '<tr><th>View</th><th>Surface</th><th>Actions</th></tr>'
-        for way in collection:
+        for way in collection['ways']:
             view_link = '<a href="https://www.openstreetmap.org/way/%d">%d</a>' % (way['id'], way['id'])
             josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(way) - 0.001, self.get_way_max_lon(way) + 0.001, self.get_way_max_lat(way) + 0.001, self.get_way_min_lat(way) - 0.001, way['id'])
             josm_link = '<a href="" onclick="var img=document.createElement(\'img\'); img.style.display=\'none\'; img.src=\'%s\'; this.parentElement.appendChild(img); return false;">Edit in JOSM</a>' % (josm_url)
@@ -479,8 +483,8 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
         return [way]
 
     def get_collection_line_style(self, collection):
-        if 'surface' in collection[0]['tags']:
-            return collection[0]['tags']['surface']
+        if 'surface' in collection['ways'][0]['tags']:
+            return collection['ways'][0]['tags']['surface']
         else:
             return 'unknown'
 
@@ -489,12 +493,12 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
             super(SurfaceKmlOutput, self)._write_collection(f, [way])
 
     def get_collection_description(self, collection):
-        if 'highway' in collection[0]['tags']:
-            highway = collection[0]['tags']['highway']
+        if 'highway' in collection['ways'][0]['tags']:
+            highway = collection['ways'][0]['tags']['highway']
         else:
             highway = ''
-        if 'surface' in collection[0]['tags']:
-            surface = collection[0]['tags']['surface']
+        if 'surface' in collection['ways'][0]['tags']:
+            surface = collection['ways'][0]['tags']['surface']
         else:
             surface = 'unknown'
         description = 'Type: %s\nSurface: %s\n' % (highway, surface)

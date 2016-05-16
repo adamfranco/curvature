@@ -27,5 +27,5 @@ fl = getattr(mod, class_name)
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
 post_processor = fl.parse(argv)
 iterable = post_processor.process(unpacker)
-for item in iterable:
-    sys.stdout.write(msgpack.packb(item))
+for collection in iterable:
+    sys.stdout.write(msgpack.packb(collection))

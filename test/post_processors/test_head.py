@@ -2,13 +2,16 @@ from curvature.post_processors.head import Head
 
 def test_head():
     first = {
-        'length': 7,
+        'join_type': 'none',
+        'ways': [{'length': 7}]
     }
     second = {
-        'length': 4,
+        'join_type': 'none',
+        'ways': [{'length': 4}]
     }
     third = {
-        'length': 5,
+        'join_type': 'none',
+        'ways': [{'length': 5}]
     }
     data = [
         first,

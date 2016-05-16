@@ -26,16 +26,16 @@ class FilterSegmentsByRadius(object):
 
     def process(self, iterable):
         for collection in iterable:
-            for item in collection:
-                all_segments = item['segments']
+            for way in collection['ways']:
+                all_segments = way['segments']
                 last_index = len(all_segments) - 1
                 indexes = [i for i, segment
                     in enumerate(all_segments)
                     if i == 0 or i == last_index or self.select_segment(segment)
                 ]
-                item['segments'] = filtered_segments = [all_segments[i] for i in indexes]
-                for i, segment in enumerate(item['segments']):
-                    if i + 1 < len(item['segments']):
+                way['segments'] = filtered_segments = [all_segments[i] for i in indexes]
+                for i, segment in enumerate(way['segments']):
+                    if i + 1 < len(way['segments']):
                         segment['end'] = end = filtered_segments[i + 1]['start']
                         start = segment['start']
                         segment['length'] = distance_on_earth(start[0], start[1], end[0], end[1])

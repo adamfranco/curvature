@@ -6,10 +6,10 @@ class AddWayLength(object):
 
     def process(self, iterable):
         for collection in iterable:
-            for item in collection:
-                segments = item['segments']
+            for way in collection['ways']:
+                segments = way['segments']
                 sum = 0
                 for segment in segments:
                     sum += segment['length']
-                item['length'] = sum
+                way['length'] = sum
             yield(collection)

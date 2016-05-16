@@ -127,7 +127,7 @@ def road_b():
 
 def test_get_collection_segments(road_a, road_b):
     output = KmlOutput('km')
-    collection = [road_a, road_b]
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
     segments = output.get_collection_segments(collection)
     assert len(segments) == 13
     assert segments[0]['start'][0] == 44.47486310000014
@@ -135,7 +135,7 @@ def test_get_collection_segments(road_a, road_b):
 
 def test_get_collection_curvature(road_a, road_b):
     output = KmlOutput('km')
-    collection = [road_a, road_b]
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
     curvature = output.get_collection_curvature(collection)
     assert curvature == 750
 
@@ -143,7 +143,7 @@ def test_get_collection_curvature_on_way(road_a, road_b):
     output = KmlOutput('km')
     # Set a different curvature for road_b: 300 instead of 226
     road_b['curvature'] = 300
-    collection = [road_a, road_b]
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
     curvature = output.get_collection_curvature(collection)
     assert curvature == 824
 
@@ -151,7 +151,7 @@ def test_get_collection_length(road_a, road_b):
     # road_a length == 4030
     # road_b length == 2160
     output = KmlOutput('km')
-    collection = [road_a, road_b]
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
     length = output.get_collection_length(collection)
     assert length == 6190
 
@@ -161,7 +161,7 @@ def test_get_collection_length_on_way(road_a, road_b):
     output = KmlOutput('km')
     # Set a different curvature for road_b: 4000 instead of 2160
     road_b['length'] = 4000
-    collection = [road_a, road_b]
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
     length = output.get_collection_length(collection)
     assert length == 8030
 
@@ -169,16 +169,19 @@ def test_get_length_weighted_collection_tags(road_a, road_b):
     # road_a length == 4030
     # road_b length == 2160
     output = KmlOutput('km')
-    names = output.get_length_weighted_collection_tags([road_a, road_b], 'name')
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
+    names = output.get_length_weighted_collection_tags(collection, 'name')
     assert names == ['Road A', 'Road B']
 
     # Ensure that reversing the ways doesn't change anything.
-    names = output.get_length_weighted_collection_tags([road_b, road_a], 'name')
+    collection = {'join_type': 'arbitrary', 'ways': [road_b, road_a]}
+    names = output.get_length_weighted_collection_tags(collection, 'name')
     assert names == ['Road A', 'Road B']
 
     # Ensure that giving B a larger length does change the order.
     road_b['length'] = 5000
-    names = output.get_length_weighted_collection_tags([road_a, road_b], 'name')
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
+    names = output.get_length_weighted_collection_tags(collection, 'name')
     assert names == ['Road B', 'Road A']
 
 def test_get_length_weighted_collection_tags_many_ways(road_a, road_b):
@@ -195,12 +198,15 @@ def test_get_length_weighted_collection_tags_many_ways(road_a, road_b):
                         'highway':  'tertiary',
                         'ref':      'VT-555'},
             'length': 100}
-    names = output.get_length_weighted_collection_tags([road_a, road_b, road_c, road_d], 'name')
+
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b, road_c, road_d]}
+    names = output.get_length_weighted_collection_tags(collection, 'name')
     assert names == ['Road B', 'Road A']
 
 def test_get_shared_collection_ref(road_a, road_b):
     output = KmlOutput('km')
-    refs = output.get_shared_collection_refs([road_a, road_b])
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
+    refs = output.get_shared_collection_refs(collection)
     assert len(refs) == 1
     assert 'VT-555' in refs
 
@@ -209,7 +215,8 @@ def test_get_shared_collection_ref(road_a, road_b):
             'tags': {   'name':     'Road B',
                         'highway':  'tertiary'},
             'length': 3000}
-    refs = output.get_shared_collection_refs([road_a, road_b, road_c])
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b, road_c]}
+    refs = output.get_shared_collection_refs(collection)
     assert len(refs) == 0
 
     # Ensure that multiple refs can be returned
@@ -228,7 +235,8 @@ def test_get_shared_collection_ref(road_a, road_b):
                         'highway':  'tertiary',
                         'ref':      'VT-555;US-30;VT-17'},
             'length': 100}
-    refs = output.get_shared_collection_refs([road_c, road_d, road_e])
+    collection = {'join_type': 'arbitrary', 'ways': [road_c, road_d, road_e]}
+    refs = output.get_shared_collection_refs(collection)
     assert len(refs) == 2
     assert 'VT-555' in refs
     assert 'VT-17' in refs
@@ -237,7 +245,8 @@ def test_get_collection_name(road_a, road_b):
     # road_a length == 4030
     # road_b length == 2160
     output = KmlOutput('km')
-    name = output.get_collection_name([road_a, road_b])
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b]}
+    name = output.get_collection_name(collection)
     assert name == 'Road A (VT-555)'
 
     # Try with additional ways that make 'Road B' longer.
@@ -251,7 +260,8 @@ def test_get_collection_name(road_a, road_b):
                         'highway':  'tertiary',
                         'ref':      'VT-555;VT-17'},
             'length': 100}
-    name = output.get_collection_name([road_a, road_b, road_c, road_d])
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b, road_c, road_d]}
+    name = output.get_collection_name(collection)
     assert name == 'Road B (VT-555)'
 
     # Multiple route-numbers.
@@ -262,14 +272,16 @@ def test_get_collection_name(road_a, road_b):
                         'highway':  'tertiary',
                         'ref':      'VT-555;US-30;VT-17'},
             'length': 100}
-    name = output.get_collection_name([road_a, road_b, road_c, road_d, road_e])
+    collection = {'join_type': 'arbitrary', 'ways': [road_a, road_b, road_c, road_d, road_e]}
+    name = output.get_collection_name(collection)
     assert name == 'Road B (VT-555 / VT-17)' or name == 'Road B (VT-17 / VT-555)'
 
     # no road name
     road_f = {'id':   1004,
             'tags': {   'highway':  'unclassified'},
             'length': 100}
-    name = output.get_collection_name([road_f])
+    collection = {'join_type': 'none', 'ways': [road_f]}
+    name = output.get_collection_name(collection)
     assert name == '1004'
 
     # ref only
@@ -277,5 +289,6 @@ def test_get_collection_name(road_a, road_b):
             'tags': {   'highway':  'tertiary',
                         'ref':      'VT-555;VT-17'},
             'length': 100}
-    name = output.get_collection_name([road_g])
+    collection = {'join_type': 'none', 'ways': [road_g]}
+    name = output.get_collection_name(collection)
     assert name == 'VT-555 / VT-17' or name == 'VT-17 / VT-555'

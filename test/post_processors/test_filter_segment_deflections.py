@@ -112,7 +112,7 @@ def way_deviated_b():
             }
 
 def test_filter_a(way_deviated_a):
-    data = [[way_deviated_a]]
+    data = [{'ways': [way_deviated_a]}]
 
     # result = list(AddSegmentLengthAndRadii().process(data))
     # result = list(AddSegmentCurvature().process(result))
@@ -120,12 +120,12 @@ def test_filter_a(way_deviated_a):
     # assert segments == []
 
     result = list(FilterSegmentDeflections().process(data))
-    for segment in result[0][0]['segments']:
+    for segment in result[0]['ways'][0]['segments']:
         assert segment['curvature'] == 0
         assert segment['curvature_level'] == 0
 
 def test_filter_b(way_deviated_b):
-    data = [[way_deviated_b]]
+    data = [{'ways': [way_deviated_b]}]
 
     # result = list(AddSegmentLengthAndRadii().process(data))
     # result = list(AddSegmentCurvature().process(result))
@@ -133,18 +133,18 @@ def test_filter_b(way_deviated_b):
     # assert segments == []
 
     result = list(FilterSegmentDeflections().process(data))
-    segments = result[0][0]['segments']
+    segments = result[0]['ways'][0]['segments']
     for i, segment in enumerate(segments):
         assert segment['curvature'] == 0, 'curvature should be 0 for segment {}'.format(i)
         assert segment['curvature_level'] == 0, 'curvature_level should be 0 for segment {}'.format(i)
 
 def test_filter_b_a(way_deviated_b, way_deviated_a):
-    data = [[way_deviated_b, way_deviated_a]]
+    data = [{'join_type': 'arbitrary', 'ways': [way_deviated_b, way_deviated_a]}]
 
     result = list(FilterSegmentDeflections().process(data))
-    for i, segment in enumerate(result[0][0]['segments']):
+    for i, segment in enumerate(result[0]['ways'][0]['segments']):
         assert segment['curvature'] == 0, 'curvature should be 0 for segment b {}'.format(i)
         assert segment['curvature_level'] == 0, 'curvature_level should be 0 for segment b {}'.format(i)
-    for i, segment in enumerate(result[0][1]['segments']):
+    for i, segment in enumerate(result[0]['ways'][1]['segments']):
         assert segment['curvature'] == 0, 'curvature should be 0 for segment a {}'.format(i)
         assert segment['curvature_level'] == 0, 'curvature_level should be 0 for segment a {}'.format(i)

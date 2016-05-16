@@ -6,7 +6,7 @@ class AddWayCurvature(object):
 
     def process(self, iterable):
         for collection in iterable:
-            for way in collection:
+            for way in collection['ways']:
                 sum = 0
                 for segment in way['segments']:
                     sum += segment['curvature']

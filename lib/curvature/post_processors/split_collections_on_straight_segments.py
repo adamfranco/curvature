@@ -1,8 +1,9 @@
 # -*- coding: UTF-8 -*-
 import argparse
 from copy import copy
+from curvature.collection_tools import CollectionSplitter
 
-class SplitCollectionsOnStraightSegments(object):
+class SplitCollectionsOnStraightSegments(CollectionSplitter):
 
     # sequences of straight segments longer than this (in meters) will cause a way
     # to be split into multiple sections. If 0, ways will not be split.
@@ -23,19 +24,21 @@ class SplitCollectionsOnStraightSegments(object):
 
     def process(self, iterable):
         for collection in iterable:
-            result_collection = []
+            result_collection = self.create_result_collection(collection)
             straight_buffer = []
             straight_distance = 0
 
-            for way in collection:
+            for way in collection['ways']:
                 for segment_index, segment in enumerate(way['segments']):
                     # Split the collection if we've hit the first curve after
                     # a long straight segment.
                     if segment['curvature_level'] and straight_distance > self.straight_segment_split_threshold:
-                        if len(result_collection):
+                        if len(result_collection['ways']):
                             yield(result_collection)
-                            result_collection = []
-                        yield(straight_buffer)
+                            result_collection = self.create_result_collection(collection)
+                        straight_collection = self.create_result_collection(collection)
+                        straight_collection['ways'] = straight_buffer
+                        yield(straight_collection)
                         straight_buffer = []
                         straight_distance = 0
 
@@ -43,11 +46,11 @@ class SplitCollectionsOnStraightSegments(object):
                     if segment['curvature_level']:
                         # If we have buffered straight segments, add them back to our result_collection
                         if len(straight_buffer):
-                            self.copy_buffer(straight_buffer, result_collection)
+                            self.copy_buffer(straight_buffer, result_collection['ways'])
                             straight_buffer = []
 
                         straight_distance = 0
-                        self.buffer_way_segment(way, segment_index, result_collection)
+                        self.buffer_way_segment(way, segment_index, result_collection['ways'])
                     # Add to our straight distance and buffer our segments
                     else:
                         straight_distance += segment['length']
@@ -56,19 +59,21 @@ class SplitCollectionsOnStraightSegments(object):
             # Yield and trailing straight buffer long enough.
             if len(straight_buffer) and straight_distance > self.straight_segment_split_threshold:
                 # Yield the remaining collection.
-                if len(result_collection):
+                if len(result_collection['ways']):
                     yield(result_collection)
-                    result_collection = []
-                yield(straight_buffer)
+                    result_collection = self.create_result_collection(collection)
+                straight_collection = self.create_result_collection(collection)
+                straight_collection['ways'] = straight_buffer
+                yield(straight_collection)
                 straight_buffer = []
                 straight_distance = 0
             # Otherwise, unbuffer any trailing straight buffer onto the end of the result collection
             else:
                 if len(straight_buffer):
-                    self.copy_buffer(straight_buffer, result_collection)
+                    self.copy_buffer(straight_buffer, result_collection['ways'])
                     straight_buffer = []
                 # Yield the remaining collection.
-                if len(result_collection):
+                if len(result_collection['ways']):
                     yield(result_collection)
 
     # Add a slice of a way including the segment, coords, refs that match a segment to a buffer.

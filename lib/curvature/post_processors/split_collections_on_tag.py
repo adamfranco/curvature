@@ -1,7 +1,8 @@
 # -*- coding: UTF-8 -*-
 import argparse
+from curvature.collection_tools import CollectionSplitter
 
-class SplitCollectionsOnTag(object):
+class SplitCollectionsOnTag(CollectionSplitter):
     def __init__(self, tag=None, group=None, exclude_ways_missing_tag=False):
         self.tag = tag
         self.group = group
@@ -18,17 +19,18 @@ class SplitCollectionsOnTag(object):
 
     def process(self, iterable):
         for collection in iterable:
-            result_collection = []
-            previous_in_group = self.way_in_group(collection[0])
-            for way in collection:
+            result_collection = self.create_result_collection(collection)
+            previous_in_group = self.way_in_group(collection['ways'][0])
+            for way in collection['ways']:
                 way_in_group = self.way_in_group(way)
                 if way_in_group == previous_in_group:
-                    result_collection.append(way)
+                    result_collection['ways'].append(way)
                 else:
                     # yield the previous portion of the collection and start
                     # a new portion with the alternate in-group state.
                     yield(result_collection)
-                    result_collection = [way]
+                    result_collection = self.create_result_collection(collection)
+                    result_collection['ways'].append(way)
                     previous_in_group = way_in_group
             # Yield the remaining collection.
             yield(result_collection)

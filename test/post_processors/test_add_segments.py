@@ -3,7 +3,7 @@ from curvature.post_processors.add_segments import AddSegments
 
 @pytest.fixture
 def south_union_street():
-    return [south_union_street_a(), south_union_street_b()]
+    return {'join_type': 'name', 'ways': [south_union_street_a(), south_union_street_b()]}
 
 @pytest.fixture
 def south_union_street_a():
@@ -95,16 +95,16 @@ def expected_south_union_street_b_segments():
     ]
 
 def test_add_segments_to_a(south_union_street_a, expected_south_union_street_a_segments):
-    data = [[south_union_street_a]]
+    data = [{'ways': [south_union_street_a]}]
 
     result = list(AddSegments().process(data))
 
-    assert(result[0][0]['segments'] == expected_south_union_street_a_segments)
+    assert(result[0]['ways'][0]['segments'] == expected_south_union_street_a_segments)
 
 def test_add_segments_to_both(south_union_street, expected_south_union_street_a_segments, expected_south_union_street_b_segments):
     data = [south_union_street]
 
     result = list(AddSegments().process(data))
 
-    assert(result[0][0]['segments'] == expected_south_union_street_a_segments)
-    assert(result[0][1]['segments'] == expected_south_union_street_b_segments)
+    assert(result[0]['ways'][0]['segments'] == expected_south_union_street_a_segments)
+    assert(result[0]['ways'][1]['segments'] == expected_south_union_street_b_segments)
