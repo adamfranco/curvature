@@ -172,13 +172,9 @@ class KmlOutput(object):
 
     def get_collection_segments(self, collection):
         segments = []
-        try:
-            for way in collection['ways']:
-                for segment in way['segments']:
-                    segments.append(segment)
-        except TypeError as t:
-            sys.stderr.write('No ways in {}'.format(collection))
-            raise
+        for way in collection['ways']:
+            for segment in way['segments']:
+                segments.append(segment)
         return segments
 
     def get_collection_curvature(self, collection):
@@ -489,8 +485,8 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
             return 'unknown'
 
     def _write_collection(self, f, collection):
-        for way in collection:
-            super(SurfaceKmlOutput, self)._write_collection(f, [way])
+        for way in collection['ways']:
+            super(SurfaceKmlOutput, self)._write_collection(f, {'join_type': 'none', 'ways': [way]})
 
     def get_collection_description(self, collection):
         if 'highway' in collection['ways'][0]['tags']:
