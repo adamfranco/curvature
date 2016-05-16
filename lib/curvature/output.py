@@ -279,16 +279,6 @@ class KmlOutput(object):
         description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n\n%s\n' % (self.get_constituent_list(collection), self.get_all_josm_link(collection))
         return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
 
-    def get_surfaces(self, way):
-        if 'constituents' in way:
-            surfaces = []
-            for constituent in way['constituents']:
-                surfaces.append(constituent['surface'])
-            surface_list = [surface[0] for surface in Counter(surfaces).most_common()]
-            return ', '.join(surface_list)
-        else:
-            return way['surface']
-
     def get_all_josm_link(self, collection):
         select = []
         for way in collection['ways']:
@@ -474,9 +464,6 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
             'mud':{'color':'F00000FF'},
 
         }
-
-    def get_constituents(self, way):
-        return [way]
 
     def get_collection_line_style(self, collection):
         if 'surface' in collection['ways'][0]['tags']:
