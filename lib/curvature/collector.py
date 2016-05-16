@@ -204,7 +204,10 @@ class WayCollector(object):
             sys.stderr.flush()
 
         for route, route_data in self.routes.iteritems():
-            ways = route_data['ways']
+            # Sort ways by OSM id so that joining always happens in the same order
+            # even if the parser returns them in a different order.
+            ways = sorted(route_data['ways'], key=lambda way: way['id'])
+
             # status output
             if self.verbose:
                 i = i + 1
