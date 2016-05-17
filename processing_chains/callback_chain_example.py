@@ -5,7 +5,7 @@ import os
 import sys
 import codecs
 import msgpack
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'lib'))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from curvature.post_processors.filter_out_ways_with_tag import FilterOutWaysWithTag
 from curvature.post_processors.add_segments import AddSegments
@@ -72,5 +72,3 @@ for processor in reversed(chain):
 
 for collection in msgpack.Unpacker(sys.stdin, use_list=True):
   prev_callback(collection)
-
-
