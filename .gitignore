@@ -6,3 +6,5 @@
 *.pyc
 images/*
 kml/*
+*.msgpack
+.cache
