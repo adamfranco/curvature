@@ -25,8 +25,9 @@ class WayCollector(object):
 
     def parse(self, filename, callback):
         # Reinitialize if we have a new file
-        collections = []
-        coords = {}
+        self.collections = []
+        self.coords = {}
+        self.routes = {}
         num_coords = 0
         num_ways = 0
         start_time = time.time()
