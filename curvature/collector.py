@@ -53,9 +53,23 @@ class WayCollector(object):
         self.join_ways()
 
         # Send our collected data to our callback function.
+        self.log("Streaming collections, each '.' is 1% complete")
+        if self.verbose:
+            total = len(self.collections)
+            if total < 100:
+                collections_marker = 1
+            else:
+                collections_marker = round(total/100)
+            i = 0
         for collection in self.collections:
+            # status output
+            if self.verbose:
+                i += 1
+                if not (i % collections_marker):
+                    sys.stderr.write('.')
+                    sys.stderr.flush()
             callback(collection)
-        self.log('Streaming completed in {time:.1f}'.format(time=(time.time() - start_time)))
+        self.log('\nStreaming completed in {time:.1f}'.format(time=(time.time() - start_time)))
 
     def coords_callback(self, coords):
         # callback method for coords
