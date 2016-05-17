@@ -1,3 +1,7 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
 from curvature.post_processors.filter_collections_by_curvature import FilterCollectionsByCurvature
 from curvature.post_processors.head import Head
 def test_chaining_post_processors():

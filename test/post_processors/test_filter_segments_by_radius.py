@@ -1,3 +1,6 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from curvature.post_processors.filter_segments_by_radius import FilterSegmentsByRadius
 
 def test_filter_radius_min():

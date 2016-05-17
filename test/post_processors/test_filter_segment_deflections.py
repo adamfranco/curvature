@@ -1,3 +1,6 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import pytest
 from curvature.post_processors.filter_segment_deflections import FilterSegmentDeflections
 from curvature.post_processors.add_segment_length_and_radius import AddSegmentLengthAndRadius

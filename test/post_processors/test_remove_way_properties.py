@@ -1,3 +1,6 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from curvature.post_processors.remove_way_properties import RemoveWayProperties
 
 def test_remove_fields():

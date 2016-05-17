@@ -1,3 +1,6 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from curvature.post_processors.add_way_curvature import AddWayCurvature
 
 def test_add_curvature():

@@ -1,3 +1,6 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import pytest
 from curvature.post_processors.filter_only_ways_with_tag import FilterOnlyWaysWithTag
 from copy import copy

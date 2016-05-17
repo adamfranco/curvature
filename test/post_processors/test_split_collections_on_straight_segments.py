@@ -1,3 +1,6 @@
+# Add our parent folder to our path
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import pytest
 from curvature.post_processors.split_collections_on_straight_segments import SplitCollectionsOnStraightSegments
 from copy import copy
