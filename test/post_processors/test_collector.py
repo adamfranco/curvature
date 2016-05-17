@@ -159,6 +159,37 @@ class Vermont125Parser(MockOSMParser):
             (224, 43.70024, -73.00024)
         ]
 
+class Vermont125AndUs7Parser(Vermont125Parser):
+
+    def ways(self):
+        ways = super(Vermont125AndUs7Parser, self).ways()
+        # Add a segment from US 7 that will be joined.
+        ways.append((
+                30001,
+                {   'name':     'North Pleasant Street',
+                    'ref':      'US 7',
+                    'highway':  'primary'},
+                [301, 221]
+            ))
+
+        # Add a disconnected segment from US 7 that won't be joined.
+        ways.append((
+                30002,
+                {   'name':     'Ethan Allen Highway',
+                    'ref':      'US 7',
+                    'highway':  'primary'},
+                [325, 326]
+            ))
+        return ways
+
+    def coords(self):
+        coords = super(Vermont125AndUs7Parser, self).coords()
+        coords.append((301, 43.70301, -73.00301))
+        coords.append((325, 43.70325, -73.00325))
+        coords.append((326, 43.70326, -73.00326))
+        return coords
+
+
 def test_collector_road_a():
     collector = WayCollector(parser_class=RoadAParser)
     collections = []
@@ -269,6 +300,30 @@ def test_collector_ref_matching():
     # joining happened in descending order
     else:
         assert collection['ways'] == reverse(expected_asc), "If joined in descending order, collection must match."
+
+# This test validates that ways that are part of a route won't be dropped if they
+# can't be joined to other ways in that route as part of a collection. Instead
+# they will just form their own collection.
+def test_collector_doesnt_drop_unjoined_ways():
+    collector = WayCollector(parser_class=Vermont125AndUs7Parser)
+    collections = []
+
+    collector.parse('doesnt_exist.pbf', callback=lambda collection: collections.append(collection))
+    assert len(collections) == 4 # VT 30, VT 125, two for US 7
+
+    # First collection, could not be joined to the others since it has no refs in common.
+    assert collections[2]['join_type'] == 'ref'
+    assert collections[2]['join_data'] == 'US 7'
+    assert len(collections[2]['ways']) == 1
+    assert collections[2]['ways'][0]['id'] == 30002
+
+    # Second collection, could be joined to the others
+    assert collections[3]['join_type'] == 'ref'
+    assert collections[3]['join_data'] == 'US 7'
+    assert len(collections[3]['ways']) == 2
+    assert collections[3]['ways'][0]['id'] == 20001
+    assert collections[3]['ways'][1]['id'] == 30001
+
 
 # Reverse an array of ways.
 # This will allow tests to remain valid even if the logic changes for join order,
