@@ -12,11 +12,6 @@ class MockOSMParser(object):
     relations_callback = None
     coords_callback = None
 
-    nodes = []
-    ways = []
-    relations = []
-    coords = []
-
     def __init__(self, concurrency=None, nodes_callback=None, ways_callback=None,
             relations_callback=None, coords_callback=None, nodes_tag_filter=None,
             ways_tag_filter=None, relations_tag_filter=None, marshal_elem_data=False):
@@ -31,135 +26,138 @@ class MockOSMParser(object):
 
     def parse(self, filename):
         if self.nodes_callback:
-            self.nodes_callback(self.nodes)
+            self.nodes_callback(self.nodes())
         if self.ways_callback:
-            self.ways_callback(self.ways)
+            self.ways_callback(self.ways())
         if self.relations_callback:
-            for relation in self.relations:
-                self.relations_callback(relation)
+            self.relations_callback(self.relations())
         if self.coords_callback:
-            self.coords_callback(self.coords)
+            self.coords_callback(self.coords())
 
 class RoadAParser(MockOSMParser):
 
-    ways = [
-        (
-            10000,
-            {   'name':     'Road A',
-                'highway':  'unclassified'},
-            [15, 16, 17, 18]
-        ),
-        # Can be appended in normal order
-        (
-            10001,
-            {   'name':     'Road A',
-                'highway':  'unclassified'},
-            [18, 19, 20, 21]
-        ),
-        # Can be appended in reverse order
-        (
-            10002,
-            {   'name':     'Road A',
-                'highway':  'unclassified'},
-            [24, 23, 22, 21]
-        ),
-        # Can be pre-pended in normal order
-        (
-            10003,
-            {   'name':     'Road A',
-                'highway':  'unclassified'},
-            [12, 13, 14, 15]
-        ),
-        # Can be pre-pended in reverse order
-        (
-            10004,
-            {   'name':     'Road A',
-                'highway':  'unclassified'},
-            [12, 11, 10, 9]
-        ),
-    ]
+    def ways(self):
+        return [
+            (
+                10000,
+                {   'name':     'Road A',
+                    'highway':  'unclassified'},
+                [15, 16, 17, 18]
+            ),
+            # Can be appended in normal order
+            (
+                10001,
+                {   'name':     'Road A',
+                    'highway':  'unclassified'},
+                [18, 19, 20, 21]
+            ),
+            # Can be appended in reverse order
+            (
+                10002,
+                {   'name':     'Road A',
+                    'highway':  'unclassified'},
+                [24, 23, 22, 21]
+            ),
+            # Can be pre-pended in normal order
+            (
+                10003,
+                {   'name':     'Road A',
+                    'highway':  'unclassified'},
+                [12, 13, 14, 15]
+            ),
+            # Can be pre-pended in reverse order
+            (
+                10004,
+                {   'name':     'Road A',
+                    'highway':  'unclassified'},
+                [12, 11, 10, 9]
+            ),
+        ]
 
-    coords = [
-        (9, 43.70009, -73.00009),
-        (10, 43.70010, -73.00010),
-        (11, 43.70011, -73.00011),
-        (12, 43.70012, -73.00012),
-        (13, 43.70013, -73.00013),
-        (14, 43.70014, -73.00014),
-        (15, 43.70015, -73.00015),
-        (16, 43.70016, -73.00016),
-        (17, 43.70017, -73.00017),
-        (18, 43.70018, -73.00018),
-        (19, 43.70019, -73.00019),
-        (20, 43.70020, -73.00020),
-        (21, 43.70021, -73.00021),
-        (22, 43.70022, -73.00022),
-        (23, 43.70023, -73.00023),
-        (24, 43.70024, -73.00024)
-    ]
+    def coords(self):
+        return [
+            (9, 43.70009, -73.00009),
+            (10, 43.70010, -73.00010),
+            (11, 43.70011, -73.00011),
+            (12, 43.70012, -73.00012),
+            (13, 43.70013, -73.00013),
+            (14, 43.70014, -73.00014),
+            (15, 43.70015, -73.00015),
+            (16, 43.70016, -73.00016),
+            (17, 43.70017, -73.00017),
+            (18, 43.70018, -73.00018),
+            (19, 43.70019, -73.00019),
+            (20, 43.70020, -73.00020),
+            (21, 43.70021, -73.00021),
+            (22, 43.70022, -73.00022),
+            (23, 43.70023, -73.00023),
+            (24, 43.70024, -73.00024)
+        ]
 
 class Vermont125Parser(MockOSMParser):
 
-    ways = [
-        (
-            20000,
-            {   'name':     'South Main Street',
-                'ref':      'VT 125',
-                'highway':  'secondary'},
-            [215, 216, 217, 218]
-        ),
-        # Can be appended in normal order
-        (
-            20001,
-            {   'name':     'Court Street',
-                'ref':      'US 7;VT 125',
-                'highway':  'primary'},
-            [218, 219, 220, 221]
-        ),
-        # Can be appended in reverse order
-        (
-            20002,
-            {   'name':     'Main Street',
-                'ref':      'VT 125;VT 30',
-                'highway':  'secondary'},
-            [224, 223, 222, 221]
-        ),
-        # Can be pre-pended in normal order
-        (
-            20003,
-            {   'name':     'Ripton Road',
-                'ref':      'VT 125',
-                'highway':  'secondary'},
-            [212, 213, 214, 215]
-        ),
-        # Can be pre-pended in reverse order
-        (
-            20004,
-            {   'name':     'Hancock Road',
-                'ref':      'VT 125',
-                'highway':  'secondary'},
-            [212, 211, 210, 209]
-        ),
-    ]
+    def ways(self):
+        return [
+            (
+                20000,
+                {   'name':     'South Main Street',
+                    'ref':      'VT 125',
+                    'highway':  'secondary'},
+                [215, 216, 217, 218]
+            ),
+            # Can be appended in normal order
+            (
+                20001,
+                {   'name':     'Court Street',
+                    'ref':      'US 7;VT 125',
+                    'highway':  'primary'},
+                [218, 219, 220, 221]
+            ),
+            # Can be appended in reverse order
+            (
+                20002,
+                {   'name':     'Main Street',
+                    'ref':      'VT 125;VT 30',
+                    'highway':  'secondary'},
+                [224, 223, 222, 221]
+            ),
+            # Can be pre-pended in normal order
+            (
+                20003,
+                {   'name':     'Ripton Road',
+                    'ref':      'VT 125',
+                    'highway':  'secondary'},
+                [212, 213, 214, 215]
+            ),
+            # Can be pre-pended in reverse order
+            (
+                20004,
+                {   'name':     'Hancock Road',
+                    'ref':      'VT 125',
+                    'highway':  'secondary'},
+                [212, 211, 210, 209]
+            ),
+        ]
 
-    coords = [
-        (209, 43.70009, -73.00009),
-        (210, 43.70010, -73.00010),
-        (211, 43.70011, -73.00011),
-        (212, 43.70012, -73.00012),
-        (213, 43.70013, -73.00013),
-        (214, 43.70014, -73.00014),
-        (215, 43.70015, -73.00015),
-        (216, 43.70016, -73.00016),
-        (217, 43.70017, -73.00017),
-        (218, 43.70018, -73.00018),
-        (219, 43.70019, -73.00019),
-        (220, 43.70020, -73.00020),
-        (221, 43.70021, -73.00021),
-        (222, 43.70022, -73.00022),
-        (223, 43.70023, -73.00023),
-        (224, 43.70024, -73.00024)
-    ]
+    def coords(self):
+        return [
+            (209, 43.70009, -73.00009),
+            (210, 43.70010, -73.00010),
+            (211, 43.70011, -73.00011),
+            (212, 43.70012, -73.00012),
+            (213, 43.70013, -73.00013),
+            (214, 43.70014, -73.00014),
+            (215, 43.70015, -73.00015),
+            (216, 43.70016, -73.00016),
+            (217, 43.70017, -73.00017),
+            (218, 43.70018, -73.00018),
+            (219, 43.70019, -73.00019),
+            (220, 43.70020, -73.00020),
+            (221, 43.70021, -73.00021),
+            (222, 43.70022, -73.00022),
+            (223, 43.70023, -73.00023),
+            (224, 43.70024, -73.00024)
+        ]
 
 def test_collector_road_a():
     collector = WayCollector(parser_class=RoadAParser)
