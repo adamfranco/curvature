@@ -88,9 +88,9 @@ class WayCollector(object):
     def ways_callback(self, ways):
         # callback method for ways
         for osmid, tags, refs in ways:
-
-            # ignore circular ways (Maybe we don't need this)
-            if refs[0] == refs[-1]:
+            # ignore single-point ways
+            if len(refs) < 2:
+                self.log('\nSkipping single-point way: id: {}, tags: {}, refs: {}\n'.format(osmid, tags, refs))
                 continue
             if 'highway' in tags and (not self.roads or tags['highway'] in self.roads):
                 way = {'id': osmid, 'tags': tags, 'refs': refs}
