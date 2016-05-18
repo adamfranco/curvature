@@ -44,3 +44,4 @@ class Validate(object):
         except:
             e = sys.exc_info()[0]
             errors.append('Exception: {}\nCollection: {}'.format(e, collection))
+        yield collection
