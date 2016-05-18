@@ -29,7 +29,8 @@
 temp_dir="/tmp"
 output_dir="."
 verbose=""
-usage="$0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
+usage="
+$0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
 
   -h      Show this help.
   -v      Verbose mode, print details about progress.
@@ -49,7 +50,7 @@ OPTIND=1         # Reset in case getopts has been used previously in the shell.
 while getopts "h?vt:o:" opt; do
   case "$opt" in
   h|\?)
-    echo usage >&2
+    echo "$usage" >&2
     exit 1
     ;;
   v)  verbose="-v"
