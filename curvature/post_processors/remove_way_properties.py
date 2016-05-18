@@ -7,7 +7,7 @@ class RemoveWayProperties(object):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Strip certain properties from the ways in the data.')
+        parser = argparse.ArgumentParser(prog='remove_way_properties', description='Strip certain properties from the ways in the data.')
         parser.add_argument('--properties', type=str, help='A comma-separated list of the keys to strip. Example --properties refs,coords')
         args = parser.parse_args(argv)
         if not args.properties:

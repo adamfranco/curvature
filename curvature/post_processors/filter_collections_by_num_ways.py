@@ -8,7 +8,7 @@ class FilterCollectionsByNumWays(object):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Filter collections matching the number of ways specified.')
+        parser = argparse.ArgumentParser(prog='filter_collections_by_num_ways', description='Filter collections matching the number of ways specified.')
         parser.add_argument('--min', type=int, default=0, help='The minimum number of constituent ways a collection may have. Default is 0, no-min.')
         parser.add_argument('--max', type=int, default=0, help='The minimum number of constituent ways a collection may have. Default is 0, no-max.')
         args = parser.parse_args(argv)

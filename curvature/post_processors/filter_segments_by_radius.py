@@ -9,7 +9,7 @@ class FilterSegmentsByRadius(object):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Filter segments by curve radius (in meters), removing them from their parent way.')
+        parser = argparse.ArgumentParser(prog='filter_segments_by_radius', description='Filter segments by curve radius (in meters), removing them from their parent way.')
         parser.add_argument('--min', type=float, default=None, help='The minimum radius to include in output.')
         parser.add_argument('--max', type=float, default=None, help='The maximum radius to include in output.')
         args = parser.parse_args(argv)

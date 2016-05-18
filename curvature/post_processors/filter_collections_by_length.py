@@ -8,7 +8,7 @@ class FilterCollectionsByLength(object):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Filter out collections not meeting our length levels.')
+        parser = argparse.ArgumentParser(prog='filter_collections_by_length', description='Filter out collections not meeting our length levels.')
         parser.add_argument('--min', type=float, default=None, help='The minimum length level to be included in the output, e.g. 300, default 0 means no minum')
         parser.add_argument('--max', type=float, default=None, help='The maximum length level to be included in the output, e.g. 5000, default 0 means no maximum')
         args = parser.parse_args(argv)

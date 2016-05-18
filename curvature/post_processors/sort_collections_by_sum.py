@@ -7,7 +7,7 @@ class SortCollectionsBySum(object):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Sort collections in the stream by the sum of one of their values. (e.g. curvature, length)')
+        parser = argparse.ArgumentParser(prog='sort_collections_by_sum', description='Sort collections in the stream by the sum of one of their values. (e.g. curvature, length)')
         parser.add_argument('--key', type=str, default='curvature', help='The key to sort on, default: curvature')
         parser.add_argument('--direction', type=str, default='DESC', help='The sort direction, ASC or DESC. Default: DESC')
         args = parser.parse_args(argv)

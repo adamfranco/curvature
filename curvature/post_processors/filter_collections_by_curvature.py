@@ -8,7 +8,7 @@ class FilterCollectionsByCurvature(object):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Filter out collections not meeting our curvature levels.')
+        parser = argparse.ArgumentParser(prog='filter_collections_by_curvature', description='Filter out collections not meeting our curvature levels.')
         parser.add_argument('--min', type=float, default=None, help='The minimum curvature level to be included in the output, e.g. 300')
         parser.add_argument('--max', type=float, default=None, help='The maximum curvature level to be included in the output, e.g. 5000')
         args = parser.parse_args(argv)

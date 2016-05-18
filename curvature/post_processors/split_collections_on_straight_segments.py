@@ -15,7 +15,7 @@ class SplitCollectionsOnStraightSegments(CollectionSplitter):
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(description='Sequences of straight segments longer than the length passed (in meters) will cause a collection of ways to be split into multiple collections.')
+        parser = argparse.ArgumentParser(prog='split_collections_on_straight_segments', description='Sequences of straight segments longer than the length passed (in meters) will cause a collection of ways to be split into multiple collections.')
         parser.add_argument('--length', type=int, default=2414, help='The minimum length of straight-segments to split on. Defaults is 2414 meters ~= 1.5 miles. 1609 meters ~= 1 mile')
         args = parser.parse_args(argv)
         if args.length < 1:
