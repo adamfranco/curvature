@@ -12,8 +12,8 @@ class SplitCollectionsOnTag(CollectionSplitter):
     def parse(cls, argv):
         parser = argparse.ArgumentParser(prog='split_collections_on_tag', description='Split collections when a tag is encountered  that is not in the input group. Collections will be split into sub-collections that are either all in the group or all out of the group.')
         parser.add_argument('--exclude_ways_missing_tag', action='store_true', help='Also split when a way doesn\'t have the tag set. Default is to considder ways missing the tag to be in the group.')
-        parser.add_argument('--tag', type=str, help='The tag to split on. Example: highway')
-        parser.add_argument('--group', type=str, help='The tag values in the primary group. Example: motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link')
+        parser.add_argument('--tag', type=str, required=True, help='The tag to split on. Example: highway')
+        parser.add_argument('--group', type=str, require=True, help='The tag values in the primary group. Example: motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link')
         args = parser.parse_args(argv)
         return cls(args.tag, args.group.split(','), args.exclude_ways_missing_tag)
 

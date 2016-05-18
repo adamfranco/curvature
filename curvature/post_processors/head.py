@@ -7,10 +7,8 @@ class Head(object):
     @classmethod
     def parse(cls, argv):
         parser = argparse.ArgumentParser(prog='head', description='Return only the n first items')
-        parser.add_argument('-n', type=int, default=None, help='The number of items to forward')
+        parser.add_argument('-n', type=int, default=None, required=True, help='The number of items to forward')
         args = parser.parse_args(argv)
-        if args.n is None:
-            raise RuntimeError("\n-n must be supplied")
         return cls(args.n)
 
     def process(self, iterable):

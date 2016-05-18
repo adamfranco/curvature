@@ -11,8 +11,8 @@ class FilterOnlyWaysWithTag(CollectionSplitter):
     @classmethod
     def parse(cls, argv):
         parser = argparse.ArgumentParser(prog='filter_only_ways_with_tag', description='Filter out ways that have one of the tags listed.')
-        parser.add_argument('--tag', type=str, help='The tag to filter on. Example: highway')
-        parser.add_argument('--values', type=str, help='The tag values to match Example: motorway,trunk,primary,secondary,tertiary,unclassified,residential')
+        parser.add_argument('--tag', type=str, required=True, help='The tag to filter on. Example: highway')
+        parser.add_argument('--values', type=str, required=True, help='The tag values to match Example: motorway,trunk,primary,secondary,tertiary,unclassified,residential')
         parser.add_argument('--include_ways_missing_tag', action='store_true', help='Include ways that don\'t have the tag set. Default is to exclude without the tag set.')
         args = parser.parse_args(argv)
         return cls(args.tag, args.values.split(','), args.include_ways_missing_tag)

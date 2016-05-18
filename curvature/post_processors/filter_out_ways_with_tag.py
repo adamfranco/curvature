@@ -12,8 +12,8 @@ class FilterOutWaysWithTag(CollectionSplitter):
     def parse(cls, argv):
         parser = argparse.ArgumentParser(prog='filter_out_ways_with_tag', description='Filter out ways that have one of the tags listed.')
         parser.add_argument('--filter_out_ways_missing_tag', action='store_true', help='Also filter out ways that don\'t have the tag set. Default is to keep ways without the tag set.')
-        parser.add_argument('--tag', type=str, help='The tag to filter on. Example: highway')
-        parser.add_argument('--values', type=str, help='The tag values filter when found. Example: track,path,cycleway,footway')
+        parser.add_argument('--tag', type=str, required=True, help='The tag to filter on. Example: highway')
+        parser.add_argument('--values', type=str, required=True, help='The tag values filter when found. Example: track,path,cycleway,footway')
         args = parser.parse_args(argv)
         return cls(args.tag, args.values.split(','), args.filter_out_ways_missing_tag)
 
