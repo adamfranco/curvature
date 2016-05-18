@@ -50,20 +50,20 @@ be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature
 
 * Pre-processing the [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf) file.
 
-      bin/curvature-collect -v --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' vermont-latest.osm.pbf \
-        | bin/curvature-collect  $verbose $input_file \
-        | bin/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
-        | bin/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
-        | bin/curvature-pp add_segments \
-        | bin/curvature-pp add_segment_length_and_radius \
-        | bin/curvature-pp add_segment_curvature \
-        | bin/curvature-pp filter_segment_deflections \
-        | bin/curvature-pp split_collections_on_straight_segments --length 2414 \
-        | bin/curvature-pp roll_up_length \
-        | bin/curvature-pp roll_up_curvature \
-        | bin/curvature-pp filter_collections_by_curvature --min 300 \
-        | bin/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
-        > vermont.msgpack
+        bin/curvature-collect -v --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' vermont-latest.osm.pbf \
+          | bin/curvature-collect  $verbose $input_file \
+          | bin/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
+          | bin/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
+          | bin/curvature-pp add_segments \
+          | bin/curvature-pp add_segment_length_and_radius \
+          | bin/curvature-pp add_segment_curvature \
+          | bin/curvature-pp filter_segment_deflections \
+          | bin/curvature-pp split_collections_on_straight_segments --length 2414 \
+          | bin/curvature-pp roll_up_length \
+          | bin/curvature-pp roll_up_curvature \
+          | bin/curvature-pp filter_collections_by_curvature --min 300 \
+          | bin/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
+          > vermont.msgpack
 
 * A basic KML file generated with a minimum curvature of 300 using the pre-processed
   [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
@@ -78,10 +78,10 @@ be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature
   in a sea of otherwise bland options. While more curvy roads will also be included, roads
   in the 300-600 range tend to be pleasant rather than exciting.
 
-      cat vermont.msgpack \
-        | bin/curvature-pp filter_collections_by_curvature --min 300 \
-        | bin/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
-        > vermont.c_300.kml
+        cat vermont.msgpack \
+          | bin/curvature-pp filter_collections_by_curvature --min 300 \
+          | bin/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
+          > vermont.c_300.kml
 
   [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.kmz)
 
@@ -106,10 +106,10 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   There will be many roads that are quite fun but don't quite make the cut, but all of the
   roads listed will be very curvy.
 
-      cat vermont.msgpack \
-        | bin/curvature-pp filter_collections_by_curvature --min 1000 \
-        | bin/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
-        > vermont.c_1000.kml
+        cat vermont.msgpack \
+          | bin/curvature-pp filter_collections_by_curvature --min 1000 \
+          | bin/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
+          > vermont.c_1000.kml
 
   [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.kmz)
 
@@ -121,17 +121,17 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
   Zoom on corners to see the shading. Green segments do not contribute to the 'curvature' value
   while yellow, orange, and red segments do.
 
-      cat vermont.msgpack \
-        | bin/curvature-pp filter_collections_by_curvature --min 1000 \
-        | bin/curvature-output-kml-curve-radius \
-        > vermont.c_1000.curves.kml
+        cat vermont.msgpack \
+          | bin/curvature-pp filter_collections_by_curvature --min 1000 \
+          | bin/curvature-output-kml-curve-radius \
+          > vermont.c_1000.curves.kml
 
   [vermont.c_1000.curves.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.curves.kmz)  
 
 * All of the commands above, combined into a single script `processing_chains/adams_defaults.sh`:
 
-      mv vermont-latest.osm.pbf vermont.osm.pbf
-      processing_chains/adams_defaults.sh -v vermont.osm.pbf
+        mv vermont-latest.osm.pbf vermont.osm.pbf
+        processing_chains/adams_defaults.sh -v vermont.osm.pbf
 
 * More examples can be seen at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/)
 
