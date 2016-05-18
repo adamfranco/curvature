@@ -253,6 +253,10 @@ class WayCollector(object):
                             unused_ways.append(way)
                     # Continue on joining the rest of the ways in this route.
                     ways = unused_ways
-                # Add this base way to our ways list
+                # After we've either added all of the ways or looped the max_loop times,
+                # add this collection to our collections list and return to the start
+                # of our `while len(ways) > 0:` loop. The next remaining way in the
+                # ways list will become the basis for a new collection that may get
+                # some more of the remaining ways joined to it.
                 self.collections.append(collection)
         self.log('\nJoining completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
