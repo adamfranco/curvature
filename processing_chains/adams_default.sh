@@ -92,8 +92,8 @@ do
     | $script_path/curvature-pp add_segment_curvature \
     | $script_path/curvature-pp filter_segment_deflections \
     | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
-    | $script_path/curvature-pp add_way_length \
-    | $script_path/curvature-pp add_way_curvature \
+    | $script_path/curvature-pp roll_up_length \
+    | $script_path/curvature-pp roll_up_curvature \
     | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
     | $script_path/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
     > $temp_dir/$filename.msgpack

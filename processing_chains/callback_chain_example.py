@@ -13,8 +13,8 @@ from curvature.post_processors.add_segment_length_and_radius import AddSegmentLe
 from curvature.post_processors.add_segment_curvature import AddSegmentCurvature
 from curvature.post_processors.filter_segment_deflections import FilterSegmentDeflections
 from curvature.post_processors.split_collections_on_straight_segments import SplitCollectionsOnStraightSegments
-from curvature.post_processors.add_way_length import AddWayLength
-from curvature.post_processors.add_way_curvature import AddWayCurvature
+from curvature.post_processors.roll_up_length import RollUpLength
+from curvature.post_processors.roll_up_curvature import RollUpCurvature
 from curvature.post_processors.filter_collections_by_curvature import FilterCollectionsByCurvature
 from curvature.post_processors.sort_collections_by_sum import SortCollectionsBySum
 
@@ -56,8 +56,8 @@ chain = [
   AddSegmentCurvature(),
   FilterSegmentDeflections(),
   SplitCollectionsOnStraightSegments(2414),
-  AddWayLength(),
-  AddWayCurvature(),
+  RollUpLength(),
+  RollUpCurvature(),
   FilterCollectionsByCurvature(min=300),
   SortCollectionsBySum(key='curvature', reverse=True)
 ]
