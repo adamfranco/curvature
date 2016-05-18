@@ -199,48 +199,44 @@ def test_collector_road_a():
     assert collections[0]['join_type'] == 'name'
     assert collections[0]['join_data'] == 'Road A'
 
-    expected_asc= [{'coords': [(-73.00009, 43.70009),
-                          (-73.0001, 43.7001),
-                          (-73.00011, 43.70011),
-                          (-73.00012, 43.70012)],
-               'id': 10004,
-               'refs': [9, 10, 11, 12],
-               'tags': {'highway': 'unclassified', 'name': 'Road A'}},
-              {'coords': [(-73.00012, 43.70012),
-                          (-73.00013, 43.70013),
-                          (-73.00014, 43.70014),
-                          (-73.00015, 43.70015)],
-               'id': 10003,
-               'refs': [12, 13, 14, 15],
-               'tags': {'highway': 'unclassified', 'name': 'Road A'}},
-              {'coords': [(-73.00015, 43.70015),
-                          (-73.00016, 43.70016),
-                          (-73.00017, 43.70017),
-                          (-73.00018, 43.70018)],
-               'id': 10000,
-               'refs': [15, 16, 17, 18],
-               'tags': {'highway': 'unclassified', 'name': 'Road A'}},
-              {'coords': [(-73.00018, 43.70018),
-                          (-73.00019, 43.70019),
-                          (-73.0002, 43.7002),
-                          (-73.00021, 43.70021)],
-               'id': 10001,
-               'refs': [18, 19, 20, 21],
-               'tags': {'highway': 'unclassified', 'name': 'Road A'}},
-              {'coords': [(-73.00021, 43.70021),
-                          (-73.00022, 43.70022),
-                          (-73.00023, 43.70023),
-                          (-73.00024, 43.70024)],
-                'id': 10002,
-                'refs': [21, 22, 23, 24],
-                'tags': {'highway': 'unclassified', 'name': 'Road A'}}
-        ]
-    # Joining happened in ascending order.
-    if collections[0]['ways'][0]['id'] == expected_asc[0]['id']:
-        assert collections[0]['ways'] == expected_asc, "If joined in ascending order, collection must match."
-    # joining happened in descending order
-    else:
-        assert collections[0]['ways'] == reverse(expected_asc), "If joined in descending order, collection must match."
+    expected =  [
+        {'coords': [(-73.00024, 43.70024),
+                      (-73.00023, 43.70023),
+                      (-73.00022, 43.70022),
+                      (-73.00021, 43.70021)],
+         'id': 10002,
+         'refs': [24, 23, 22, 21],
+         'tags': {'highway': 'unclassified', 'name': 'Road A'}},
+        {'coords': [(-73.00021, 43.70021),
+                  (-73.0002, 43.7002),
+                  (-73.00019, 43.70019),
+                  (-73.00018, 43.70018)],
+         'id': 10001,
+         'refs': [21, 20, 19, 18],
+         'tags': {'highway': 'unclassified', 'name': 'Road A'}},
+        {'coords': [(-73.00018, 43.70018),
+                  (-73.00017, 43.70017),
+                  (-73.00016, 43.70016),
+                  (-73.00015, 43.70015)],
+         'id': 10000,
+         'refs': [18, 17, 16, 15],
+         'tags': {'highway': 'unclassified', 'name': 'Road A'}},
+        {'coords': [(-73.00015, 43.70015),
+                  (-73.00014, 43.70014),
+                  (-73.00013, 43.70013),
+                  (-73.00012, 43.70012)],
+         'id': 10003,
+         'refs': [15, 14, 13, 12],
+         'tags': {'highway': 'unclassified', 'name': 'Road A'}},
+        {'coords': [(-73.00012, 43.70012),
+                  (-73.00011, 43.70011),
+                  (-73.0001, 43.7001),
+                  (-73.00009, 43.70009)],
+         'id': 10004,
+         'refs': [12, 11, 10, 9],
+         'tags': {'highway': 'unclassified', 'name': 'Road A'}}]
+
+    assert collections[0]['ways'] == expected
 
 def test_collector_ref_matching():
     collector = WayCollector(parser_class=Vermont125Parser)
@@ -258,48 +254,49 @@ def test_collector_ref_matching():
     assert collection['join_type'] == 'ref'
     assert collection['join_data'] == 'VT 125'
 
-    expected_asc= [{'coords': [(-73.00009, 43.70009),
-                          (-73.0001, 43.7001),
-                          (-73.00011, 43.70011),
-                          (-73.00012, 43.70012)],
-               'id': 20004,
-               'refs': [209, 210, 211, 212],
-               'tags': {'highway': 'secondary', 'name': 'Hancock Road', 'ref': 'VT 125'}},
-              {'coords': [(-73.00012, 43.70012),
-                          (-73.00013, 43.70013),
-                          (-73.00014, 43.70014),
-                          (-73.00015, 43.70015)],
-               'id': 20003,
-               'refs': [212, 213, 214, 215],
-               'tags': {'highway': 'secondary', 'name': 'Ripton Road', 'ref': 'VT 125'}},
-              {'coords': [(-73.00015, 43.70015),
-                          (-73.00016, 43.70016),
-                          (-73.00017, 43.70017),
-                          (-73.00018, 43.70018)],
-               'id': 20000,
-               'refs': [215, 216, 217, 218],
-               'tags': {'highway': 'secondary', 'name': 'South Main Street', 'ref': 'VT 125'}},
-              {'coords': [(-73.00018, 43.70018),
-                          (-73.00019, 43.70019),
-                          (-73.0002, 43.7002),
-                          (-73.00021, 43.70021)],
-               'id': 20001,
-               'refs': [218, 219, 220, 221],
-               'tags': {'highway': 'primary', 'name': 'Court Street', 'ref': 'US 7;VT 125'}},
-              {'coords': [(-73.00021, 43.70021),
-                          (-73.00022, 43.70022),
-                          (-73.00023, 43.70023),
-                          (-73.00024, 43.70024)],
-                'id': 20002,
-                'refs': [221, 222, 223, 224],
-                'tags': {'highway': 'secondary', 'name': 'Main Street', 'ref': 'VT 125;VT 30'}}
-        ]
-    # Joining happened in ascending order.
-    if collection['ways'][0]['id'] == expected_asc[0]['id']:
-        assert collection['ways'] == expected_asc, "If joined in ascending order, collection must match."
-    # joining happened in descending order
-    else:
-        assert collection['ways'] == reverse(expected_asc), "If joined in descending order, collection must match."
+    expected =  [
+          {'coords': [(-73.00024, 43.70024),
+                      (-73.00023, 43.70023),
+                      (-73.00022, 43.70022),
+                      (-73.00021, 43.70021)],
+           'id': 20002,
+           'refs': [224, 223, 222, 221],
+           'tags': {'highway': 'secondary',
+                    'name': 'Main Street',
+                    'ref': 'VT 125;VT 30'}},
+          {'coords': [(-73.00021, 43.70021),
+                      (-73.0002, 43.7002),
+                      (-73.00019, 43.70019),
+                      (-73.00018, 43.70018)],
+           'id': 20001,
+           'refs': [221, 220, 219, 218],
+           'tags': {'highway': 'primary',
+                    'name': 'Court Street',
+                    'ref': 'US 7;VT 125'}},
+          {'coords': [(-73.00018, 43.70018),
+                      (-73.00017, 43.70017),
+                      (-73.00016, 43.70016),
+                      (-73.00015, 43.70015)],
+           'id': 20000,
+           'refs': [218, 217, 216, 215],
+           'tags': {'highway': 'secondary',
+                    'name': 'South Main Street',
+                    'ref': 'VT 125'}},
+          {'coords': [(-73.00015, 43.70015),
+                      (-73.00014, 43.70014),
+                      (-73.00013, 43.70013),
+                      (-73.00012, 43.70012)],
+           'id': 20003,
+           'refs': [215, 214, 213, 212],
+           'tags': {'highway': 'secondary', 'name': 'Ripton Road', 'ref': 'VT 125'}},
+          {'coords': [(-73.00012, 43.70012),
+                      (-73.00011, 43.70011),
+                      (-73.0001, 43.7001),
+                      (-73.00009, 43.70009)],
+           'id': 20004,
+           'refs': [212, 211, 210, 209],
+           'tags': {'highway': 'secondary', 'name': 'Hancock Road', 'ref': 'VT 125'}}]
+    assert collection['ways'] == expected
 
 # This test validates that ways that are part of a route won't be dropped if they
 # can't be joined to other ways in that route as part of a collection. Instead
@@ -323,15 +320,3 @@ def test_collector_doesnt_drop_unjoined_ways():
     assert len(collections[3]['ways']) == 2
     assert collections[3]['ways'][0]['id'] == 20001
     assert collections[3]['ways'][1]['id'] == 30001
-
-
-# Reverse an array of ways.
-# This will allow tests to remain valid even if the logic changes for join order,
-# since it is a totally valid result to join ways in either order.
-def reverse(ways):
-    reversed = copy(ways)
-    reversed.reverse()
-    for way in reversed:
-        way['refs'].reverse()
-        way['coords'].reverse()
-    return reversed
