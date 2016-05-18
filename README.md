@@ -266,6 +266,15 @@ Example, piping to other scripts:
 
     bin/curvature-collect -v ~/Downloads/vermont.osm.pbf | bin/msgpack-reader
 
+Note the binary MessagePack format is very fast to read/write, but it is not particularly
+space-efficient. When writing to disk (instead of piping between scripts) it may
+be faster (and is definitely more space-efficient) to pipe the MessagePack data through
+GZIP:
+
+    bin/curvature-collect -v ~/Downloads/vermont.osm.pbf | gzip > vermont.msgpack.gz
+
+    cat vermont.msgpack.gz | gunzip | bin/msgpack-reader | head -n 50
+
 Reading the MessagePack stream
 ------------------------------
 When developing processing-chains, it is sometimes helpful to get a human-readable
