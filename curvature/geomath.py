@@ -50,6 +50,8 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
     cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) +
            math.cos(phi1)*math.cos(phi2))
+    if cos > 1:
+        return 0
     arc = math.acos( cos )
 
     # Remember to multiply arc by the radius of the earth
