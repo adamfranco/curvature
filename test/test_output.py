@@ -1,6 +1,6 @@
 # Add our parent folder to our path
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import pytest
 from curvature.output import KmlOutput
 from copy import copy
