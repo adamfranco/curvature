@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import math
 from curvature.geomath import distance_on_earth
+from curvature.radiusmath import circum_circle_radius
 
 class AddSegmentLengthAndRadius(object):
 
@@ -52,16 +53,10 @@ class AddSegmentLengthAndRadius(object):
             else:
                 base_length = None
 
-            # ignore curvature from zero-distance
-            if first_segment['length'] > 0 and second_segment and second_segment['length'] > 0 and base_length > 0:
-                # Circumcircle radius calculation from http://www.mathopenref.com/trianglecircumcircle.html
-                a = first_segment['length']
-                b = second_segment['length']
-                c = base_length
-                r = (a * b * c)/math.sqrt(math.fabs((a+b+c)*(b+c-a)*(c+a-b)*(a+b-c)))
+            if second_segment:
+                r = circum_circle_radius(first_segment['length'], second_segment['length'], base_length)
             else:
-                r = 1000000
-
+                r = 10000
             # The first segment only is part of one triangle, so just use that radius.
             # Note that 1 is the first segment since we've already incremented i above.
             if i == 1:
