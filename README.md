@@ -372,6 +372,11 @@ indicate an unpaved road-surface.
 
     cat vermont.msgpack | bin/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' | bin/msgpack-reader
 
+You can also filter on complex boolean expressions using the `filter_out_ways` *post processor*, such
+as all of the driveways in the US that were incorrectly imported as unnamed 'residential' ways:
+
+    cat vermont.msgpack | bin/curvature-pp filter_out_ways --match 'And(TagEmpty("name"), TagEmpty("ref"), TagEquals("highway", "residential"), TagEquals("tiger:reviewed", "no"))' | bin/msgpack-reader
+
 The `filter_xxxx_ways_xxxx` and `split_collections_on_xxxx` *post processors* will break
 apart collections into multiple resulting collections, so if you ran the above example
 on an input file that had a road that started paved, became gravel, then became paved again,
