@@ -316,21 +316,29 @@ class SingleColorKmlOutput(KmlOutput):
     min_curvature = 0
     max_curvature = 4000
 
-    def __init__(self, units, min_curvature, max_curvature):
+    def __init__(self, units, min_curvature, max_curvature, assumed_paved_highways=('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link'), paved_surfaces=('paved', 'asphalt', 'concrete', 'concrete:lanes', 'concrete:plates', 'metal', 'wood', 'cobblestone')):
         super(SingleColorKmlOutput, self).__init__(units)
         self.min_curvature = min_curvature
         self.max_curvature = max_curvature
+        self.assumed_paved_highways = assumed_paved_highways
+        self.paved_surfaces = paved_surfaces
 
     def get_styles(self):
-        styles = {'lineStyle0':{'color':'F000E010'}} # Straight roads
+        styles = {'paved0':{'color':'F000E010'}} # Straight roads
+        styles = {'unpaved0':{'color':'F000E010', 'width': '2'}} # Straight roads
+        styles = {'unknown0':{'color':'6F00E010', 'width': '3'}} # Straight roads
 
         # Add a style for each level in a gradient from yellow to red (00FFFF - 0000FF)
         for i in range(256):
-            styles['lineStyle{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i)}
+            styles['paved{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i)}
+            styles['unpaved{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i), 'width': '2'}
+            styles['unknown{}'.format(i + 1)] = {'color':'6f00{:02X}FF'.format(255 - i), 'width': '3'}
 
         # Add a style for each level in a gradient from red to magenta (0000FF - FF00FF)
         for i in range(1, 256):
-            styles['lineStyle{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i)}
+            styles['paved{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i)}
+            styles['unpaved{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i), 'width': '2'}
+            styles['unknown{}'.format(i + 256)] = {'color':'6f{:02X}00FF'.format(i), 'width': '3'}
 
         return styles
 
@@ -382,8 +390,20 @@ class SingleColorKmlOutput(KmlOutput):
         return level
 
     def get_collection_line_style(self, collection):
-        return 'lineStyle{}'.format(
+        return '{}{}'.format(
+            self.get_collection_paved_style(collection),
             self.level_for_curvature(self.get_collection_curvature(collection)))
+
+    def get_collection_paved_style(self, collection):
+        for way in collection['ways']:
+            if way['tags']['highway'] in self.assumed_paved_highways:
+                return 'paved'
+            if 'surface' in way['tags']:
+                if way['tags']['surface'] in self.paved_surfaces:
+                    return 'paved'
+                else:
+                    return 'unpaved'
+        return 'unknown'
 
 
 class MultiColorKmlOutput(KmlOutput):
