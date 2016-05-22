@@ -27,6 +27,7 @@
 
 # Set some default variables:
 temp_dir="/tmp"
+reuse_temp=0
 output_dir="."
 verbose=""
 usage="
@@ -35,7 +36,8 @@ $0 [-h] [-v] [-t temp/dir] [-o output/dir] <input-file.osm.pbf>
   -h      Show this help.
   -v      Verbose mode, print details about progress.
   -t      Use another directory for temporary files. Default: /tmp/
-  -o      Use anotehr directory for output files. Default: ./
+  -o      Use another directory for output files. Default: ./
+  -r      Keep and reuse temporary files.
 "
 # Store our the program path.
 pushd `dirname $0` > /dev/null
@@ -47,13 +49,15 @@ script_path="${script_path}/bin"
 # Allow the user to configure our variables via command-line options.
 ##
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "h?vt:o:" opt; do
+while getopts "h?vrt:o:" opt; do
   case "$opt" in
   h|\?)
     echo "$usage" >&2
     exit 1
     ;;
   v)  verbose="-v"
+    ;;
+  r)  reuse_temp=1
     ;;
   o)  output_dir=$OPTARG
     ;;
@@ -74,33 +78,37 @@ do
   filename=`basename -s .pbf $input_file`
   filename=`basename -s .osm $filename`
 
-  # Take the following processing steps first:
-  # 1. Collect the highway ways and their points into collections.
-  # 2. Filter out unpaved ways and highway types we aren't interested in.
-  # 3. Exclude US TIGER-imported ways that don't have names or ref tags and have not been
-  #    reviewed. These are most likely driveways or forest tracks.
-  # 4. Add segments and their lengths & radii.
-  # 5. Calculate the curvature and filter curvature values for "deflections" (noisy data)
-  # 6. Split our collections on long straight-aways (longer than 1.5 miles) to avoid
-  #    highlighting long straight roads with infrequent curvy-sections.
-  # 7. Sum the length and curvature of the sections in each way for reuse.
-  # 8. Filter out collections not meeting our minimum curvature thresholds.
-  # 9. Sort the items by their curvature value.
-  # 10. Save the intermediate data.
-  $script_path/curvature-collect --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' $verbose $input_file \
-    | $script_path/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
-    | $script_path/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
-    | $script_path/curvature-pp filter_out_ways --match 'And(TagEmpty("name"), TagEmpty("ref"), TagEquals("highway", "residential"), TagEquals("tiger:reviewed", "no"))' \
-    | $script_path/curvature-pp add_segments \
-    | $script_path/curvature-pp add_segment_length_and_radius \
-    | $script_path/curvature-pp add_segment_curvature \
-    | $script_path/curvature-pp filter_segment_deflections \
-    | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
-    | $script_path/curvature-pp roll_up_length \
-    | $script_path/curvature-pp roll_up_curvature \
-    | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
-    | $script_path/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
-    > $temp_dir/$filename.msgpack
+  if [[ ! reuse_temp || ! -f $temp_dir/$filename.msgpack ]]
+  then
+
+    # Take the following processing steps first:
+    # 1. Collect the highway ways and their points into collections.
+    # 2. Filter out unpaved ways and highway types we aren't interested in.
+    # 3. Exclude US TIGER-imported ways that don't have names or ref tags and have not been
+    #    reviewed. These are most likely driveways or forest tracks.
+    # 4. Add segments and their lengths & radii.
+    # 5. Calculate the curvature and filter curvature values for "deflections" (noisy data)
+    # 6. Split our collections on long straight-aways (longer than 1.5 miles) to avoid
+    #    highlighting long straight roads with infrequent curvy-sections.
+    # 7. Sum the length and curvature of the sections in each way for reuse.
+    # 8. Filter out collections not meeting our minimum curvature thresholds.
+    # 9. Sort the items by their curvature value.
+    # 10. Save the intermediate data.
+    $script_path/curvature-collect --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' $verbose $input_file \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
+      | $script_path/curvature-pp filter_out_ways --match 'And(TagEmpty("name"), TagEmpty("ref"), TagEquals("highway", "residential"), TagEquals("tiger:reviewed", "no"))' \
+      | $script_path/curvature-pp add_segments \
+      | $script_path/curvature-pp add_segment_length_and_radius \
+      | $script_path/curvature-pp add_segment_curvature \
+      | $script_path/curvature-pp filter_segment_deflections \
+      | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
+      | $script_path/curvature-pp roll_up_length \
+      | $script_path/curvature-pp roll_up_curvature \
+      | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
+      | $script_path/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
+      > $temp_dir/$filename.msgpack
+  fi
 
   # Output a KML file showing only the most twisty roads, those with a curvature
   # of 1000 or more.
@@ -158,6 +166,8 @@ do
   rm $temp_dir/$filename/doc.kml
   rmdir $temp_dir/$filename
 
-
-  rm $temp_dir/$filename.msgpack
+  if [[ ! reuse_temp ]]
+  then
+    rm $temp_dir/$filename.msgpack
+  fi
 done
