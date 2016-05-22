@@ -292,7 +292,7 @@ class KmlOutput(object):
 
     def get_constituent_list(self, collection):
         list = '<table style="width: 100%; text-align: center;">'
-        list += '<tr><th>View</th><th>Surface</th><th>Actions</th></tr>'
+        list += '<tr><th>View</th><th>Surface</th><th>Curv.</th><th>Length</th><th>Name</th><th>Actions</th></tr>'
         for way in collection['ways']:
             view_link = '<a href="https://www.openstreetmap.org/way/%d">%d</a>' % (way['id'], way['id'])
             josm_url = 'http://127.0.0.1:8111/load_and_zoom?left=%.5f&right=%.5f&top=%.5f&bottom=%.5f&select=way%d' % (self.get_way_min_lon(way) - 0.001, self.get_way_max_lon(way) + 0.001, self.get_way_max_lat(way) + 0.001, self.get_way_min_lat(way) - 0.001, way['id'])
@@ -306,7 +306,16 @@ class KmlOutput(object):
                 surface = way['tags']['surface']
             else:
                 surface = 'unknown'
-            list += '<tr><td>%s</td><td>%s</td><td>%s, %s, %s</td></tr>' % (view_link, surface, web_edit_link, josm_link, coords)
+            if 'name' in way['tags']:
+                name = way['tags']['name']
+            else:
+                name = ''
+            curvature = '%.0f' % self.get_way_curvature(way)
+            if self.units == 'km':
+                length = '%.2f km\n' % (self.get_way_length(way) / 1000)
+            else:
+                length = '%.2f mi\n' % (self.get_way_length(way) / 1609)
+            list += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s, %s, %s</td></tr>' % (view_link, surface, curvature, length, name, web_edit_link, josm_link, coords)
 
         list += '</table>'
         return list
