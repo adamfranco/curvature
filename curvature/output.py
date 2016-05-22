@@ -404,15 +404,18 @@ class SingleColorKmlOutput(KmlOutput):
             self.level_for_curvature(self.get_collection_curvature(collection)))
 
     def get_collection_paved_style(self, collection):
-        for way in collection['ways']:
-            if way['tags']['highway'] in self.assumed_paved_highways:
-                return 'paved'
-            if 'surface' in way['tags']:
-                if way['tags']['surface'] in self.paved_surfaces:
-                    return 'paved'
-                else:
-                    return 'unpaved'
-        return 'unknown'
+        # Go by the highway tag first.
+        highway_tags = self.get_length_weighted_collection_tags(collection, 'highway')
+        if highway_tags[0] in self.assumed_paved_highways:
+            return 'paved'
+        # Then by the surface tag.
+        surface_tags = self.get_length_weighted_collection_tags(collection, 'surface', 'unknown')
+        if surface_tags[0] in self.paved_surfaces:
+            return 'paved'
+        elif surface_tags[0] == 'unknown':
+            return 'unknown'
+        else:
+            return 'unpaved'
 
 
 class MultiColorKmlOutput(KmlOutput):
