@@ -40,7 +40,7 @@ class KmlOutput(object):
         for id in styles:
             style = styles[id]
             if 'width' not in style:
-                style['width'] = '4'
+                style['width'] = '3'
             if 'color' not in style:
                 style['color'] = 'F0FFFFFF'
 
@@ -326,19 +326,19 @@ class SingleColorKmlOutput(KmlOutput):
     def get_styles(self):
         styles = {'paved0':{'color':'F000E010'}} # Straight roads
         styles = {'unpaved0':{'color':'F000E010', 'width': '2'}} # Straight roads
-        styles = {'unknown0':{'color':'6F00E010', 'width': '3'}} # Straight roads
+        styles = {'unknown0':{'color':'7F00E010', 'width': '2.5'}} # Straight roads
 
         # Add a style for each level in a gradient from yellow to red (00FFFF - 0000FF)
         for i in range(256):
             styles['paved{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i)}
             styles['unpaved{}'.format(i + 1)] = {'color':'F000{:02X}FF'.format(255 - i), 'width': '2'}
-            styles['unknown{}'.format(i + 1)] = {'color':'6f00{:02X}FF'.format(255 - i), 'width': '3'}
+            styles['unknown{}'.format(i + 1)] = {'color':'7f00{:02X}FF'.format(255 - i), 'width': '2.5'}
 
         # Add a style for each level in a gradient from red to magenta (0000FF - FF00FF)
         for i in range(1, 256):
             styles['paved{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i)}
             styles['unpaved{}'.format(i + 256)] = {'color':'F0{:02X}00FF'.format(i), 'width': '2'}
-            styles['unknown{}'.format(i + 256)] = {'color':'6f{:02X}00FF'.format(i), 'width': '3'}
+            styles['unknown{}'.format(i + 256)] = {'color':'7f{:02X}00FF'.format(i), 'width': '2.5'}
 
         return styles
 
