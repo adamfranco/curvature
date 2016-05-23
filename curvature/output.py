@@ -191,7 +191,8 @@ class KmlOutput(object):
         else:
             total = 0
             for segment in way['segments']:
-                total += segment['curvature']
+                if 'curvature' in segment:
+                    total += segment['curvature']
             return total
 
     def get_collection_length(self, collection):
