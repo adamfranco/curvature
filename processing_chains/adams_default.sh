@@ -84,7 +84,7 @@ do
   filename=`basename -s .pbf $input_file`
   filename=`basename -s .osm $filename`
 
-  if [[ ! reuse_temp || ! -f $temp_dir/$filename.msgpack ]]
+  if [ $reuse_temp  -eq 0 ] || [ ! -f $temp_dir/$filename.msgpack ]
   then
 
     # Take the following processing steps first:
@@ -114,6 +114,11 @@ do
       | $script_path/curvature-pp filter_collections_by_curvature --min 300 \
       | $script_path/curvature-pp sort_collections_by_sum --key curvature --direction DESC \
       > $temp_dir/$filename.msgpack
+  else
+    if [[ $verbose == '-v' ]]
+    then
+      echo "Reusing temp files.."
+    fi
   fi
 
   # Output a KML file showing only the most twisty roads, those with a curvature
