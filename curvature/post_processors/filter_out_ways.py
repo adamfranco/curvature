@@ -6,6 +6,8 @@ from curvature.match import Or
 from curvature.match import Not
 from curvature.match import TagEmpty
 from curvature.match import TagEquals
+from curvature.match import TagContains
+from curvature.match import Id
 
 class FilterOutWays(CollectionSplitter):
     def __init__(self, match_expression):

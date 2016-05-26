@@ -106,3 +106,22 @@ class TagEquals(WayMatcher):
         if self.tag not in way['tags']:
             return False
         return way['tags'][self.tag] == self.value
+
+class TagContains(TagEquals):
+
+    def match_way(self, way):
+        if 'tags' not in way:
+            raise ValueError('Ways must be a dict with a "tags" key. Received {}'.format(way))
+        if self.tag not in way['tags']:
+            return False
+        return self.value in way['tags'][self.tag]
+
+class Id(WayMatcher):
+
+    def __init__(self, *arg):
+        if not len(arg):
+            raise ValueError('You must pass at least one id')
+        self.ids = arg
+
+    def match_way(self, way):
+        return way['id'] in self.ids
