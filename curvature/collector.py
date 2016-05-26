@@ -168,6 +168,33 @@ class WayCollector(object):
         # delete our coords database as we don't need it any more.
         self.coords = []
 
+    def way_sort_key(self, way):
+        # To encourage joining that continues along the length of route rather
+        # than doubling back on roundabouts, ramps, islands, and other split-route
+        # situations, sort the two-direction ways first, followed by one-way ways,
+        # followed by roundabout ways.
+
+        key = 'a'
+        # put roundabouts last.
+        if 'junction' in way['tags']:
+            if way['tags']['junction'] == 'roundabout':
+                key = 'f'
+            elif 'oneway' in way['tags']:
+                if way['tags']['oneway'] == 'yes':
+                    key = 'e'
+                else:
+                    # two-way junctions.
+                    key = 'c'
+        # put one-way after 2-way
+        if 'oneway' in way['tags']:
+            if way['tags']['oneway'] == 'yes':
+                key = 'd'
+        # put other link-ways after two-way ways.
+        if key == 'a' and '_link' in way['tags']['highway']:
+            key = 'b'
+        key = '{}-{}'.format(key, str(way['id']).zfill(20))
+        return key
+
     # Join numbered/named routes end-to-end and add them to the way list.
     def join_ways(self):
         # status output
@@ -181,9 +208,10 @@ class WayCollector(object):
         self.log("{} routes will be joined, each '.' is 1% complete".format(total))
 
         for route, route_data in self.routes.iteritems():
-            # Sort ways by OSM id so that joining always happens in the same order
+            # Sort ways so that joining always happens in the same order
             # even if the parser returns them in a different order.
-            ways = sorted(route_data['ways'], key=lambda way: way['id'])
+            # ways = sorted(route_data['ways'], key=lambda way: way['id'])
+            ways = sorted(route_data['ways'], key=lambda way: self.way_sort_key(way))
 
             # status output
             if self.verbose:
@@ -195,7 +223,7 @@ class WayCollector(object):
             while len(ways) > 0:
                 collection = {  'join_type': route_data['join_type'],
                                 'join_data': route_data['join_data'],
-                                'ways': [ways.pop()] }
+                                'ways': [ways.pop(0)] }
                 # A list of all refs added to a collection. Checking this list will
                 # prevent creating non-linar forking structures.
                 collection_refs = [collection['ways'][0]['refs']]
@@ -216,10 +244,12 @@ class WayCollector(object):
                     unused_ways = []
                     # try to join to the begining or end
                     while len(ways) > 0:
-                        way = ways.pop()
+                        way = ways.pop(0)
+                        modified_this_pass = False
                         # join to the end of the base in order
                         if collection['ways'][-1]['refs'][-1] == way['refs'][0] and way['refs'][-1] not in collection_refs:
                             collection_modified = True
+                            modified_this_pass = True
                             collection['ways'].append(way)
                             collection_refs = collection_refs + way['refs']
                         # join to the end of the base in reverse order
@@ -230,12 +260,14 @@ class WayCollector(object):
                             way_copy['refs'] = list(reversed(way_copy['refs']))
                             way_copy['coords'] = list(reversed(way_copy['coords']))
                             collection_modified = True
+                            modified_this_pass = True
                             collection['ways'].append(way_copy)
                             collection_refs = collection_refs + way_copy['refs']
 
                         # join to the beginning of the base in order
                         elif collection['ways'][0]['refs'][0] == way['refs'][-1] and way['refs'][0] not in collection_refs:
                             collection_modified = True
+                            modified_this_pass = True
                             collection['ways'].insert(0, way)
                             collection_refs =  way['refs'] + collection_refs
 
@@ -245,12 +277,19 @@ class WayCollector(object):
                             # a member of other routes that will be joined in a different sequence.
                             way_copy = copy(way)
                             collection_modified = True
+                            modified_this_pass = True
                             way_copy['refs'] = list(reversed(way_copy['refs']))
                             way_copy['coords'] = list(reversed(way_copy['coords']))
                             collection['ways'].insert(0, way_copy)
                             collection_refs = way_copy['refs'] + collection_refs
                         else:
                             unused_ways.append(way)
+                        # If we've modified our collection with a new end-way, start looping
+                        # again from our sorted list so that we join in the correct order.
+                        if modified_this_pass:
+                            ways = unused_ways + ways
+                            unused_ways = []
+
                     # Continue on joining the rest of the ways in this route.
                     ways = unused_ways
                 # After we've either added all of the ways or looped the max_loop times,
