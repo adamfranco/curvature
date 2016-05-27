@@ -409,3 +409,9 @@ that can be easily customized or reordered for performance or to achieve differe
 The piped MessagePack streams are the recommended way to build processing chains using this
 release of Curvature. Additional pure-Python processing-chains are included as experimental
 examples, however the API for configuring these may change in future releases.
+
+For end-users, Curvature 2 now has improved KML output that distinguishes between
+primary/secondary/motorway/known-paved roads and roads whose surface is unknown.
+Tertiary/residential/unclassified roads without a `surface` tag will now render as
+thinner and less opaque. These might be excellent roads, but if you like to stick to
+asphalt, you might need to do some additional checking for these roads.
