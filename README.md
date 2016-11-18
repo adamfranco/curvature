@@ -36,8 +36,8 @@ increased weight.
 About & License
 ---------------
 Author: Adam Franco  
-[https://github.com/adamfranco/curvature](https://github.com/adamfranco/curvature)
-[roadcurvature.com](http://roadcurvature.com)
+[https://github.com/adamfranco/curvature](https://github.com/adamfranco/curvature)  
+[roadcurvature.com](http://roadcurvature.com)  
 Copyright 2012 Adam Franco  
 License: GNU General Public License Version 3 or later
 
