@@ -333,6 +333,24 @@ class SingleColorKmlOutput(KmlOutput):
         self.assumed_paved_highways = assumed_paved_highways
         self.paved_surfaces = paved_surfaces
 
+    def head(self, f):
+        super(SingleColorKmlOutput, self).head(f)
+        f.write('<ScreenOverlay id="curvature_key">\n')
+        f.write('	<name>Legend</name>\n')
+        f.write('	<Icon><href>images/key.png</href></Icon>\n')
+        f.write('	<overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>\n')
+        f.write('	<screenXY x="25" y="95" xunits="pixels" yunits="pixels"/>\n')
+        f.write('	<rotationXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>\n')
+        f.write('	<size x="0" y="0" xunits="pixels" yunits="pixels"/>\n')
+        f.write('	<visibility>1</visibility>\n')
+        f.write('</ScreenOverlay>\n')
+        f.write('<Folder>\n')
+        f.write('	<name>Roads</name>\n')
+
+    def foot(self, f):
+        f.write('</Folder>\n')
+        super(SingleColorKmlOutput, self).foot(f)
+
     def get_styles(self):
         styles = {'paved0':{'color':'F000E010'}} # Straight roads
         styles = {'unpaved0':{'color':'F000E010', 'width': '2'}} # Straight roads

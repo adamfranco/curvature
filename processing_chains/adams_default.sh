@@ -134,11 +134,16 @@ do
     | $script_path/curvature-pp filter_collections_by_curvature --min 1000 \
     | $script_path/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
     > $temp_dir/$filename/doc.kml
+  # Add our key icon.
+  mkdir $temp_dir/images
+  cp ${script_path}/../output-master/key.png $temp_dir/images/key.png
   # Zip the KML into a KMZ
   cd $temp_dir
-  zip -q $output_dir/$filename.c_1000.kmz $filename/doc.kml
-  # Delete our temporary file.
+  zip -q $output_dir/$filename.c_1000.kmz $filename/doc.kml images/key.png
+  # Delete our temporary files
   rm $filename/doc.kml
+  rm images/key.png
+  rmdir images
   rmdir $filename
   cd $cwd
 
