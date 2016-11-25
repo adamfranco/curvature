@@ -337,7 +337,7 @@ class SingleColorKmlOutput(KmlOutput):
         super(SingleColorKmlOutput, self).head(f)
         f.write('<ScreenOverlay id="curvature_key">\n')
         f.write('	<name>Legend</name>\n')
-        f.write('	<Icon><href>images/key.png</href></Icon>\n')
+        f.write('	<Icon><href>images/legend.png</href></Icon>\n')
         f.write('	<overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>\n')
         f.write('	<screenXY x="25" y="95" xunits="pixels" yunits="pixels"/>\n')
         f.write('	<rotationXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>\n')

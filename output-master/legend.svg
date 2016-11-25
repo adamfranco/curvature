@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="177.48175"
+   height="159.80411"
+   viewBox="0 0 177.48175 159.80411"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="legend.svg"
+   inkscape:export-filename="legend.png"
+   inkscape:export-xdpi="101.41888"
+   inkscape:export-ydpi="101.41888">
+  <defs
+     id="defs4">
+    <linearGradient
+       id="linearGradient4188"
+       inkscape:collect="always">
+      <stop
+         id="stop4192"
+         offset="0"
+         style="stop-color:#ffff00;stop-opacity:1" />
+      <stop
+         style="stop-color:#ff0000;stop-opacity:1"
+         offset="0.5"
+         id="stop4198" />
+      <stop
+         id="stop4194"
+         offset="1"
+         style="stop-color:#ff00ff;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4188"
+       id="linearGradient4148"
+       x1="92.923126"
+       y1="64.433014"
+       x2="648.52887"
+       y2="64.433014"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(0.29147657,0,0,1.0327379,50.634691,-25.342904)" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#00552c"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="168.48496"
+     inkscape:cy="22.141025"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1280"
+     inkscape:window-height="751"
+     inkscape:window-x="0"
+     inkscape:window-y="1"
+     inkscape:window-maximized="1"
+     units="px"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-67.458531,-26.493293)">
+    <rect
+       style="opacity:1;fill:#ffffff;fill-opacity:0.18431373;fill-rule:nonzero;stroke:#ff0000;stroke-width:0.16014716;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49803922"
+       id="rect4296"
+       width="177.32161"
+       height="159.64397"
+       x="67.538605"
+       y="26.573366" />
+    <g
+       id="g4312"
+       transform="translate(-2.5018847,-2.5898411)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3340"
+         d="M 77.722785,40.156284 239.66248,42.242729"
+         style="fill:#ff00ff;fill-opacity:0.75;fill-rule:evenodd;stroke:url(#linearGradient4148);stroke-width:5.90786457;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text4200"
+         y="61.443169"
+         x="76.593102"
+         style="font-style:normal;font-weight:normal;font-size:12px;line-height:125%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49367089"
+         xml:space="preserve"><tspan
+           y="61.443169"
+           x="76.593102"
+           id="tspan4202"
+           sodipodi:role="line">Twisty</tspan></text>
+      <text
+         sodipodi:linespacing="125%"
+         id="text4204"
+         y="61.443169"
+         x="172.10381"
+         style="font-style:normal;font-weight:normal;font-size:12px;line-height:125%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49367089"
+         xml:space="preserve"><tspan
+           y="61.443169"
+           x="172.10381"
+           id="tspan4206"
+           sodipodi:role="line">Very Twisty</tspan></text>
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4212"
+         d="m 79.379035,87.666523 c 15.2035,-33.659239 15.976777,26.963887 36.365485,-3.030458"
+         style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#ff0000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      <text
+         sodipodi:linespacing="100%"
+         id="text4236"
+         y="84.379616"
+         x="127.42873"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.00000095px;line-height:100%;font-family:'Bitstream Vera Sans';-inkscape-font-specification:'Bitstream Vera Sans, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49367089"
+         xml:space="preserve"><tspan
+           y="84.379616"
+           x="127.42873"
+           id="tspan4238"
+           sodipodi:role="line">Tagged paved or </tspan><tspan
+           id="tspan4298"
+           y="96.379616"
+           x="127.42873"
+           sodipodi:role="line">primary/secondary</tspan></text>
+      <text
+         sodipodi:linespacing="100%"
+         id="text4240"
+         y="117.37572"
+         x="127.56349"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.00000095px;line-height:100%;font-family:'Bitstream Vera Sans';-inkscape-font-specification:'Bitstream Vera Sans, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49367089"
+         xml:space="preserve"><tspan
+           y="117.37572"
+           x="127.56349"
+           id="tspan4242"
+           sodipodi:role="line">Minor roads with </tspan><tspan
+           id="tspan4300"
+           y="129.37572"
+           x="127.56349"
+           sodipodi:role="line">unknown surface</tspan></text>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:12px;line-height:125%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.49367089"
+         x="77.097008"
+         y="153.77873"
+         id="text4282"
+         sodipodi:linespacing="125%"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10px;line-height:125%;font-family:'Bitstream Vera Sans';-inkscape-font-specification:'Bitstream Vera Sans, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           id="tspan4286"
+           sodipodi:role="line"
+           x="77.097008"
+           y="153.77873">Curvature data is a derivative of </tspan><tspan
+           id="tspan4290"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10px;line-height:125%;font-family:'Bitstream Vera Sans';-inkscape-font-specification:'Bitstream Vera Sans, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           sodipodi:role="line"
+           x="77.097008"
+           y="166.27873">the OpenStreetMap, which is </tspan><tspan
+           id="tspan4306"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10px;line-height:125%;font-family:'Bitstream Vera Sans';-inkscape-font-specification:'Bitstream Vera Sans, Normal';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           sodipodi:role="line"
+           x="77.097008"
+           y="178.77873">© OpenStreetMap contributors</tspan></text>
+      <path
+         style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#ff0000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 79.379035,87.666523 c 15.2035,-33.659239 15.976777,26.963887 36.365485,-3.030458"
+         id="path4350"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc" />
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4352"
+         d="m 79.379035,119.66652 c 15.2035,-33.659236 15.976777,26.96389 36.365485,-3.03045"
+         style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#ff0000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.50308646" />
+    </g>
+  </g>
+</svg>

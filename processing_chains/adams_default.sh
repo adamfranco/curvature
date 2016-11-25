@@ -136,13 +136,13 @@ do
     > $temp_dir/$filename/doc.kml
   # Add our key icon.
   mkdir $temp_dir/images
-  cp ${script_path}/../output-master/key.png $temp_dir/images/key.png
+  cp ${script_path}/../output-master/legend.png $temp_dir/images/legend.png
   # Zip the KML into a KMZ
   cd $temp_dir
-  zip -q $output_dir/$filename.c_1000.kmz $filename/doc.kml images/key.png
+  zip -q $output_dir/$filename.c_1000.kmz $filename/doc.kml images/legend.png
   # Delete our temporary files
   rm $filename/doc.kml
-  rm images/key.png
+  rm images/legend.png
   rmdir images
   rmdir $filename
   cd $cwd
@@ -155,15 +155,23 @@ do
   fi
   # Make a temporary directory.
   mkdir $temp_dir/$filename
+  # Add our key icon.
+  mkdir $temp_dir/images
+  cp ${script_path}/../output-master/legend.png $temp_dir/images/legend.png
   # Filter and write the KML.
   cat $temp_dir/$filename.msgpack \
     | $script_path/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
     > $temp_dir/$filename/doc.kml
+  # Add our key icon.
+  mkdir $temp_dir/images
+  cp ${script_path}/../output-master/legend.png $temp_dir/images/legend.png
   # Zip the KML into a KMZ
   cd $temp_dir
-  zip -q $output_dir/$filename.c_300.kmz $filename/doc.kml
+  zip -q $output_dir/$filename.c_300.kmz $filename/doc.kml images/legend.png
   # Delete our temporary file.
   rm $filename/doc.kml
+  rm images/legend.png
+  rmdir images
   rmdir $filename
   cd $cwd
 
