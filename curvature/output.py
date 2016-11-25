@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import sys
 import math
 import string
@@ -9,6 +10,7 @@ from xml.sax.saxutils import escape
 class KmlOutput(object):
     units = 'mi'
     no_compress = False
+    description = "Curvature data is a derivative of Open Street Map which is © OpenStreetMap contributors and provided under the terms of the Open Data Commons Open Database License (ODbL). https://www.openstreetmap.org/about"
 
     def __init__(self, units):
         if units in ['mi', 'km']:
@@ -24,6 +26,7 @@ class KmlOutput(object):
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
         f.write('<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n')
         f.write('<Document>\n')
+        f.write('	<description>{}</description>\n'.format(self.description))
 
     def get_styles(self):
         return {
