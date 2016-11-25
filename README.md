@@ -12,6 +12,7 @@ It works by calculating a synthetic "curvature" parameter for each road segment
 These twisty segments can then be output as KML files that can be viewed in Google Earth
 or viewed in tabular form.
 
+Project website and downloads: [roadcurvature.com](http://roadcurvature.com)
 
 About the "curvature" parameter:
 --------------------------------
@@ -35,18 +36,19 @@ increased weight.
 About & License
 ---------------
 Author: Adam Franco  
-[https://github.com/adamfranco/curvature](https://github.com/adamfranco/curvature/wiki/)  
+[https://github.com/adamfranco/curvature](https://github.com/adamfranco/curvature)  
+[roadcurvature.com](http://roadcurvature.com)  
 Copyright 2012 Adam Franco  
 License: GNU General Public License Version 3 or later
 
 Rendered Data
 -------------
-Rendered curvature files generated with this program can be dowloaded from [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/). Files are available for the entire world and are automatically updated approximately every two weeks.
+Rendered curvature files generated with this program can be dowloaded from [kml.roadcurvature.com](http://kml.roadcurvature.com/). Files are available for the entire world and are automatically updated approximately every two weeks.
 
 Examples
 --------
 Below are links to some example KML files generated with Curvature. Additional files can
-be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/).
+be found at [kml.roadcurvature.com/](http://kml.roadcurvature.com/).
 
 * Pre-processing the [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf) file.
 
@@ -83,7 +85,7 @@ be found at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature
           | bin/curvature-output-kml --min_curvature 300 --max_curvature 20000 \
           > vermont.c_300.kml
 
-  [vermont.c_300.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_300.kmz)
+  [vermont.c_300.kml](http://kml.roadcurvature.com/north_america/us/vermont.c_300.kmz)
 
   An additional note: Vermont has approximately [8,000 miles of dirt roads and only 6,000 miles
 of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-dirt-road-reigns.html).
@@ -111,7 +113,7 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
           | bin/curvature-output-kml --min_curvature 1000 --max_curvature 20000 \
           > vermont.c_1000.kml
 
-  [vermont.c_1000.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.kmz)
+  [vermont.c_1000.kml](http://kml.roadcurvature.com/north_america/us/vermont.c_1000.kmz)
 
 * Multi-colored KML files generated with a minimum curvature of 1000 using the pre-processed
   [vermont-latest.osm.pbf](http://download.geofabrik.de/north-america/us/vermont-latest.osm.pbf)
@@ -126,14 +128,14 @@ of paved roads](http://www.nytimes.com/1996/06/24/us/in-slow-paced-vermont-the-d
           | bin/curvature-output-kml-curve-radius \
           > vermont.c_1000.curves.kml
 
-  [vermont.c_1000.curves.kml](http://www2.adamfranco.com/curvature/kml/north_america/us/vermont.c_1000.curves.kmz)  
+  [vermont.c_1000.curves.kml](http://kml.roadcurvature.com/north_america/us/vermont.c_1000.curves.kmz)  
 
 * All of the commands above, combined into a single script `processing_chains/adams_defaults.sh`:
 
         mv vermont-latest.osm.pbf vermont.osm.pbf
         processing_chains/adams_defaults.sh -v vermont.osm.pbf
 
-* More examples can be seen at [adamfranco.com/curvature/kml/](http://www2.adamfranco.com/curvature/kml/)
+* More examples can be seen at [roadcurvature.com](http://roadcurvature.com/)
 
 Installation
 ============
