@@ -14,6 +14,7 @@ class WayCollector(object):
     num_ways = 0
     verbose = False
     roads = []
+    roundabouts = []
 
     def __init__(self, parser_class=OSMParser):
         self.parser_class = parser_class
@@ -94,6 +95,10 @@ class WayCollector(object):
                     self.log('\nSkipping single-point way: id: {}, tags: {}, refs: {}\n'.format(osmid, tags, refs))
                     continue
                 way = {'id': osmid, 'tags': tags, 'refs': refs}
+
+                # Add the way to our roundabouts list if it is tagged as a roundabout.
+                if 'junction' in tags and tags['junction'] == 'roundabout':
+                    self.roundabouts.append(way)
 
                 # Add our ways to a route collection if we can match them either
                 # by route-number or alternatively, by name. These route-collections
@@ -292,6 +297,16 @@ class WayCollector(object):
 
                     # Continue on joining the rest of the ways in this route.
                     ways = unused_ways
+
+                    # Try to find a roundabout segment that will bridge between
+                    # one of our collection ends and one of the other remaining ways.
+                    # Roundabouts may or may not be tagged with our road name or
+                    # route number.
+                    if len(ways):
+                        roundabout_segment = self.get_roundabout_segment(collection, ways)
+                        if roundabout_segment:
+                            ways.insert(0, roundabout_segment)
+
                 # After we've either added all of the ways or looped the max_loop times,
                 # add this collection to our collections list and return to the start
                 # of our `while len(ways) > 0:` loop. The next remaining way in the
@@ -299,3 +314,56 @@ class WayCollector(object):
                 # some more of the remaining ways joined to it.
                 self.collections.append(collection)
         self.log('\nJoining completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
+
+    def get_roundabout_segment(self, collection, remaining_ways):
+        # Find roundabouts that connect to our start or end points.
+        collection_start = collection['ways'][0]['refs'][0]
+        collection_end = collection['ways'][-1]['refs'][-1]
+        candidates = []
+        for way in self.roundabouts:
+            for i, ref in enumerate(way['refs']):
+                if ref == collection_start or ref == collection_end:
+                    candidates.append(self.extract_roundabout_segment(way, i))
+                    break
+
+        # Find the first remaining way that has a start/end point shared with one of
+        # our roundabout candidates.
+        for segment in candidates:
+            # Go through each point in our roundabout and check to see if we can
+            # attach a remaining way to it. Doing so in this order will catch the first
+            # entrance/exit we come to.
+            for end_i, end_ref in enumerate(segment['refs']):
+                for remaining_way in remaining_ways:
+                    remaining_way_start = way['refs'][0]
+                    remaining_way_end = way['refs'][-1]
+                    if end_ref == remaining_way_start or end_ref == remaining_way_end:
+                        # We've found a link. Remove the remaining points from the segment.
+                        if end_i == len(segment['refs']) - 1:
+                            return segment
+                        else:
+                            slice_end = end_i + 1
+                            segment['refs'] = segment['refs'][0][0:slice_end]
+                            if 'coords' in segment:
+                                segment['coords'] = segment['coords'][0:slice_end]
+                        return segment
+
+    def extract_roundabout_segment(self, way, start_index):
+        segment = copy(way)
+        # for non-circular roundabout ways, drop the points before our start_index
+        if segment['refs'][0] != segment['refs'][-1]:
+            segment['refs'] = segment['refs'][start_index:]
+            if 'coords' in segment:
+                segment['coords'] = segment['coords'][start_index:]
+        # For circular roundabout ways, make the start_index the first element,
+        # but include all remaining refs.
+        else:
+            # Add our refs from the start to the last element of the array.
+            segment['refs'] = segment['refs'][start_index:]
+            if 'coords' in segment:
+                segment['coords'] = segment['coords'][start_index:]
+            # Add our refs from 1 to the start_index, dropping the duplicate start/end point
+            # and the duplicate start-index point (segment will no longer be fully circular).
+            segment['refs'] = segment['refs'][1:start_index]
+            if 'coords' in segment:
+                segment['coords'] = segment['coords'][1:start_index]
+        return segment
