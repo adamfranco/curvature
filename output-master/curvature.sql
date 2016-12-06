@@ -5,7 +5,7 @@
 -- Dumped from database version 9.5.5
 -- Dumped by pg_dump version 9.5.1
 
--- Started on 2016-12-06 18:43:40 EST
+-- Started on 2016-12-06 18:57:39 EST
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -34,7 +34,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 3873 (class 0 OID 0)
+-- TOC entry 3874 (class 0 OID 0)
 -- Dependencies: 1
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
@@ -51,7 +51,7 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
--- TOC entry 3874 (class 0 OID 0)
+-- TOC entry 3875 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
 --
@@ -68,7 +68,7 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology WITH SCHEMA topology;
 
 
 --
--- TOC entry 3875 (class 0 OID 0)
+-- TOC entry 3876 (class 0 OID 0)
 -- Dependencies: 3
 -- Name: EXTENSION postgis_topology; Type: COMMENT; Schema: -; Owner: 
 --
@@ -100,7 +100,7 @@ CREATE TABLE curvature_segments (
 ALTER TABLE curvature_segments OWNER TO postgres;
 
 --
--- TOC entry 3744 (class 2606 OID 19496)
+-- TOC entry 3745 (class 2606 OID 19496)
 -- Name: curvature_segments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -109,7 +109,15 @@ ALTER TABLE ONLY curvature_segments
 
 
 --
--- TOC entry 3872 (class 0 OID 0)
+-- TOC entry 3743 (class 1259 OID 19514)
+-- Name: curvature_segment_geom; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX curvature_segment_geom ON curvature_segments USING gist (geom);
+
+
+--
+-- TOC entry 3873 (class 0 OID 0)
 -- Dependencies: 8
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
@@ -120,7 +128,7 @@ GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
--- Completed on 2016-12-06 18:43:40 EST
+-- Completed on 2016-12-06 18:57:39 EST
 
 --
 -- PostgreSQL database dump complete
