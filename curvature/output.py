@@ -7,93 +7,21 @@ import os
 import codecs
 from xml.sax.saxutils import escape
 
-class KmlOutput(object):
+class OutputTools(object):
     units = 'mi'
-    no_compress = False
-    description = "Curvature data is a derivative of Open Street Map which is © OpenStreetMap contributors and provided under the terms of the Open Data Commons Open Database License (ODbL). https://www.openstreetmap.org/about"
+    assumed_paved_highways = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link')
+    paved_surfaces = ('paved', 'asphalt', 'concrete', 'concrete:lanes', 'concrete:plates', 'metal', 'wood', 'cobblestone')
 
-    def __init__(self, units):
+    def __init__(self, units, assumed_paved_highways=None, paved_surfaces=None):
         if units in ['mi', 'km']:
             self.units = units
         else:
             raise ValueError("units must be 'mi' or 'km'")
+        if assumed_paved_highways is not None:
+            self.assumed_paved_highways = assumed_paved_highways
+        if paved_surfaces is not None:
+            self.paved_surfaces = paved_surfaces
 
-    def _write_header(self, f):
-        self._write_doc_start(f)
-        self._write_styles(f, self.get_styles())
-
-    def _write_doc_start(self, f):
-        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
-        f.write('<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n')
-        f.write('<Document>\n')
-        f.write('	<description>{}</description>\n'.format(self.description))
-
-    def get_styles(self):
-        return {
-            'lineStyle0':{'color':'F000E010'}, # Straight roads
-            'lineStyle1':{'color':'F000FFFF'}, # Level 1 turns
-            'lineStyle2':{'color':'F000AAFF'}, # Level 2 turns
-            'lineStyle3':{'color':'F00055FF'}, # Level 3 turns
-            'lineStyle4':{'color':'F00000FF'}, # Level 4 turns
-            'elminiated':{'color':'F0000000'}, # Eliminated segments
-        }
-
-
-    def _write_styles(self, f, styles):
-        for id in styles:
-            style = styles[id]
-            if 'width' not in style:
-                style['width'] = '3'
-            if 'color' not in style:
-                style['color'] = 'F0FFFFFF'
-
-            f.write('	<Style id="' + id + '">\n')
-            f.write('		<LineStyle>\n')
-            f.write('			<color>' + style['color'] + '</color>\n')
-            f.write('			<width>' + style['width'] + '</width>\n')
-            f.write('		</LineStyle>\n')
-            f.write('	</Style>\n')
-
-    def _write_footer(self, f):
-        f.write('</Document>\n')
-        f.write('</kml>\n')
-
-    def _record_collection_bbox(self, collection):
-        for way in collection['ways']:
-            if not hasattr(self, 'min_lat') and 'segments' in way and len(way['segments']):
-                self.min_lat = way['segments'][0]['start'][0]
-                self.max_lat = way['segments'][0]['start'][0]
-                self.min_lon = way['segments'][0]['start'][1]
-                self.max_lon = way['segments'][0]['start'][1]
-            way_max_lat = self.get_way_max_lat(way)
-            if way_max_lat > self.max_lat:
-                self.max_lat = way_max_lat
-            way_min_lat = self.get_way_min_lat(way)
-            if way_min_lat < self.min_lat:
-                self.min_lat = way_min_lat
-            way_max_lon = self.get_way_max_lon(way)
-            if way_max_lon > self.max_lon:
-                self.max_lon = way_max_lon
-            way_min_lon = self.get_way_min_lon(way)
-            if way_min_lon < self.min_lon:
-                self.min_lon = way_min_lon
-
-    def _write_region(self, f):
-        if not hasattr(self, 'max_lat'):
-            return
-
-# 		f.write('	<!--\n')
-# 		f.write('	<Region>\n')
-        f.write('		<LatLonBox>\n')
-        f.write('			<north>%.6f</north>\n' % (self.max_lat))
-        f.write('			<south>%.6f</south>\n' % (self.min_lat))
-        # Note that this won't work for regions crossing longitude 180, but this
-        # should only affect the Russian asian file
-        f.write('			<east>%.6f</east>\n' % (self.max_lon))
-        f.write('			<west>%.6f</west>\n' % (self.min_lon))
-        f.write('		</LatLonBox>\n')
-# 		f.write('	</Region>\n')
-# 		f.write('	-->\n')
 
     def get_way_max_lat(self, way):
         if 'max_lat' not in way:
@@ -161,17 +89,6 @@ class KmlOutput(object):
                 way['max_lon'] = segment['end'][1]
             if segment['end'][1] < way['min_lon']:
                 way['min_lon'] = segment['end'][1]
-
-    def head (self, f):
-        self._write_header(f)
-
-    def write_collection(self, f, collection):
-        self._record_collection_bbox(collection)
-        self._write_collection(f, collection)
-
-    def foot (self, f):
-        self._write_region(f)
-        self._write_footer(f)
 
     def get_collection_segments(self, collection):
         segments = []
@@ -324,17 +241,130 @@ class KmlOutput(object):
         list += '</table>'
         return list
 
+
+    def get_collection_paved_style(self, collection):
+        # Go by the highway tag first.
+        highway_tags = self.get_length_weighted_collection_tags(collection, 'highway')
+        if highway_tags[0] in self.assumed_paved_highways:
+            return 'paved'
+        # Then by the surface tag.
+        surface_tags = self.get_length_weighted_collection_tags(collection, 'surface', 'unknown')
+        if surface_tags[0] in self.paved_surfaces:
+            return 'paved'
+        elif surface_tags[0] == 'unknown':
+            return 'unknown'
+        else:
+            return 'unpaved'
+
+class KmlOutput(object):
+    no_compress = False
+    description = "Curvature data is a derivative of Open Street Map which is © OpenStreetMap contributors and provided under the terms of the Open Data Commons Open Database License (ODbL). https://www.openstreetmap.org/about"
+
+    def __init__(self, units):
+        self.tools = OutputTools(units)
+
+    def _write_header(self, f):
+        self._write_doc_start(f)
+        self._write_styles(f, self.get_styles())
+
+    def _write_doc_start(self, f):
+        f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
+        f.write('<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">\n')
+        f.write('<Document>\n')
+        f.write('	<description>{}</description>\n'.format(self.description))
+
+    def get_styles(self):
+        return {
+            'lineStyle0':{'color':'F000E010'}, # Straight roads
+            'lineStyle1':{'color':'F000FFFF'}, # Level 1 turns
+            'lineStyle2':{'color':'F000AAFF'}, # Level 2 turns
+            'lineStyle3':{'color':'F00055FF'}, # Level 3 turns
+            'lineStyle4':{'color':'F00000FF'}, # Level 4 turns
+            'elminiated':{'color':'F0000000'}, # Eliminated segments
+        }
+
+
+    def _write_styles(self, f, styles):
+        for id in styles:
+            style = styles[id]
+            if 'width' not in style:
+                style['width'] = '3'
+            if 'color' not in style:
+                style['color'] = 'F0FFFFFF'
+
+            f.write('	<Style id="' + id + '">\n')
+            f.write('		<LineStyle>\n')
+            f.write('			<color>' + style['color'] + '</color>\n')
+            f.write('			<width>' + style['width'] + '</width>\n')
+            f.write('		</LineStyle>\n')
+            f.write('	</Style>\n')
+
+    def _write_footer(self, f):
+        f.write('</Document>\n')
+        f.write('</kml>\n')
+
+    def _record_collection_bbox(self, collection):
+        for way in collection['ways']:
+            if not hasattr(self, 'min_lat') and 'segments' in way and len(way['segments']):
+                self.min_lat = way['segments'][0]['start'][0]
+                self.max_lat = way['segments'][0]['start'][0]
+                self.min_lon = way['segments'][0]['start'][1]
+                self.max_lon = way['segments'][0]['start'][1]
+            way_max_lat = self.tools.get_way_max_lat(way)
+            if way_max_lat > self.max_lat:
+                self.max_lat = way_max_lat
+            way_min_lat = self.tools.get_way_min_lat(way)
+            if way_min_lat < self.min_lat:
+                self.min_lat = way_min_lat
+            way_max_lon = self.tools.get_way_max_lon(way)
+            if way_max_lon > self.max_lon:
+                self.max_lon = way_max_lon
+            way_min_lon = self.tools.get_way_min_lon(way)
+            if way_min_lon < self.min_lon:
+                self.min_lon = way_min_lon
+
+    def _write_region(self, f):
+        if not hasattr(self, 'max_lat'):
+            return
+
+# 		f.write('	<!--\n')
+# 		f.write('	<Region>\n')
+        f.write('		<LatLonBox>\n')
+        f.write('			<north>%.6f</north>\n' % (self.max_lat))
+        f.write('			<south>%.6f</south>\n' % (self.min_lat))
+        # Note that this won't work for regions crossing longitude 180, but this
+        # should only affect the Russian asian file
+        f.write('			<east>%.6f</east>\n' % (self.max_lon))
+        f.write('			<west>%.6f</west>\n' % (self.min_lon))
+        f.write('		</LatLonBox>\n')
+# 		f.write('	</Region>\n')
+# 		f.write('	-->\n')
+
+    def head (self, f):
+        self._write_header(f)
+
+    def write_collection(self, f, collection):
+        self._record_collection_bbox(collection)
+        self._write_collection(f, collection)
+
+    def get_collection_description(self, collection):
+        return self.tools.get_collection_description(collection)
+
+    def foot (self, f):
+        self._write_region(f)
+        self._write_footer(f)
+
+
 class SingleColorKmlOutput(KmlOutput):
 
     min_curvature = 0
     max_curvature = 4000
 
-    def __init__(self, units, min_curvature, max_curvature, assumed_paved_highways=('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary', 'secondary_link'), paved_surfaces=('paved', 'asphalt', 'concrete', 'concrete:lanes', 'concrete:plates', 'metal', 'wood', 'cobblestone')):
+    def __init__(self, units, min_curvature, max_curvature, assumed_paved_highways=None, paved_surfaces=None):
         super(SingleColorKmlOutput, self).__init__(units)
+        self.tools = OutputTools(units, assumed_paved_highways, paved_surfaces)
         self.min_curvature = min_curvature
         self.max_curvature = max_curvature
-        self.assumed_paved_highways = assumed_paved_highways
-        self.paved_surfaces = paved_surfaces
 
     def head(self, f):
         super(SingleColorKmlOutput, self).head(f)
@@ -374,13 +404,13 @@ class SingleColorKmlOutput(KmlOutput):
         return styles
 
     def _write_collection(self, f, collection):
-        segments = self.get_collection_segments(collection)
+        segments = self.tools.get_collection_segments(collection)
         if not len(segments):
 # 				sys.stderr.write("\nError: way has no segments: {} \n".format(way['name']))
             return
         f.write('	<Placemark>\n')
         f.write('		<styleUrl>#' + self.get_collection_line_style(collection) + '</styleUrl>\n')
-        f.write('		<name>' + escape(self.get_collection_name(collection)) + '</name>\n')
+        f.write('		<name>' + escape(self.tools.get_collection_name(collection)) + '</name>\n')
         f.write('		<description><![CDATA[' + self.get_collection_description(collection) + ']]></description>\n')
         f.write('		<LineString>\n')
         f.write('			<tessellate>1</tessellate>\n')
@@ -422,22 +452,8 @@ class SingleColorKmlOutput(KmlOutput):
 
     def get_collection_line_style(self, collection):
         return '{}{}'.format(
-            self.get_collection_paved_style(collection),
-            self.level_for_curvature(self.get_collection_curvature(collection)))
-
-    def get_collection_paved_style(self, collection):
-        # Go by the highway tag first.
-        highway_tags = self.get_length_weighted_collection_tags(collection, 'highway')
-        if highway_tags[0] in self.assumed_paved_highways:
-            return 'paved'
-        # Then by the surface tag.
-        surface_tags = self.get_length_weighted_collection_tags(collection, 'surface', 'unknown')
-        if surface_tags[0] in self.paved_surfaces:
-            return 'paved'
-        elif surface_tags[0] == 'unknown':
-            return 'unknown'
-        else:
-            return 'unpaved'
+            self.tools.get_collection_paved_style(collection),
+            self.level_for_curvature(self.tools.get_collection_curvature(collection)))
 
 
 class MultiColorKmlOutput(KmlOutput):
@@ -451,11 +467,11 @@ class MultiColorKmlOutput(KmlOutput):
         f.write('	</Style>\n')
 
     def _write_collection(self, f, collection):
-        segments = self.get_collection_segments(collection)
+        segments = self.tools.get_collection_segments(collection)
 
         f.write('	<Folder>\n')
         f.write('		<styleUrl>#folderStyle</styleUrl>\n')
-        f.write('		<name>' + escape(self.get_collection_name(collection)) + '</name>\n')
+        f.write('		<name>' + escape(self.tools.get_collection_name(collection)) + '</name>\n')
         f.write('		<description><![CDATA[' + self.get_collection_description(collection) + ']]></description>\n')
         current_curvature_level = 0
         i = 0
@@ -539,7 +555,7 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
         else:
             surface = 'unknown'
         description = 'Type: %s\nSurface: %s\n' % (highway, surface)
-        description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n' % (self.get_constituent_list(collection))
+        description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n' % (self.tools.get_constituent_list(collection))
         return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
 
     def get_filename(self, basename, extension):
