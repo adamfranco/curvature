@@ -4,7 +4,6 @@ import math
 import string
 from collections import Counter
 import os
-import codecs
 from xml.sax.saxutils import escape
 
 class KmlOutput(object):

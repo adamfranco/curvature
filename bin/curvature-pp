@@ -7,15 +7,8 @@ import sys
 # Add our parent folder to our path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-import codecs
 import msgpack
 import importlib
-
-# Set our output to default to UTF-8
-reload(sys)
-sys.setdefaultencoding('utf-8')
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
 argv = sys.argv
 file_name = argv.pop(0)

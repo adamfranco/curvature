@@ -3,15 +3,8 @@
 
 import os
 import sys
-import codecs
 import msgpack
 import pprint
-
-# Set our output to default to UTF-8
-reload(sys)
-sys.setdefaultencoding('utf-8')
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
 for item in unpacker:

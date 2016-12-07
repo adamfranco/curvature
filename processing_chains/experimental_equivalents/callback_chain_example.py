@@ -3,7 +3,6 @@
 
 import os
 import sys
-import codecs
 import msgpack
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -17,12 +16,6 @@ from curvature.post_processors.roll_up_length import RollUpLength
 from curvature.post_processors.roll_up_curvature import RollUpCurvature
 from curvature.post_processors.filter_collections_by_curvature import FilterCollectionsByCurvature
 from curvature.post_processors.sort_collections_by_sum import SortCollectionsBySum
-
-# Set our output to default to UTF-8
-reload(sys)
-sys.setdefaultencoding('utf-8')
-# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 class CallbackedProcessor(object):
   def __init__(self, processor, callback):
