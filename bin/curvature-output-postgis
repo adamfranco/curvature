@@ -37,10 +37,20 @@ else:
     conn = psycopg2.connect(port=args.port, database=args.database, user=args.user, password=args.password)
 cur = conn.cursor()
 
+# Fetch or insert our source.
+cur.execute("SELECT id FROM public.sources WHERE source=%s", (args.source,))
+result = cur.fetchone()
+if result is None:
+    cur.execute("INSERT INTO public.sources (source) VALUES (%s) RETURNING id", (args.source,))
+    result = cur.fetchone()
+if result is None:
+    raise Exception('Failed to insert a source.')
+source_id = result[0]
+
 # Clear out previously inserted segments from our source.
 if args.clear:
     print "Clearing " + args.source
-    cur.execute("DELETE FROM public.curvature_segments WHERE source=%s", (args.source,))
+    cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
 
 unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
 tools = OutputTools('km')
@@ -71,7 +81,7 @@ for collection in unpacker:
         paved = False
     geom = 'LINESTRING({})'.format(','.join(coords))
 
-    cur.execute("INSERT INTO public.curvature_segments (source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_GeomFromText(%s));", (args.source, id, name, curvature, paved, geom))
+    cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_GeomFromText(%s));", (source_id, id, name, curvature, paved, geom))
 
 conn.commit()
 cur.close()
