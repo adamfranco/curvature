@@ -207,7 +207,7 @@ class WayCollector(object):
             marker = round(total/100)
         self.log("{} routes will be joined, each '.' is 1% complete".format(total))
 
-        for route, route_data in self.routes.iteritems():
+        for route, route_data in self.routes.items():
             # Sort ways so that joining always happens in the same order
             # even if the parser returns them in a different order.
             # ways = sorted(route_data['ways'], key=lambda way: way['id'])
