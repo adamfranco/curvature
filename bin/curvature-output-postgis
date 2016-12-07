@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+import os
+import sys
+import psycopg2
+
+# Add our parent folder to our path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+import codecs
+import msgpack
+import argparse
+from curvature.geomath import Units
+from curvature.output import OutputTools
+from hashlib import sha1
+
+parser = argparse.ArgumentParser(description='Output into a PostGIS database.')
+parser.add_argument('--host', type=str, default='', help='The database to connect to.')
+parser.add_argument('--port', type=int, default=5432, help='The database port to connect to.')
+parser.add_argument('--database', type=str, required=True, help='The database to connect to.')
+parser.add_argument('--user', type=str, help='Username for connecting to the database.')
+parser.add_argument('--password', type=str, help='Password for connecting to the database.')
+parser.add_argument('--source', type=str, required=True, help='Source string to identify this data-set. Used for partial refreshes.')
+parser.add_argument('--clear', action='store_true', help='If true, all items with the source passed will be deleted prior to inserting new data.')
+args = parser.parse_args()
+
+# Set our output to default to UTF-8
+reload(sys)
+sys.setdefaultencoding('utf-8')
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+
+if args.host:
+    conn = psycopg2.connect(host=args.host, port=args.port, database=args.database, user=args.user, password=args.password)
+else:
+    conn = psycopg2.connect(port=args.port, database=args.database, user=args.user, password=args.password)
+cur = conn.cursor()
+
+# Clear out previously inserted segments from our source.
+if args.clear:
+    print "Clearing " + args.source
+    cur.execute("DELETE FROM public.curvature_segments WHERE source=%s", (args.source,))
+
+unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+tools = OutputTools('km')
+
+for collection in unpacker:
+    coords = []
+    way_ids = []
+    output_ways = []
+    for way in collection['ways']:
+        segments = way['segments']
+        coords.append('{:0.6f} {:0.6f}'.format(segments[0]['start'][1], segments[0]['start'][0]))
+        for segment in way['segments']:
+            coords.append('{:0.6f} {:0.6f}'.format(segment['end'][1], segment['end'][0]))
+
+        way_ids.append(way['id'])
+
+    hash = sha1()
+    hash.update(':'.join(map(str, way_ids)))
+    id = hash.hexdigest()
+    name = tools.get_collection_name(collection)
+    curvature = int(tools.get_collection_curvature(collection))
+    surface = tools.get_collection_paved_style(collection)
+    if surface == 'unpaved':
+        continue;
+    if surface == 'paved':
+        paved = True
+    else:
+        paved = False
+    geom = 'LINESTRING({})'.format(','.join(coords))
+
+    cur.execute("INSERT INTO public.curvature_segments (source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_GeomFromText(%s));", (args.source, id, name, curvature, paved, geom))
+
+conn.commit()
+cur.close()
+conn.close()
