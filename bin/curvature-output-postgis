@@ -63,7 +63,9 @@ for collection in unpacker:
         for segment in way['segments']:
             coords.append('{:0.6f} {:0.6f}'.format(segment['end'][1], segment['end'][0]))
 
-        way_ids.append(way['id'])
+        # The id will include by the way id and the starting ref as a single OSM
+        # way might be split into multiple collections.
+        way_ids.append("{}-{}".format(way['id'], way['refs'][0]))
 
     hash = sha1()
     id_bytestring = ':'.join(map(str, way_ids)).encode('ascii')
