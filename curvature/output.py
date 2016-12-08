@@ -280,7 +280,7 @@ class KmlOutput(object):
         surface_tags = self.get_length_weighted_collection_tags(collection, 'surface', 'unknown')
         description = description + 'Type: %s\nSurface: %s\n' % (', '.join(highway_tags), ', '.join(surface_tags))
         description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n\n%s\n' % (self.get_constituent_list(collection), self.get_all_josm_link(collection))
-        return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
+        return '<div style="width: 500px">%s</div>' % (description.replace('\n', '<br/>'))
 
     def get_all_josm_link(self, collection):
         select = []
