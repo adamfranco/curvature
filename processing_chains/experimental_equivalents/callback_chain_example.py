@@ -56,12 +56,12 @@ chain = [
 ]
 
 def print_msgpack(arg):
-  sys.stdout.write(msgpack.packb(arg))
+  sys.stdout.buffer.write(msgpack.packb(arg, use_bin_type=True))
 
 prev_callback = print_msgpack
 
 for processor in reversed(chain):
   prev_callback = CallbackedProcessor(processor, prev_callback).input
 
-for collection in msgpack.Unpacker(sys.stdin, use_list=True):
+for collection in msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8'):
   prev_callback(collection)

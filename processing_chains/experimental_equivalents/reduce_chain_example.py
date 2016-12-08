@@ -31,7 +31,7 @@ from curvature.post_processors.sort_collections_by_sum import SortCollectionsByS
 
 
 chain = [
-  msgpack.Unpacker(sys.stdin, use_list=True),
+  msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8'),
   FilterOutWaysWithTag('surface', ['unpaved','dirt','gravel','fine_gravel','sand','grass','ground','pebblestone','mud','clay','dirt/sand','soil']),
   FilterOutWaysWithTag('service', ['driveway', 'parking_aisle', 'drive-through', 'parking', 'bus', 'emergency_access']),
   AddSegments(),
@@ -48,7 +48,7 @@ chain = [
 process_chain = reduce(lambda acc, processor: processor.process(acc), chain)
 
 def print_msgpack(arg):
-  sys.stdout.write(msgpack.packb(arg))
+  sys.stdout.buffer.write(msgpack.packb(arg, use_bin_type=True))
 
 for collection in process_chain:
   print_msgpack(collection)

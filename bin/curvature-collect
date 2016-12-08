@@ -39,7 +39,7 @@ if args.highway_types:
     collector.roads = args.highway_types.split(',')
 
 def output(collection):
-    sys.stdout.write(msgpack.packb(collection))
+    sys.stdout.buffer.write(msgpack.packb(collection, use_bin_type=True))
 # start parsing
 for file in args.file:
     collector.parse(file.name, output)

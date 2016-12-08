@@ -19,7 +19,7 @@ units = Units(args.units)
 
 sys.stdout.write("Curvature\tLength (%s)\tId\tName\tCounty\tHighway\n" % (args.units))
 
-unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
 for collection in unpacker:
     for way in collection:
         if 'curvature' in way:
