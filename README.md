@@ -201,6 +201,11 @@ with `pip` or `easy_install`:
 
     pip install msgpack-python
 
+Optional dependencies
+---------------------
+*psycopg2*
+Needed if you want to load Curvature output into a PostGIS database.
+
 Curvature Installation
 ----------------------
 Once your Python environment set up and the `imposm.parser` and `msgpack-python` modules are installed, just download
@@ -415,6 +420,25 @@ to one of the output programs like `bin/curvature-output-kml` or `bin/curvature-
 to write a data-file. Example:
 
     cat vermont.msgpack | curvature-output-kml > doc.kml
+
+PostGIS Output
+--------------
+In addition to writing KML and text files, Curvature can also insert each segment
+into a PostGIS database.
+
+You will need a PostGIS database server and account credentials to access it.
+The database schema expected can be found in [output-master/curvature.sql](output-master/curvature.sql).
+Once your database is set up and the schema created you can insert batches of curvature
+data using the `curvature-output-postgis` output. For example:
+
+    cat vermont.msgpack | bin/curvature-output-postgis -v \
+      --source north_america/us/vermont --clear \
+      --database curvature --user curvatureuser --password curvaturepassword
+
+The `--source` option provides a shared key for this working data set to allow you
+to build up and refresh a world-wide database one region at a time. The `--clear`
+option tells the output to clear existing values associated with the source before
+inserting the new ones. `--host` and `--port` options are also available.
 
 Change Log
 ==========
