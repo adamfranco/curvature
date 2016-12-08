@@ -260,11 +260,11 @@ class KmlOutput(object):
         else:
             ref = None
         if names and ref:
-            return unicode('{} ({})').format(names[0], ref)
+            return '{} ({})'.format(names[0], ref)
         elif ref:
-            return unicode('{}').format(ref)
+            return '{}'.format(ref)
         elif names:
-            return unicode('{}').format(names[0])
+            return '{}'.format(names[0])
         else:
             return '{}'.format(collection['ways'][0]['id'])
 
