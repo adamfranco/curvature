@@ -15,6 +15,7 @@ from curvature.output import OutputTools
 from hashlib import sha1
 
 parser = argparse.ArgumentParser(description='Output into a PostGIS database.')
+parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
 parser.add_argument('--host', type=str, default='', help='The database to connect to.')
 parser.add_argument('--port', type=int, default=5432, help='The database port to connect to.')
 parser.add_argument('--database', type=str, required=True, help='The database to connect to.')
@@ -42,7 +43,8 @@ source_id = result[0]
 
 # Clear out previously inserted segments from our source.
 if args.clear:
-    print "Clearing " + args.source
+    if args.v:
+        sys.stderr.write("Clearing {}\n".format(args.source))
     cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
 
 unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
