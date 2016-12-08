@@ -20,16 +20,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import argparse
 from curvature.collector import WayCollector
-import codecs
 import msgpack
 import time
 import resource
-
-# Set our output to default to UTF-8
-reload(sys)
-sys.setdefaultencoding('utf-8')
-# sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 
 parser = argparse.ArgumentParser(description='Find the roads that are most twisty in an Open Street Map (OSM) XML file.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
@@ -46,7 +39,7 @@ if args.highway_types:
     collector.roads = args.highway_types.split(',')
 
 def output(collection):
-    sys.stdout.write(msgpack.packb(collection))
+    sys.stdout.buffer.write(msgpack.packb(collection, use_bin_type=True))
 # start parsing
 for file in args.file:
     collector.parse(file.name, output)
