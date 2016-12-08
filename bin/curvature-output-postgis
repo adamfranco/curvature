@@ -76,7 +76,18 @@ for collection in unpacker:
         paved = False
     geom = 'LINESTRING({})'.format(','.join(coords))
 
-    cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_GeomFromText(%s));", (source_id, id, name, curvature, paved, geom))
+    with conn.cursor() as cur:
+        try:
+            cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_GeomFromText(%s));", (source_id, id, name, curvature, paved, geom))
+        except psycopg2.IntegrityError as e:
+            conn.rollback()
+            sys.stderr.write("{}".format(e))
+            sys.stderr.write("To insert:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n".format(args.source, id, name, curvature))
+            with conn.cursor() as cur:
+                cur.execute("SELECT source, c.id, name, curvature FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id WHERE c.id=%s", (id,))
+                result = cur.fetchone()
+                sys.stderr.write("Existing:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n".format(result[0], result[1], result[2], result[3]))
+            pass
 
 conn.commit()
 cur.close()
