@@ -421,6 +421,13 @@ to write a data-file. Example:
 
     cat vermont.msgpack | curvature-output-kml > doc.kml
 
+GeoJSON Output
+--------------
+Use the `curvature-output-geojson` script to export results as a GeoJSON file that
+can be used in many GIS programs.
+
+    cat vermont.msgpack | curvature-output-geojson > veromnt.geojson
+
 PostGIS Output
 --------------
 In addition to writing KML and text files, Curvature can also insert each segment
