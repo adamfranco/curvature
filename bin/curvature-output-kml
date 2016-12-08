@@ -7,7 +7,6 @@ import sys
 # Add our parent folder to our path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-import codecs
 import msgpack
 import argparse
 from curvature.output import SingleColorKmlOutput
@@ -18,19 +17,12 @@ parser.add_argument('--min_curvature', type=float, default=0, help='The minimum 
 parser.add_argument('--max_curvature', type=float, default=4000, help='The maximum curvature level for color-scale. Default: 4000')
 parser.add_argument('--assumed_paved_highways', type=str, default='motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link', help='Highway types that are assumed to be paved.')
 parser.add_argument('--paved_surfaces', type=str, default='paved,asphalt,concrete,concrete:lanes,concrete:plates,metal,wood,cobblestone')
-
 args = parser.parse_args()
-
-# Set our output to default to UTF-8
-reload(sys)
-sys.setdefaultencoding('utf-8')
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
 kml = SingleColorKmlOutput(args.units, args.min_curvature, args.max_curvature)
 kml.head(sys.stdout)
 
-unpacker = msgpack.Unpacker(sys.stdin, use_list=True)
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
 for collection in unpacker:
     kml.write_collection(sys.stdout, collection)
 

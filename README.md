@@ -144,32 +144,55 @@ Prerequisites
 -------------
 
 *Python*
-This is a Python script, therefore you need a functional Python 2.7 or later environment on your computer. See
-http://python.org/
+This is a Python script, therefore you need a functional Python 3 or later environment on your computer.
+This program has been tested on Python 3.5.
+See http://python.org/
 
-*Protocol Buffers*
-The `imposm.parser` library (below) utilizes the ["Protocol Buffers" library](https://developers.google.com/protocol-buffers/docs/downloads)
-to read `.pbf` files. You will need to download and install the Protocol Buffers library. This can usually be accomplished with something like:
+*Boost.Python*
+Boost is system for providing C++ libraries (like libosmium) to Python
 
-    cd /usr/local/src/
-    wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
-    tar xzf protobuf-2.6.1.tar.gz
-    cd protobuf-2.6.1
-    ./configure
-    make
-    make check
-    make install
+*libosmium*
+http://osmcode.org/libosmium/manual.html#building-libosmium
 
-*imposm.parser*
-curvature makes use of the `imposm.parser` which you can find at
-[imposm.org](http://imposm.org/docs/imposm.parser/latest/install.html#installation) and installed
-with `pip` or `easy_install`:
+The `sparsehash` package will also be needed for the following to work.
 
-    pip install imposm.parser
+    wget https://github.com/osmcode/libosmium/archive/v2.10.2.tar.gz
+    tar xzf v2.10.2.tar.gz
+    cd  libosmium-2.10.2/
+    mkdir build
+    cd build
+    cmake -g INSTALL_PROTOZERO ../
+    make && make install
 
-or
 
-    easy_install imposm.parser
+*pyosmium*
+After libosmium is available on your system, you should be able to use `pip` to
+install the python osmium bindings.
+
+    pip install osmium
+
+Issues: On my system (OS X 10.10.5 with most packages installed via MacPorts) I
+had to take two additional steps to fix errors in building osmium with `pip`.
+
+1. MacPorts put the boost.python installation in `/opt/local/include/boost/` while
+   osmium is looking for it in `/opt/local/lib/boost/`. Making a symbolic link
+   solved this.
+
+        cd /opt/local/lib
+        ln -s ../include/boost boost
+
+2. I was seeing the following error:
+
+        In file included from lib/osmium.cc:5:
+        In file included from /usr/local/include/osmium/area/assembler.hpp:62:
+        /usr/local/include/osmium/tags/filter.hpp:41:10: fatal error: 'boost/iterator/filter_iterator.hpp' file not found
+        #include <boost/iterator/filter_iterator.hpp>
+
+I fixed this by ensuring that a `BOOST_PREFIX` variable was in my shell environment
+before running `pip`:
+
+        export BOOST_PREFIX=/opt/local/
+        pip install osmium
 
 *msgpack*
 curvature makes use of `msgpack` which you can find at
@@ -177,10 +200,6 @@ curvature makes use of `msgpack` which you can find at
 with `pip` or `easy_install`:
 
     pip install msgpack-python
-
-or
-
-    easy_install msgpack-python
 
 Curvature Installation
 ----------------------

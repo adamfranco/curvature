@@ -3,10 +3,10 @@ import math
 import resource
 from copy import copy
 import time
-from imposm.parser import OSMParser
+import osmium
 
 # simple class that handles the parsed OSM data.
-class WayCollector(object):
+class WayCollector(osmium.SimpleHandler):
     collections = []
     routes = {}
     coords = {}
@@ -15,8 +15,8 @@ class WayCollector(object):
     verbose = False
     roads = []
 
-    def __init__(self, parser_class=OSMParser):
-        self.parser_class = parser_class
+    def __init__(self):
+        osmium.SimpleHandler.__init__(self)
 
     def log(self, msg):
         if self.verbose:
@@ -34,23 +34,10 @@ class WayCollector(object):
         self.log("Loading {}".format(filename))
         self.log("Loading ways, each '-' is 100 ways, each row is 10,000 ways")
 
-        p = self.parser_class(ways_callback=self.ways_callback)
-        p.parse(filename)
+        self.apply_file(filename, locations=True, idx='sparse_mem_array')
 
         self.log("\nWays matched in {}".format(filename))
-        self.log("{} coordinates will be loaded, each '.' is 1% complete".format(len(self.coords)))
 
-        total = len(self.coords)
-        if total < 100:
-            self.coords_marker = 1
-        else:
-            self.coords_marker = round(total/100)
-
-        p = self.parser_class(coords_callback=self.coords_callback)
-        p.parse(filename)
-        self.log("\nCoordinates loaded")
-        self.apply_coordinates()
-        self.log("\nApplying coordinates to ways complete")
         self.join_ways()
 
         # Send our collected data to our callback function.
@@ -72,101 +59,54 @@ class WayCollector(object):
             callback(collection)
         self.log('\nStreaming completed in {time:.1f}'.format(time=(time.time() - start_time)))
 
-    def coords_callback(self, coords):
-        # callback method for coords
-        for osm_id, lon, lat in coords:
-            if osm_id in self.coords:
-                self.coords[osm_id] = (lat, lon)
 
-                # status output
-                if self.verbose:
-                    self.num_coords = self.num_coords + 1
-                    if not (self.num_coords % self.coords_marker):
-                        sys.stderr.write('.')
-                        sys.stderr.flush()
-
-    def ways_callback(self, ways):
+    def way(self, way):
         # callback method for ways
-        for osmid, tags, refs in ways:
-            if 'highway' in tags and (not self.roads or tags['highway'] in self.roads):
-                # ignore single-point ways
-                if len(refs) < 2:
-                    self.log('\nSkipping single-point way: id: {}, tags: {}, refs: {}\n'.format(osmid, tags, refs))
-                    continue
-                way = {'id': osmid, 'tags': tags, 'refs': refs}
+        if 'highway' in way.tags and (not self.roads or way.tags['highway'] in self.roads):
+            # ignore single-point ways
+            if len(way.nodes) < 2:
+                self.log('\nSkipping single-point way: id: {}, tags: {}, nodes: {}\n'.format(way.id, way.tags, way.nodes))
+                return
 
-                # Add our ways to a route collection if we can match them either
-                # by route-number or alternatively, by name. These route-collections
-                # will later be joined into longer segments so that curvature
-                # calculations can extend over multiple way-segments that might be
-                # split due to bridges, local names, speed limits, or other metadata
-                # changes.
-                if 'ref' in tags:
-                    routes = tags['ref'].split(';')
-                    for route in routes:
-                        if route not in self.routes:
-                            self.routes[route] = {  'join_type': 'ref',
-                                                    'join_data': route,
-                                                    'ways': []}
-                        self.routes[route]['ways'].append(way)
+            new_way = {'id': way.id, 'tags': {}, 'refs': [], 'coords': []}
+            for tag in way.tags:
+                new_way['tags'][tag.k] = tag.v
+            for node in way.nodes:
+                new_way['refs'].append(node.ref)
+                new_way['coords'].append((node.lat, node.lon))
+
+            # Add our ways to a route collection if we can match them either
+            # by route-number or alternatively, by name. These route-collections
+            # will later be joined into longer segments so that curvature
+            # calculations can extend over multiple way-segments that might be
+            # split due to bridges, local names, speed limits, or other metadata
+            # changes.
+            if 'ref' in new_way['tags']:
+                routes = new_way['tags']['ref'].split(';')
+                for route in routes:
+                    if route not in self.routes:
+                        self.routes[route] = {  'join_type': 'ref',
+                                                'join_data': route,
+                                                'ways': []}
+                    self.routes[route]['ways'].append(new_way)
+            else:
+                if 'name' in new_way['tags'] and new_way['tags']['name'] != '':
+                    if new_way['tags']['name'] not in self.routes:
+                        self.routes[new_way['tags']['name']] = {   'join_type': 'name',
+                                                        'join_data': new_way['tags']['name'],
+                                                        'ways': []}
+                    self.routes[new_way['tags']['name']]['ways'].append(new_way)
                 else:
-                    if 'name' in tags and tags['name'] != '':
-                        if tags['name'] not in self.routes:
-                            self.routes[tags['name']] = {   'join_type': 'name',
-                                                            'join_data': tags['name'],
-                                                            'ways': []}
-                        self.routes[tags['name']]['ways'].append(way)
-                    else:
-                        self.collections.append({'join_type': 'none', 'ways': [way]})
+                    self.collections.append({'join_type': 'none', 'ways': [new_way]})
 
-                for ref in refs:
-                    self.coords[ref] = None
-
-                # status output
-                if self.verbose:
-                    self.num_ways = self.num_ways + 1
-                    if not (self.num_ways % 100):
-                        sys.stderr.write('-')
-                        if not self.num_ways % 10000:
-                            sys.stderr.write('\n')
-                        sys.stderr.flush()
-
-    # Add the coordinates to each way.
-    def apply_coordinates(self):
-        # status output
-        start_time = time.time()
-        i = 0
-        total = len(self.routes) + len(self.collections)
-        if total < 100:
-            marker = 1
-        else:
-            marker = round(total/100)
-        self.log("{} routes & ways have their coordinates added. Each '.' is 1% complete".format(total))
-
-        # Add to joinable-ways.
-        for route, route_data in self.routes.iteritems():
-            for way in route_data['ways']:
-                way['coords'] = map(lambda ref: self.coords[ref], way['refs'])
             # status output
             if self.verbose:
-                i = i + 1
-                if not (i % marker):
-                    sys.stderr.write('.')
+                self.num_ways = self.num_ways + 1
+                if not (self.num_ways % 100):
+                    sys.stderr.write('-')
+                    if not self.num_ways % 10000:
+                        sys.stderr.write('\n')
                     sys.stderr.flush()
-
-        # Add to un-joinable ways.
-        for collection in self.collections:
-            for way in collection['ways']:
-                way['coords'] = map(lambda ref: self.coords[ref], way['refs'])
-            # status output
-            if self.verbose:
-                i = i + 1
-                if not (i % marker):
-                    sys.stderr.write('.')
-                    sys.stderr.flush()
-
-        # delete our coords database as we don't need it any more.
-        self.coords = []
 
     def way_sort_key(self, way):
         # To encourage joining that continues along the length of route rather
@@ -207,7 +147,7 @@ class WayCollector(object):
             marker = round(total/100)
         self.log("{} routes will be joined, each '.' is 1% complete".format(total))
 
-        for route, route_data in self.routes.iteritems():
+        for route, route_data in self.routes.items():
             # Sort ways so that joining always happens in the same order
             # even if the parser returns them in a different order.
             # ways = sorted(route_data['ways'], key=lambda way: way['id'])
