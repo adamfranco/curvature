@@ -419,6 +419,12 @@ to write a data-file. Example:
 Change Log
 ==========
 
+2.1.0
+-----
+Updated from Python 2.7 to Python 3.5. Also removed the dependency on the Python27-only
+imposom.parser library in favor of the well-maintained Osmium PBF parsing library.
+Python 2.7 is no longer supported by Curvature.
+
 2.0.0
 -----
 Curvature 2 is a complete rewrite of the program with a new stream-based processing model.
