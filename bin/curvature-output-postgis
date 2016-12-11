@@ -84,7 +84,7 @@ for collection in unpacker:
 
     with conn.cursor() as cur:
         try:
-            cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_GeomFromText(%s));", (source_id, id, name, curvature, paved, geom))
+            cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, geom) VALUES (%s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913));", (source_id, id, name, curvature, paved, geom))
             success = success + 1
         except psycopg2.IntegrityError as e:
             conn.rollback()
