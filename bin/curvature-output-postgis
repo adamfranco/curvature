@@ -97,7 +97,8 @@ for collection in unpacker:
             with conn.cursor() as cur:
                 cur.execute("SELECT source, c.id, name, curvature FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id WHERE c.id=%s", (id,))
                 result = cur.fetchone()
-                sys.stderr.write("Existing:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n".format(result[0], result[1], result[2], result[3]))
+                if result is not None:
+                    sys.stderr.write("Existing:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n".format(result[0], result[1], result[2], result[3]))
             pass
 
 conn.commit()
