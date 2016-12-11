@@ -37,6 +37,7 @@ result = cur.fetchone()
 if result is None:
     cur.execute("INSERT INTO public.sources (source) VALUES (%s) RETURNING id", (args.source,))
     result = cur.fetchone()
+    conn.commit()
 if result is None:
     raise Exception('Failed to insert a source.')
 source_id = result[0]
@@ -86,6 +87,7 @@ for collection in unpacker:
     with conn.cursor() as cur:
         try:
             cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, geom) VALUES (%s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913));", (source_id, id, name, curvature, paved, length, geom))
+            conn.commit()
             success = success + 1
         except psycopg2.IntegrityError as e:
             conn.rollback()
