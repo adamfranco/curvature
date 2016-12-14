@@ -75,6 +75,8 @@ for collection in unpacker:
     name = tools.get_collection_name(collection)
     curvature = int(tools.get_collection_curvature(collection))
     length = int(tools.get_collection_length(collection))
+    highway_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'highway'))
+    surface_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'surface', 'unknown'))
     surface = tools.get_collection_paved_style(collection)
     if surface == 'unpaved':
         continue;
@@ -86,7 +88,28 @@ for collection in unpacker:
 
     with conn.cursor() as cur:
         try:
-            cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, geom) VALUES (%s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913));", (source_id, id, name, curvature, paved, length, geom))
+            cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, highway, surface, geom) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913));", (source_id, id, name, curvature, paved, length, highway_tags, surface_tags, geom))
+            position = 0
+            for way in collection['ways']:
+                position = position + 1
+                if 'name' in way['tags']:
+                    name = way['tags']['name']
+                else:
+                    name = ''
+                if 'highway' in way['tags']:
+                    highway = way['tags']['highway']
+                else:
+                    highway = ''
+                if 'surface' in way['tags']:
+                    surface = way['tags']['surface']
+                else:
+                    surface = 'unknown'
+                min_lon = tools.get_way_min_lon(way) - 0.001
+                max_lon = tools.get_way_max_lon(way) + 0.001
+                min_lat = tools.get_way_max_lat(way) + 0.001
+                max_lat = tools.get_way_min_lat(way) - 0.001
+                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, highway, surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (id, position, way['id'], name, highway, surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
+
             conn.commit()
             success = success + 1
         except psycopg2.IntegrityError as e:
