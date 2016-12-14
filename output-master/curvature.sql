@@ -5,7 +5,7 @@
 -- Dumped from database version 9.5.5
 -- Dumped by pg_dump version 9.5.5
 
--- Started on 2016-12-11 01:07:07 EST
+-- Started on 2016-12-13 22:58:05 EST
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -34,7 +34,7 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- TOC entry 3891 (class 0 OID 0)
+-- TOC entry 3886 (class 0 OID 0)
 -- Dependencies: 1
 -- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
 --
@@ -51,7 +51,7 @@ CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
 --
--- TOC entry 3892 (class 0 OID 0)
+-- TOC entry 3887 (class 0 OID 0)
 -- Dependencies: 2
 -- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
 --
@@ -68,7 +68,7 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology WITH SCHEMA topology;
 
 
 --
--- TOC entry 3893 (class 0 OID 0)
+-- TOC entry 3888 (class 0 OID 0)
 -- Dependencies: 3
 -- Name: EXTENSION postgis_topology; Type: COMMENT; Schema: -; Owner: 
 --
@@ -88,8 +88,8 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE curvature_segments (
-    id character(41) NOT NULL,
-    name character varying(50),
+    id character(40) NOT NULL,
+    name character varying(100),
     curvature integer,
     geom geometry(LineString),
     paved boolean DEFAULT false NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE curvature_segments (
 ALTER TABLE curvature_segments OWNER TO postgres;
 
 --
--- TOC entry 3894 (class 0 OID 0)
+-- TOC entry 3889 (class 0 OID 0)
 -- Dependencies: 205
 -- Name: COLUMN curvature_segments.id; Type: COMMENT; Schema: public; Owner: postgres
 --
@@ -138,7 +138,7 @@ CREATE SEQUENCE sources_id_seq
 ALTER TABLE sources_id_seq OWNER TO curvature_app;
 
 --
--- TOC entry 3896 (class 0 OID 0)
+-- TOC entry 3891 (class 0 OID 0)
 -- Dependencies: 206
 -- Name: sources_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: curvature_app
 --
@@ -147,18 +147,7 @@ ALTER SEQUENCE sources_id_seq OWNED BY sources.id;
 
 
 --
--- TOC entry 208 (class 1259 OID 51759)
--- Name: test; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW test AS
- SELECT st_expand(st_setsrid((st_makebox2d(st_makepoint(('-8140237.76425813'::numeric)::double precision, (5479006.187481432)::double precision), st_makepoint(('-8061966.247294108'::numeric)::double precision, (5557277.704445452)::double precision)))::geometry, 900913), (39135.75848201024)::double precision) AS bounding_box;
-
-
-ALTER TABLE test OWNER TO postgres;
-
---
--- TOC entry 3753 (class 2604 OID 28649)
+-- TOC entry 3749 (class 2604 OID 28649)
 -- Name: id; Type: DEFAULT; Schema: public; Owner: curvature_app
 --
 
@@ -166,7 +155,7 @@ ALTER TABLE ONLY sources ALTER COLUMN id SET DEFAULT nextval('sources_id_seq'::r
 
 
 --
--- TOC entry 3756 (class 2606 OID 27410)
+-- TOC entry 3752 (class 2606 OID 104481)
 -- Name: curvature_segments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -175,7 +164,7 @@ ALTER TABLE ONLY curvature_segments
 
 
 --
--- TOC entry 3760 (class 2606 OID 28651)
+-- TOC entry 3756 (class 2606 OID 28651)
 -- Name: sources_pkey; Type: CONSTRAINT; Schema: public; Owner: curvature_app
 --
 
@@ -184,7 +173,7 @@ ALTER TABLE ONLY sources
 
 
 --
--- TOC entry 3754 (class 1259 OID 19514)
+-- TOC entry 3750 (class 1259 OID 19514)
 -- Name: curvature_segment_geom; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -192,7 +181,7 @@ CREATE INDEX curvature_segment_geom ON curvature_segments USING gist (geom);
 
 
 --
--- TOC entry 3757 (class 1259 OID 28657)
+-- TOC entry 3753 (class 1259 OID 28657)
 -- Name: fki_foreign_key_source; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -200,7 +189,7 @@ CREATE INDEX fki_foreign_key_source ON curvature_segments USING btree (fk_source
 
 
 --
--- TOC entry 3758 (class 1259 OID 56200)
+-- TOC entry 3754 (class 1259 OID 56200)
 -- Name: length_idx; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -208,7 +197,7 @@ CREATE INDEX length_idx ON curvature_segments USING btree (length);
 
 
 --
--- TOC entry 3761 (class 2606 OID 28652)
+-- TOC entry 3757 (class 2606 OID 28652)
 -- Name: foreign_key_source; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -217,7 +206,7 @@ ALTER TABLE ONLY curvature_segments
 
 
 --
--- TOC entry 3890 (class 0 OID 0)
+-- TOC entry 3885 (class 0 OID 0)
 -- Dependencies: 8
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
 --
@@ -229,7 +218,7 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --
--- TOC entry 3895 (class 0 OID 0)
+-- TOC entry 3890 (class 0 OID 0)
 -- Dependencies: 205
 -- Name: curvature_segments; Type: ACL; Schema: public; Owner: postgres
 --
@@ -240,7 +229,7 @@ GRANT ALL ON TABLE curvature_segments TO postgres;
 GRANT ALL ON TABLE curvature_segments TO curvature_app;
 
 
--- Completed on 2016-12-11 01:07:07 EST
+-- Completed on 2016-12-13 22:58:06 EST
 
 --
 -- PostgreSQL database dump complete
