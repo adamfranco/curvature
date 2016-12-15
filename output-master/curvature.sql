@@ -91,12 +91,12 @@ CREATE TABLE curvature_segments (
     id character(40) NOT NULL,
     name character varying(100),
     curvature integer,
-    geom geometry(LineString),
-    paved boolean DEFAULT false NOT NULL,
-    fk_source integer,
     length integer,
+    highway character varying(100),
     surface character varying(50),
-    highway character varying(50)
+    paved boolean DEFAULT false NOT NULL,
+    geom geometry(LineString),
+    fk_source integer
 );
 
 
@@ -118,6 +118,7 @@ COMMENT ON COLUMN curvature_segments.id IS 'Sha1 hash of the constituent way-ids
 
 CREATE TABLE segment_ways (
     fk_segment character(40) NOT NULL,
+    "position" integer,
     id integer NOT NULL,
     name character varying(100),
     highway character varying(20),
@@ -127,8 +128,7 @@ CREATE TABLE segment_ways (
     min_lon double precision,
     max_lon double precision,
     min_lat double precision,
-    max_lat double precision,
-    "position" integer
+    max_lat double precision
 );
 
 
