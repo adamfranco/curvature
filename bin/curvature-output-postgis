@@ -106,8 +106,8 @@ for collection in unpacker:
                     surface = 'unknown'
                 min_lon = tools.get_way_min_lon(way) - 0.001
                 max_lon = tools.get_way_max_lon(way) + 0.001
-                min_lat = tools.get_way_max_lat(way) + 0.001
-                max_lat = tools.get_way_min_lat(way) - 0.001
+                min_lat = tools.get_way_min_lat(way) - 0.001
+                max_lat = tools.get_way_max_lat(way) + 0.001
                 try:
                     cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, highway, surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (id, position, way['id'], name, highway, surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
                 except psycopg2.Error as e:
