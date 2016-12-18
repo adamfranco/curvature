@@ -4,6 +4,8 @@
 import os
 import sys
 import psycopg2
+import timeit
+import math
 
 # Add our parent folder to our path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -53,6 +55,10 @@ tools = OutputTools('km')
 
 success = 0
 failed = 0
+
+if args.v:
+    start = timeit.default_timer()
+    sys.stderr.write("Loading ways for {}\n".format(args.source))
 
 for collection in unpacker:
     coords = []
@@ -133,4 +139,11 @@ cur.close()
 conn.close()
 
 if args.v:
-    sys.stderr.write("Attemped to insert {} segments. {} were successful and {} failed.\n".format(success + failed, success, failed))
+    elapsed = timeit.default_timer() - start;
+    hours = math.floor(elapsed / 3600)
+    remainder = elapsed - (hours * 3600)
+    minutes = math.floor(remainder / 60)
+    seconds = remainder - (minutes * 60)
+    rate = (success + failed) / elapsed
+    sys.stderr.write("{:d}h {:d}m {:0.2f}s elapsed. {:0.2f} inserts/second\n".format(hours, minutes, seconds, rate))
+    sys.stderr.write("Attempted to insert {} segments. {} were successful and {} failed.\n".format(success + failed, success, failed))
