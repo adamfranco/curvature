@@ -93,8 +93,8 @@ for collection in unpacker:
     geom = 'LINESTRING({})'.format(','.join(coords))
 
     with conn.cursor() as cur:
-        try:
-            cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, highway, surface, geom) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913));", (source_id, id, name, curvature, paved, length, highway_tags, surface_tags, geom))
+        cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, highway, surface, geom) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913)) ON CONFLICT DO NOTHING;", (source_id, id, name, curvature, paved, length, highway_tags, surface_tags, geom))
+        if cur.rowcount == 1:
             position = 0
             for way in collection['ways']:
                 position = position + 1
@@ -114,18 +114,12 @@ for collection in unpacker:
                 max_lon = tools.get_way_max_lon(way) + 0.001
                 min_lat = tools.get_way_min_lat(way) - 0.001
                 max_lat = tools.get_way_max_lat(way) + 0.001
-                try:
-                    cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, highway, surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);", (id, position, way['id'], name, highway, surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
-                except psycopg2.Error as e:
+                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, highway, surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (id, position, way['id'], name, highway, surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
+                if cur.rowcount != 1:
                     sys.stderr.write("Error insert ing way:\n\tsegment: {}\n\tposition: {}\n\tid: {}\n\tname: {}\n\thighway: {}\n\tsurface: {}\n\tcurvature: {}\n\tlength: {}\n".format(id, position, way['id'], name, highway, surface,  way['curvature'], way['length']))
-                    raise
-
-            conn.commit()
             success = success + 1
-        except psycopg2.Error as e:
-            conn.rollback()
+        else:
             failed = failed + 1
-            sys.stderr.write("{}".format(e))
             sys.stderr.write("To insert:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
             with conn.cursor() as cur:
                 cur.execute("SELECT source, c.id, name, curvature, length, highway, surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id WHERE c.id=%s", (id,))
