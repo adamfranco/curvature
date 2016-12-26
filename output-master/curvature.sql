@@ -39,7 +39,8 @@ CREATE TABLE curvature_segments (
     highway character varying(100),
     paved boolean DEFAULT false NOT NULL,
     fk_source integer,
-    geom geometry(LineString)
+    geom geometry(LineString),
+    hash character(40) DEFAULT NULL::bpchar
 );
 
 

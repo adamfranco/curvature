@@ -44,40 +44,68 @@ if result is None:
     raise Exception('Failed to insert a source.')
 source_id = result[0]
 
+start = timeit.default_timer()
+existing = {}
 # Clear out previously inserted segments from our source.
 if args.clear:
     if args.v:
         sys.stderr.write("Clearing {}\n".format(args.source))
     cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
+else:
+    cur.execute("SELECT id, hash FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
+    results = cur.fetchall()
+    for r in results:
+        existing[r[0]] = r[1]
 
 unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
 tools = OutputTools('km')
 
-success = 0
+total = 0
+ignored = 0
+updated = 0
 failed = 0
+deleted = 0
 
 if args.v:
-    start = timeit.default_timer()
     sys.stderr.write("Loading ways for {}\n".format(args.source))
 
 for collection in unpacker:
+    total = total + 1
+    content_hash = sha1()
     coords = []
     way_ids = []
     output_ways = []
     for way in collection['ways']:
         segments = way['segments']
         coords.append('{:0.6f} {:0.6f}'.format(segments[0]['start'][1], segments[0]['start'][0]))
+        content_hash.update('{:0.6f} {:0.6f}'.format(segments[0]['start'][1], segments[0]['start'][0]).encode('ascii'))
         for segment in way['segments']:
             coords.append('{:0.6f} {:0.6f}'.format(segment['end'][1], segment['end'][0]))
+            content_hash.update('{:0.6f} {:0.6f}'.format(segment['end'][1], segment['end'][0]).encode('ascii'))
 
         # The id will include by the way id and the starting ref as a single OSM
         # way might be split into multiple collections.
         way_ids.append("{}-{}".format(way['id'], way['refs'][0]))
+        content_hash.update("{}-{}".format(way['id'], way['refs'][0]).encode('ascii'))
 
-    hash = sha1()
+        if 'name' in way['tags']:
+            name = way['tags']['name']
+        else:
+            name = ''
+        if 'highway' in way['tags']:
+            highway = way['tags']['highway']
+        else:
+            highway = ''
+        if 'surface' in way['tags']:
+            surface = way['tags']['surface']
+        else:
+            surface = 'unknown'
+        content_hash.update('{}-{}-{}'.format(name, highway, surface).encode('utf-8'))
+
+    id_hash = sha1()
     id_bytestring = ':'.join(map(str, way_ids)).encode('ascii')
-    hash.update(id_bytestring)
-    id = hash.hexdigest()
+    id_hash.update(id_bytestring)
+    id = id_hash.hexdigest()
     name = tools.get_collection_name(collection)
     curvature = int(tools.get_collection_curvature(collection))
     length = int(tools.get_collection_length(collection))
@@ -92,8 +120,32 @@ for collection in unpacker:
         paved = False
     geom = 'LINESTRING({})'.format(','.join(coords))
 
+    content_hash.update(id_bytestring)
+    content_hash.update(name.encode('utf-8'))
+    content_hash.update('{}'.format(curvature).encode('ascii'))
+    content_hash.update('{}'.format(length).encode('ascii'))
+    content_hash.update(highway_tags.encode('ascii'))
+    content_hash.update(surface_tags.encode('ascii'))
+    hash = content_hash.hexdigest()
+
     with conn.cursor() as cur:
-        cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, highway, surface, geom) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913)) ON CONFLICT DO NOTHING;", (source_id, id, name, curvature, paved, length, highway_tags, surface_tags, geom))
+        if id in existing:
+            if existing[id] == hash:
+                # Remove this id from our list so it won't get deleted as no longer
+                # existing in the source data.
+                del(existing[id])
+                # There is nothing to do since the content is the same, just move on.
+                ignored = ignored + 1
+                continue
+            else:
+                # Remove this id from our list so it won't get deleted as no longer
+                # existing in the source data.
+                del(existing[id])
+                # Delete the exiting segement and its ways so that they can be recreated
+                # from the source data.
+                cur.execute('DELETE FROM public.curvature_segments WHERE id = %s', (id, ))
+
+        cur.execute("INSERT INTO public.curvature_segments (fk_source, id, name, curvature, paved, length, highway, surface, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING;", (source_id, id, name, curvature, paved, length, highway_tags, surface_tags, geom, hash))
         if cur.rowcount == 1:
             position = 0
             for way in collection['ways']:
@@ -117,16 +169,27 @@ for collection in unpacker:
                 cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, highway, surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (id, position, way['id'], name, highway, surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
                 if cur.rowcount != 1:
                     sys.stderr.write("Error insert ing way:\n\tsegment: {}\n\tposition: {}\n\tid: {}\n\tname: {}\n\thighway: {}\n\tsurface: {}\n\tcurvature: {}\n\tlength: {}\n".format(id, position, way['id'], name, highway, surface,  way['curvature'], way['length']))
-            success = success + 1
+            updated = updated + 1
         else:
             failed = failed + 1
-            sys.stderr.write("To insert:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
+            sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
             with conn.cursor() as cur:
                 cur.execute("SELECT source, c.id, name, curvature, length, highway, surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id WHERE c.id=%s", (id,))
                 result = cur.fetchone()
                 if result is not None:
-                    sys.stderr.write("Existing:\n\tSource: {}\n\tHash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6]))
+                    sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6]))
             pass
+
+if not args.clear:
+    if len(existing):
+        if args.v:
+            sys.stderr.write("Clearing {} missing ways from {}\n".format(len(existing), args.source))
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s AND id IN %s", (source_id, existing.keys()))
+            deleted = cur.rowcount
+    else:
+        if args.v:
+            sys.stderr.write("No missing ways from {} to delete.\n".format(args.source))
 
 conn.commit()
 cur.close()
@@ -138,6 +201,8 @@ if args.v:
     remainder = elapsed - (hours * 3600)
     minutes = math.floor(remainder / 60)
     seconds = remainder - (minutes * 60)
-    rate = (success + failed) / elapsed
-    sys.stderr.write("{:d}h {:d}m {:0.2f}s elapsed. {:0.2f} inserts/second\n".format(hours, minutes, seconds, rate))
-    sys.stderr.write("Attempted to insert {} segments. {} were successful and {} failed.\n".format(success + failed, success, failed))
+    rate = total / elapsed
+    sys.stderr.write("{:d}h {:d}m {:0.2f}s elapsed. {:0.2f} segments/second\n".format(hours, minutes, seconds, rate))
+    sys.stderr.write("{} segments in input. {} ignored, {} successfully updated, {} failed.\n".format(total, ignored, updated, failed))
+    if deleted:
+        sys.stderr.write("Removed {} segments.\n".format(deleted))
