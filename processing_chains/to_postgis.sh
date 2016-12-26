@@ -80,7 +80,7 @@ while getopts "h?vrCt:H:D:U:P:S:" opt; do
     ;;
   P)  password="--password $OPTARG"
     ;;
-  S)  password="--source $OPTARG"
+  S)  source="--source $OPTARG"
     ;;
   C)  clear="--clear"
     ;;
