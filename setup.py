@@ -8,5 +8,5 @@ setup(name='curvature',
       author='Adam Franco',
       author_email='adamfranco@gmail.com',
       url='https://www.github.com/adamfranco/curvature/',
-      packages=['curvature'],
+      packages=['curvature', 'curvature.post_processors'],
      )
