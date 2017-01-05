@@ -171,7 +171,7 @@ class OutputTools(object):
     def get_collection_name(self, collection):
         names = self.get_length_weighted_collection_tags(collection, 'name')
         # See if we have any shared route-numbers.
-        refs = self.get_shared_collection_refs(collection)
+        refs = sorted(self.get_shared_collection_refs(collection))
         if refs:
             ref = ' / '.join(refs)
         else:
