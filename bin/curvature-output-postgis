@@ -1,0 +1,280 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+import os
+import sys
+import psycopg2
+import timeit
+import math
+
+# Add our parent folder to our path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+import msgpack
+import argparse
+from curvature.geomath import Units
+from curvature.output import OutputTools
+from hashlib import sha1
+
+parser = argparse.ArgumentParser(description='Output into a PostGIS database.')
+parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
+parser.add_argument('-s', action='store_true', help='Include summary output implied with -v.')
+parser.add_argument('--host', type=str, default='', help='The database to connect to.')
+parser.add_argument('--port', type=int, default=5432, help='The database port to connect to.')
+parser.add_argument('--database', type=str, required=True, help='The database to connect to.')
+parser.add_argument('--user', type=str, help='Username for connecting to the database.')
+parser.add_argument('--password', type=str, help='Password for connecting to the database.')
+parser.add_argument('--source', type=str, required=True, help='Source string to identify this data-set. Used for partial refreshes.')
+parser.add_argument('--clear', action='store_true', help='If true, all items with the source passed will be deleted prior to inserting new data.')
+args = parser.parse_args()
+
+if args.host:
+    conn = psycopg2.connect(host=args.host, port=args.port, database=args.database, user=args.user, password=args.password)
+else:
+    conn = psycopg2.connect(port=args.port, database=args.database, user=args.user, password=args.password)
+cur = conn.cursor()
+
+# Fetch or insert our source.
+cur.execute("SELECT id FROM public.sources WHERE source=%s", (args.source,))
+result = cur.fetchone()
+if result is None:
+    cur.execute("INSERT INTO public.sources (source) VALUES (%s) RETURNING id", (args.source,))
+    result = cur.fetchone()
+    conn.commit()
+if result is None:
+    raise Exception('Failed to insert a source.')
+source_id = result[0]
+
+start = timeit.default_timer()
+existing = {}
+# Clear out previously inserted segments from our source.
+if args.clear:
+    if args.v:
+        sys.stderr.write("Clearing {}\n".format(args.source))
+    cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
+else:
+    cur.execute("SELECT id_hash, hash FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
+    results = cur.fetchall()
+    for r in results:
+        existing[r[0]] = r[1]
+
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
+tools = OutputTools('km')
+
+total = 0
+ignored = 0
+updated = 0
+failed = 0
+deleted = 0
+
+highway_tag_map = {}
+surface_tag_map = {}
+
+if args.v:
+    sys.stderr.write("Loading ways for {}\n".format(args.source))
+
+for collection in unpacker:
+    total = total + 1
+    content_hash = sha1()
+    coords = []
+    way_ids = []
+    output_ways = []
+    for way in collection['ways']:
+        segments = way['segments']
+        coords.append('{:0.6f} {:0.6f}'.format(segments[0]['start'][1], segments[0]['start'][0]))
+        content_hash.update('{:0.6f} {:0.6f}'.format(segments[0]['start'][1], segments[0]['start'][0]).encode('ascii'))
+        for segment in way['segments']:
+            coords.append('{:0.6f} {:0.6f}'.format(segment['end'][1], segment['end'][0]))
+            content_hash.update('{:0.6f} {:0.6f}'.format(segment['end'][1], segment['end'][0]).encode('ascii'))
+
+        # The id will include by the way id and the starting ref as a single OSM
+        # way might be split into multiple collections.
+        way_ids.append("{}-{}".format(way['id'], way['refs'][0]))
+        content_hash.update("{}-{}".format(way['id'], way['refs'][0]).encode('ascii'))
+
+        if 'name' in way['tags']:
+            name = way['tags']['name']
+        else:
+            name = ''
+        if 'highway' in way['tags']:
+            highway = way['tags']['highway']
+        else:
+            highway = ''
+        if 'surface' in way['tags']:
+            surface = way['tags']['surface']
+        else:
+            surface = 'unknown'
+        content_hash.update('{}-{}-{}'.format(name, highway, surface).encode('utf-8'))
+
+    id_hash = sha1()
+    id_bytestring = ':'.join(map(str, way_ids)).encode('ascii')
+    id_hash.update(id_bytestring)
+    id = id_hash.hexdigest()
+    name = tools.get_collection_name(collection)
+    curvature = int(tools.get_collection_curvature(collection))
+    length = int(tools.get_collection_length(collection))
+    highway_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'highway'))
+    surface_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'surface', 'unknown'))
+    surface = tools.get_collection_paved_style(collection)
+    if surface == 'unpaved':
+        continue;
+    if surface == 'paved':
+        paved = True
+    else:
+        paved = False
+    geom = 'LINESTRING({})'.format(','.join(coords))
+
+    content_hash.update(id_bytestring)
+    content_hash.update(name.encode('utf-8'))
+    content_hash.update('{}'.format(curvature).encode('ascii'))
+    content_hash.update('{}'.format(length).encode('ascii'))
+    content_hash.update(highway_tags.encode('ascii'))
+    content_hash.update(surface_tags.encode('ascii'))
+    hash = content_hash.hexdigest()
+
+    with conn.cursor() as cur:
+        if id in existing:
+            if existing[id] == hash:
+                # Remove this id from our list so it won't get deleted as no longer
+                # existing in the source data.
+                del(existing[id])
+                # There is nothing to do since the content is the same, just move on.
+                ignored = ignored + 1
+                continue
+            else:
+                # Remove this id from our list so it won't get deleted as no longer
+                # existing in the source data.
+                del(existing[id])
+
+                # Note the update.
+                # sys.stderr.write("Updating:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, hash, name, curvature, length, highway_tags, surface_tags))
+                # with conn.cursor() as s_cur:
+                #     s_cur.execute("SELECT source, c.id_hash, c.hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id WHERE c.id_hash=%s", (id,))
+                #     result = s_cur.fetchone()
+                #     if result is not None:
+                #         sys.stderr.write("- Existing:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7]))
+
+                # Delete the exiting segement and its ways so that they can be recreated
+                # from the source data.
+                cur.execute('DELETE FROM public.curvature_segments WHERE id_hash = %s', (id, ))
+
+        if highway_tags in highway_tag_map:
+            fk_highway = highway_tag_map[highway_tags]
+        else:
+            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('highway', highway_tags))
+            result = cur.fetchone()
+            if result is None:
+                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('highway', highway_tags))
+                result = cur.fetchone()
+                conn.commit()
+            if result is None:
+                raise Exception('Failed to insert a highway tag.')
+            highway_tag_map[highway_tags] = result[0]
+            fk_highway = highway_tag_map[highway_tags]
+        if surface_tags in surface_tag_map:
+            fk_surface = surface_tag_map[surface_tags]
+        else:
+            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('surface', surface_tags))
+            result = cur.fetchone()
+            if result is None:
+                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('surface', surface_tags))
+                result = cur.fetchone()
+                conn.commit()
+            if result is None:
+                raise Exception('Failed to insert a surface tag.')
+            surface_tag_map[surface_tags] = result[0]
+            fk_surface = surface_tag_map[surface_tags]
+
+        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, geom, hash))
+        if cur.rowcount == 1:
+            result = cur.fetchone()
+            segment_db_id = result[0]
+
+            position = 0
+            for way in collection['ways']:
+                position = position + 1
+                if 'name' in way['tags']:
+                    name = way['tags']['name']
+                else:
+                    name = ''
+                if 'highway' in way['tags']:
+                    highway = way['tags']['highway']
+                else:
+                    highway = ''
+                if 'surface' in way['tags']:
+                    surface = way['tags']['surface']
+                else:
+                    surface = 'unknown'
+                min_lon = tools.get_way_min_lon(way) - 0.001
+                max_lon = tools.get_way_max_lon(way) + 0.001
+                min_lat = tools.get_way_min_lat(way) - 0.001
+                max_lat = tools.get_way_max_lat(way) + 0.001
+
+                if highway in highway_tag_map:
+                    fk_highway = highway_tag_map[highway]
+                else:
+                    cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('highway', highway))
+                    result = cur.fetchone()
+                    if result is None:
+                        cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('highway', highway))
+                        result = cur.fetchone()
+                        conn.commit()
+                    if result is None:
+                        raise Exception('Failed to insert a highway tag.')
+                    highway_tag_map[highway] = result[0]
+                    fk_highway = highway_tag_map[highway]
+                if surface in surface_tag_map:
+                    fk_surface = surface_tag_map[surface]
+                else:
+                    cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('surface', surface))
+                    result = cur.fetchone()
+                    if result is None:
+                        cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('surface', surface))
+                        result = cur.fetchone()
+                        conn.commit()
+                    if result is None:
+                        raise Exception('Failed to insert a surface tag.')
+                    surface_tag_map[surface] = result[0]
+                    fk_surface = surface_tag_map[surface]
+
+                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, fk_highway, fk_surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (segment_db_id, position, way['id'], name, fk_highway, fk_surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
+                if cur.rowcount != 1:
+                    sys.stderr.write("Error inserting way:\n\tsegment: {}\n\tposition: {}\n\tid: {}\n\tname: {}\n\thighway: {}\n\tsurface: {}\n\tcurvature: {}\n\tlength: {}\n".format(id, position, way['id'], name, highway, surface,  way['curvature'], way['length']))
+            updated = updated + 1
+        else:
+            failed = failed + 1
+            if args.v:
+                sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
+                with conn.cursor() as cur:
+                    cur.execute("SELECT source, c.id_hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id WHERE c.id_hash=%s", (id,))
+                    result = cur.fetchone()
+                    if result is not None:
+                        sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6]))
+            pass
+
+if not args.clear:
+    if len(existing):
+        if args.v:
+            sys.stderr.write("Clearing {} missing ways from {}\n".format(len(existing), args.source))
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s AND id_hash IN %s", (source_id, tuple(existing.keys())))
+            deleted = cur.rowcount
+    else:
+        if args.v:
+            sys.stderr.write("No missing ways from {} to delete.\n".format(args.source))
+
+conn.commit()
+cur.close()
+conn.close()
+
+if args.v or args.s:
+    elapsed = timeit.default_timer() - start;
+    hours = math.floor(elapsed / 3600)
+    remainder = elapsed - (hours * 3600)
+    minutes = math.floor(remainder / 60)
+    seconds = remainder - (minutes * 60)
+    rate = total / elapsed
+    sys.stderr.write("{:d}h {:d}m {:0.2f}s elapsed. {:0.2f} segments/second\n".format(hours, minutes, seconds, rate))
+    sys.stderr.write("{} segments in input. {} ignored, {} successfully updated, {} failed.\n".format(total, ignored, updated, failed))
+    if deleted:
+        sys.stderr.write("Removed {} segments.\n".format(deleted))
