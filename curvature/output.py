@@ -555,7 +555,7 @@ class SurfaceKmlOutput(SingleColorKmlOutput):
             surface = 'unknown'
         description = 'Type: %s\nSurface: %s\n' % (highway, surface)
         description = description + '\nConstituent ways - <em>Open/edit in OpenStreetMap:</em>\n%s\n' % (self.tools.get_constituent_list(collection))
-        return '<div style="width: 500px">%s</div>' % (string.replace(description, '\n', '<br/>'))
+        return '<div style="width: 500px">%s</div>' % (description.replace('\n', '<br/>'))
 
     def get_filename(self, basename, extension):
         filename = basename + '.surfaces'
