@@ -18,6 +18,7 @@ from hashlib import sha1
 
 parser = argparse.ArgumentParser(description='Output into a PostGIS database.')
 parser.add_argument('-v', action='store_true', help='Verbose mode, showing status output')
+parser.add_argument('-s', action='store_true', help='Include summary output implied with -v.')
 parser.add_argument('--host', type=str, default='', help='The database to connect to.')
 parser.add_argument('--port', type=int, default=5432, help='The database port to connect to.')
 parser.add_argument('--database', type=str, required=True, help='The database to connect to.')
@@ -242,12 +243,13 @@ for collection in unpacker:
             updated = updated + 1
         else:
             failed = failed + 1
-            sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
-            with conn.cursor() as cur:
-                cur.execute("SELECT source, c.id_hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id WHERE c.id_hash=%s", (id,))
-                result = cur.fetchone()
-                if result is not None:
-                    sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6]))
+            if args.v:
+                sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
+                with conn.cursor() as cur:
+                    cur.execute("SELECT source, c.id_hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id WHERE c.id_hash=%s", (id,))
+                    result = cur.fetchone()
+                    if result is not None:
+                        sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6]))
             pass
 
 if not args.clear:
@@ -265,7 +267,7 @@ conn.commit()
 cur.close()
 conn.close()
 
-if args.v:
+if args.v or args.s:
     elapsed = timeit.default_timer() - start;
     hours = math.floor(elapsed / 3600)
     remainder = elapsed - (hours * 3600)

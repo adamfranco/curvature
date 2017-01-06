@@ -37,10 +37,11 @@ user=""
 password=""
 source=""
 usage="
-$0 [-h] [-v] [-t temp/dir] [-C] [-H dbhost] -D database -U user -P password -S source <input-file.osm.pbf>
+$0 [-h] [-v] [-s] [-t temp/dir] [-C] [-H dbhost] -D database -U user -P password -S source <input-file.osm.pbf>
 
   -h      Show this help.
   -v      Verbose mode, print details about progress.
+  -s      Include summary output implied with -v.
   -t      Use another directory for temporary files. Default: /tmp/
   -r      Keep and reuse temporary files.
   -C      Clear out previous entries from this source.
@@ -60,13 +61,15 @@ script_path="${script_path}/bin"
 # Allow the user to configure our variables via command-line options.
 ##
 OPTIND=1         # Reset in case getopts has been used previously in the shell.
-while getopts "h?vrCt:H:D:U:P:S:" opt; do
+while getopts "h?vsrCt:H:D:U:P:S:" opt; do
   case "$opt" in
   h|\?)
     echo "$usage" >&2
     exit 1
     ;;
   v)  verbose="-v"
+    ;;
+  s)  summary="-s"
     ;;
   r)  reuse_temp=1
     ;;
@@ -148,7 +151,7 @@ do
     echo "Sending to PostGIS ..."
   fi
   cat $temp_dir/$filename.msgpack \
-    | $script_path/curvature-output-postgis $verbose $clear $host $database $user $password $source
+    | $script_path/curvature-output-postgis $verbose $summary $clear $host $database $user $password $source
 
   if [[ ! reuse_temp ]]
   then
