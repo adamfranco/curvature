@@ -128,8 +128,18 @@ for collection in unpacker:
     content_hash.update(name.encode('utf-8'))
     content_hash.update('{}'.format(curvature).encode('ascii'))
     content_hash.update('{}'.format(length).encode('ascii'))
-    content_hash.update(highway_tags.encode('ascii'))
-    content_hash.update(surface_tags.encode('ascii'))
+    try:
+        content_hash.update(highway_tags.encode('ascii'))
+    except UnicodeEncodeError:
+        # Highway tags *should* all be ascii, but in a couple cases non-ascii
+        # characters get into the data.
+        content_hash.update(highway_tags.encode('utf-8'))
+    try:
+        content_hash.update(surface_tags.encode('ascii'))
+    except UnicodeEncodeError:
+        # Highway tags *should* all be ascii, but in a couple cases non-ascii
+        # characters get into the data.
+        content_hash.update(surface_tags.encode('utf-8'))
     hash = content_hash.hexdigest()
 
     with conn.cursor() as cur:
