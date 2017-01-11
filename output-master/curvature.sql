@@ -33,7 +33,7 @@ SET default_with_oids = false;
 CREATE TABLE curvature_segments (
     id integer NOT NULL,
     id_hash character(40) NOT NULL,
-    name character varying(100),
+    name character varying(500),
     curvature integer,
     length integer,
     fk_surface integer NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE segment_ways (
     fk_segment integer NOT NULL,
     "position" integer,
     id integer NOT NULL,
-    name character varying(100),
+    name character varying(500),
     fk_highway integer NOT NULL,
     fk_surface integer NOT NULL,
     curvature integer,
@@ -131,7 +131,7 @@ COMMENT ON COLUMN segment_ways.name IS 'The name of the way.';
 
 CREATE TABLE sources (
     id integer NOT NULL,
-    source character varying(100)
+    source character varying(500)
 );
 
 
@@ -164,8 +164,8 @@ ALTER SEQUENCE sources_id_seq OWNED BY sources.id;
 
 CREATE TABLE tags (
     tag_id integer NOT NULL,
-    tag_name character varying(100),
-    tag_value character varying(100)
+    tag_name character varying(500),
+    tag_value character varying(500)
 );
 
 
@@ -392,4 +392,3 @@ ALTER TABLE ONLY segment_ways
 --
 -- PostgreSQL database dump complete
 --
-
