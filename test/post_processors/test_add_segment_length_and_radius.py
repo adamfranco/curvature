@@ -90,6 +90,129 @@ def south_union_street_b():
                         'end':    [44.48055300000012, -73.20930960000047]}]
             }
 
+@pytest.fixture
+def basic_straight_road():
+    return {
+        'segments': [
+            {
+                'start': [0, 0],
+                'end': [1, 0],
+            },
+            {
+                'start': [1, 0],
+                'end': [2, 0],
+            },
+            {
+                'start': [2, 0],
+                'end': [3, 0],
+            },
+            {
+                'start': [3, 0],
+                'end': [4, 0],
+            },
+        ]
+    }
+
+@pytest.fixture
+def basic_curved_road():
+    return {
+        'segments': [
+            {
+                'start': [0.000, 0.000],
+                'end': [0.001, 0.000],
+            },
+            {
+                'start': [0.001, 0.000],
+                'end': [0.002, 0.000],
+            },
+            {
+                'start': [0.002, 0.000],
+                'end': [0.003, 0.001],
+            },
+            {
+                'start': [0.003, 0.001],
+                'end': [0.003, 0.002],
+            },
+            {
+                'start': [0.003, 0.002],
+                'end': [0.003, 0.003],
+            },
+            {
+                'start': [0.003, 0.003],
+                'end': [0.003, 0.004],
+            },
+        ]
+    }
+
+def test_straight_road(basic_straight_road):
+    data = [{'ways': [basic_straight_road]}]
+    result = list(AddSegmentLengthAndRadius().process(data))
+    segments = result[0]['ways'][0]['segments']
+    # [{'end': [1, 0],
+    #   'length': 111229.83322958752,
+    #   'radius': 145159487741.38614,
+    #   'start': [0, 0]},
+    #  {'end': [2, 0],
+    #   'length': 111229.83322958752,
+    #   'radius': 96897816892.49901,
+    #   'start': [1, 0]},
+    #  {'end': [3, 0],
+    #   'length': 111229.83322958752,
+    #   'radius': 96897816892.49901,
+    #   'start': [2, 0]},
+    #  {'end': [4, 0],
+    #   'length': 111229.83322962806,
+    #   'radius': 10000,
+    #   'start': [3, 0]}]
+    assert(111229 <= segments[0]['length'] <= 111230)
+    assert(111229 <= segments[1]['length'] <= 111230)
+    assert(111229 <= segments[2]['length'] <= 111230)
+    assert(111229 <= segments[3]['length'] <= 111230)
+    assert(145159487741 <= segments[0]['radius'] < 145159487742)
+    assert(96897816892 <= segments[1]['radius'] < 96897816893)
+    assert(96897816892 <= segments[2]['radius'] < 96897816893)
+    assert(10000 == segments[3]['radius'])
+
+def test_curved_road(basic_curved_road):
+    data = [{'ways': [basic_curved_road]}]
+    result = list(AddSegmentLengthAndRadius().process(data))
+    segments = result[0]['ways'][0]['segments']
+    # [{'end': [0.001, 0.0],
+    #   'length': 111.22983735621419,
+    #   'radius': 6373000.524647183,
+    #   'start': [0.0, 0.0]},
+    #  {'end': [0.002, 0.0],
+    #   'length': 111.22983735621419,
+    #   'radius': 175.8698149547354,
+    #   'start': [0.001, 0.0]},
+    #  {'end': [0.003, 0.001],
+    #   'length': 157.30274453170819,
+    #   'radius': 175.8698149547354,
+    #   'start': [0.002, 0.0]},
+    #  {'end': [0.003, 0.002],
+    #   'length': 111.22983735621419,
+    #   'radius': 175.8698149547354,
+    #   'start': [0.003, 0.001]},
+    #  {'end': [0.003, 0.003],
+    #   'length': 111.22983735621419,
+    #   'radius': 6373000.524647183,
+    #   'start': [0.003, 0.002]},
+    #  {'end': [0.003, 0.004],
+    #   'length': 111.22983735621419,
+    #   'radius': 10000,
+    #   'start': [0.003, 0.003]}]
+    assert(111 <= segments[0]['length'] <= 112)
+    assert(111 <= segments[1]['length'] <= 112)
+    assert(157 <= segments[2]['length'] <= 158)
+    assert(111 <= segments[3]['length'] <= 112)
+    assert(111 <= segments[4]['length'] <= 112)
+    assert(111 <= segments[5]['length'] <= 112)
+    assert(6373000 <= segments[0]['radius'] <= 6373001)
+    assert(175 <= segments[1]['radius'] <= 176)
+    assert(175 <= segments[2]['radius'] <= 176)
+    assert(175 <= segments[3]['radius'] <= 176)
+    assert(6373000 <= segments[4]['radius'] <= 6373001)
+    assert(10000 == segments[5]['radius'])
 
 def test_add_to_a(south_union_street_a):
     data = [{'ways': [south_union_street_a]}]
