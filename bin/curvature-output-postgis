@@ -264,11 +264,15 @@ for collection in unpacker:
 
 if not args.clear:
     if len(existing):
-        if args.v:
-            sys.stderr.write("Clearing {} missing ways from {}\n".format(len(existing), args.source))
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s AND id_hash IN %s", (source_id, tuple(existing.keys())))
-            deleted = cur.rowcount
+        # Only delete if there is input -- lack of any input indicates an error.
+        if total > 1:
+            if args.v:
+                sys.stderr.write("Clearing {} missing ways from {}\n".format(len(existing), args.source))
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s AND id_hash IN %s", (source_id, tuple(existing.keys())))
+                deleted = cur.rowcount
+        else:
+            sys.stderr.write("Error: Skipping delete due to no ways in input for {}\n".format(args.source))
     else:
         if args.v:
             sys.stderr.write("No missing ways from {} to delete.\n".format(args.source))
