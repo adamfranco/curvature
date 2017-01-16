@@ -16,10 +16,10 @@ class FilterCollectionsByNumWays(object):
 
     def process(self, iterable):
         for collection in iterable:
-            if self.min > 0:
+            if self.min is not None and self.min > 0:
                 if len(collection['ways']) < self.min:
                     continue
-            if self.max > 0:
+            if self.max is not None and self.max > 0:
                 if len(collection['ways']) > self.max:
                     continue
             yield(collection)
