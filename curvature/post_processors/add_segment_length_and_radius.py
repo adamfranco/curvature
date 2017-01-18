@@ -2,8 +2,10 @@
 import math
 from curvature.geomath import distance_on_earth
 from curvature.radiusmath import circum_circle_radius
+import itertools
 
 class AddSegmentLengthAndRadius(object):
+    MAX_RADIUS = 10000
 
     @classmethod
     def parse(cls, argv):
@@ -11,65 +13,49 @@ class AddSegmentLengthAndRadius(object):
 
     def process(self, iterable):
         for collection in iterable:
-            all_segments = []
-            for way in collection['ways']:
-                if 'segments' not in way:
-                    raise ValueError('Required "segments" not found in way. Add them with `curvature-pp add_segments` before using this processor.')
-                all_segments = all_segments + way['segments']
+            if 'segments' not in collection['ways'][0]:
+                raise ValueError('Required "segments" not found in way. Add them with `curvature-pp add_segments` before using this processor.')
+            all_segments = list(itertools.chain(*map(lambda way: way['segments'], collection['ways'])))
+            self.calculate_length(all_segments)
             self.calculate_segment_radii(all_segments)
             yield(collection)
+
+    def calculate_length(self, segments):
+        for segment in segments:
+            segment['length'] = distance_on_earth(
+                segment['start'][0],
+                segment['start'][1],
+                segment['end'][0],
+                segment['end'][1]
+            )
 
     def calculate_segment_radii(self, segments):
         # Special case: If only one segment, just use a static large 'straight'
         # radius, there is no curve.
         if len(segments) == 1:
-            segments[0]['radius'] = 1000000
+            segments[0]['radius'] = AddSegmentLengthAndRadius.MAX_RADIUS
 
-        i = 0
-        while i < len(segments):
-            first_segment = segments[i]
-            i = i + 1
-            if 'length' not in first_segment:
-                first_segment['length'] = distance_on_earth(first_segment['start'][0],
-                                                            first_segment['start'][1],
-                                                            first_segment['end'][0],
-                                                            first_segment['end'][1] )
-
-            if i < len(segments):
-                second_segment = segments[i]
-                if 'length' not in second_segment:
-                    second_segment['length'] = distance_on_earth(second_segment['start'][0],
-                                                                second_segment['start'][1],
-                                                                second_segment['end'][0],
-                                                                second_segment['end'][1] )
+        for i, segment in enumerate(segments):
+            next_index = i + 1
+            if next_index < len(segments):
+                next_segment = segments[next_index]
+                base_length = distance_on_earth(segment['start'][0],
+                                                segment['start'][1],
+                                                next_segment['end'][0],
+                                                next_segment['end'][1])
+                radius = circum_circle_radius(segment['length'], next_segment['length'], base_length)
+                # The first segment only is part of one triangle, so just use that radius.
+                # Note that 1 is the first segment since we've already incremented i above.
+                # Otherwise, set the radius of the previous segment to the smaller radius of the two circumcircles it's a part of.
+                # An alternative implementation would be to average the radii or do some sort
+                # of weighted average, but I think I chose to use the shorter radius as curves
+                # are often followed by long straight-aways, and this method seemed to work well
+                # with the data.
+                if i == 0:
+                    segment['radius'] = radius
+                elif segment['radius'] > radius:
+                    segment['radius'] = radius
+                next_segment['radius'] = radius
             else:
-                second_segment = None
-
-            if second_segment:
-                base_length = distance_on_earth(first_segment['start'][0],
-                                                first_segment['start'][1],
-                                                second_segment['end'][0],
-                                                second_segment['end'][1] )
-            else:
-                base_length = None
-
-            if second_segment:
-                r = circum_circle_radius(first_segment['length'], second_segment['length'], base_length)
-            else:
-                r = 10000
-            # The first segment only is part of one triangle, so just use that radius.
-            # Note that 1 is the first segment since we've already incremented i above.
-            if i == 1:
-                first_segment['radius'] = r
-            # Otherwise, set the radius of the previous segment to the smaller radius of the two circumcircles it's a part of.
-            # An alternative implementation would be to average the radii or do some sort
-            # of weighted average, but I think I chose to use the shorter radius as curves
-            # are often followed by long straight-aways, and this method seemed to work well
-            # with the data.
-            else:
-                if first_segment['radius'] > r:
-                    first_segment['radius'] = r
-
-            # If there is a second segment, set its initial radius to that of this first triangle.
-            if second_segment:
-                second_segment['radius'] = r
+                if segment['radius'] > AddSegmentLengthAndRadius.MAX_RADIUS:
+                    segment['radius'] = AddSegmentLengthAndRadius.MAX_RADIUS
