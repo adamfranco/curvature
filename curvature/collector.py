@@ -4,6 +4,7 @@ import resource
 from copy import copy
 import time
 import osmium
+from osmium._osmium import InvalidLocationError
 
 # simple class that handles the parsed OSM data.
 class WayCollector(osmium.SimpleHandler):
@@ -72,8 +73,11 @@ class WayCollector(osmium.SimpleHandler):
             for tag in way.tags:
                 new_way['tags'][tag.k] = tag.v
             for node in way.nodes:
-                new_way['refs'].append(node.ref)
-                new_way['coords'].append((node.lat, node.lon))
+                try:
+                    new_way['refs'].append(node.ref)
+                    new_way['coords'].append((node.lat, node.lon))
+                except InvalidLocationError as e:
+                    self.log('\nSkipping node: {} (x={}, y={}) because of error: {}\n'.format(node.ref, node.x, node.y, e))
 
             # Add our ways to a route collection if we can match them either
             # by route-number or alternatively, by name. These route-collections
