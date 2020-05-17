@@ -18,7 +18,7 @@ args = parser.parse_args()
 kml = SurfaceKmlOutput(args.units)
 kml.head(sys.stdout)
 
-unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True)
 for collection in unpacker:
     kml.write_collection(sys.stdout, collection)
 

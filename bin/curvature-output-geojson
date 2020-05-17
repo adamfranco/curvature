@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 units = Units(args.units)
 
-unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True)
 tools = OutputTools('km')
 
 output = FeatureCollection([])
