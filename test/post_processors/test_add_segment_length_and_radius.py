@@ -6,8 +6,8 @@ from curvature.post_processors.add_segment_length_and_radius import AddSegmentLe
 from copy import copy
 
 @pytest.fixture
-def south_union_street():
-    return {'join_type': 'name', 'ways': [south_union_street_a(), south_union_street_b()]}
+def south_union_street(south_union_street_a, south_union_street_b):
+    return {'join_type': 'name', 'ways': [south_union_street_a, south_union_street_b]}
 
 @pytest.fixture
 def south_union_street_a():
