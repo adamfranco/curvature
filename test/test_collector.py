@@ -430,7 +430,7 @@ def us2(road_xml_dir, us2_node_data, us2_way_data):
 def writeOSMFile(file_path, node_data, way_data):
     from osmium import SimpleWriter
     format = 'xml'
-    file_path = f'{file_path}.{format}'
+    file_path = '{}.{}'.format(file_path, format)
     f = SimpleWriter(file_path)
 
     for n in (MockOSMNode(_id, loc) for _id, loc in node_data):
