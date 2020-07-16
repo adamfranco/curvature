@@ -552,17 +552,19 @@ def test_collector_doesnt_drop_unjoined_ways(vermont_125_and_us_7):
     collector.parse(vermont_125_and_us_7, callback=lambda collection: collections.append(collection))
     assert len(collections) == 4 # VT 30, VT 125, two for US 7
     # First collection, could not be joined to the others since it has no refs in common.
-    assert collections[2]['join_type'] == 'ref'
-    assert collections[2]['join_data'] == 'US 7'
-    assert len(collections[2]['ways']) == 2
-    assert collections[2]['ways'][0]['id'] == 20001
-    assert collections[2]['ways'][1]['id'] == 30001
+    collection = next(filter(lambda c: c['join_data'] =='US 7' and c['ways'][0]['id'] == 20001, collections), None)
+    assert collection['join_type'] == 'ref'
+    assert collection['join_data'] == 'US 7'
+    assert len(collection['ways']) == 2
+    assert collection['ways'][0]['id'] == 20001
+    assert collection['ways'][1]['id'] == 30001
 
     # Second collection, could be joined to the others
-    assert collections[3]['join_type'] == 'ref'
-    assert collections[3]['join_data'] == 'US 7'
-    assert len(collections[3]['ways']) == 1
-    assert collections[3]['ways'][0]['id'] == 30002
+    collection = next(filter(lambda c: c['join_data'] =='US 7' and c['ways'][0]['id'] == 30002, collections), None)
+    assert collection['join_type'] == 'ref'
+    assert collection['join_data'] == 'US 7'
+    assert len(collection['ways']) == 1
+    assert collection['ways'][0]['id'] == 30002
 
 # This test validates that joining won't spiral back on itself in a roundabout.
 def test_collector_joins_past_roundabout(us2):
