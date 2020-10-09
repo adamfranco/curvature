@@ -47,38 +47,38 @@ def way_unclassified_no():
             'tiger:reviewed': 'no'}}
 
 @pytest.fixture
-def collection_1():
+def collection_1(way_residential_no, way_residential_yes, way_residential, way_unclassified):
     return {
         'join_type': 'arbitrary',
         'ways': [
-            way_residential_no(),
-            way_residential_yes(),
-            way_residential(),
-            way_unclassified()
+            way_residential_no,
+            way_residential_yes,
+            way_residential,
+            way_unclassified
         ]}
 
 @pytest.fixture
-def collection_2():
+def collection_2(way_unclassified):
     return {
         'join_type': 'none',
         'ways': [
-            way_unclassified()
+            way_unclassified
         ]}
 
 @pytest.fixture
-def collection_3():
+def collection_3(way_residential_no):
     return {
         'join_type': 'none',
         'ways': [
-            way_residential_no()
+            way_residential_no
         ]}
 
 @pytest.fixture
-def collection_4():
+def collection_4(way_residential):
     return {
         'join_type': 'none',
         'ways': [
-            way_residential()
+            way_residential
         ]}
 
 def test_tag_equals(collection_1, collection_2, way_residential, way_unclassified):

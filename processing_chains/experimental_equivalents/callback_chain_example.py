@@ -63,5 +63,5 @@ prev_callback = print_msgpack
 for processor in reversed(chain):
   prev_callback = CallbackedProcessor(processor, prev_callback).input
 
-for collection in msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8'):
+for collection in msgpack.Unpacker(sys.stdin.buffer, use_list=True):
   prev_callback(collection)
