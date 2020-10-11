@@ -112,3 +112,49 @@ def test_many_bboxes_for_performance():
     assert len(tiles_at_zoom(tiles, 4)) == 2
     assert len(tiles_at_zoom(tiles, 5)) == 6
     assert len(tiles_at_zoom(tiles, 6)) == 12
+
+def test_bbox_from_coords():
+    a = AffectedArea()
+    coords = [
+        (43.9493, -73.2548), # SW corner
+        (43.997, -73.0), # middle, east
+        (43.95, -73.10), # middle
+        (44.0461, -73.20), # north, middle.
+    ]
+    a.record_affected(BBox.from_coords(coords))
+
+    b = a.get_affected_bbox()
+    assert b.west == -73.2548, "West should be equal"
+    assert b.south == 43.9493, "South should be equal"
+    assert b.east == -73.0, "East should be equal"
+    assert b.north == 44.0461, "North should be equal"
+
+    tiles = a.get_affected_tiles(max_zoom=9, min_zoom=3)
+    expected_tiles = {
+        Tile(x=151, y=186, z=9),
+        Tile(x=152, y=186, z=9),
+        Tile(x=75, y=93, z=8),
+        Tile(x=76, y=93, z=8),
+        Tile(x=37, y=46, z=7),
+        Tile(x=38, y=46, z=7),
+        Tile(x=18, y=23, z=6),
+        Tile(x=19, y=23, z=6),
+        Tile(x=9, y=11, z=5),
+        Tile(x=4, y=5, z=4),
+        Tile(x=2, y=2, z=3)
+    }
+    assert tiles == expected_tiles
+
+def test_bbox_from_coords_performance():
+    coords = [
+        (43.9493, -73.2548), # SW corner
+        (43.997, -73.0), # middle, east
+        (43.95, -73.10), # middle
+        (44.0461, -73.20), # north, middle.
+    ]
+    for i in range(0, 10000):
+        coords.append((43.95, -73.10))
+    start_time = time.time()
+    bbox = BBox.from_coords(coords)
+    elapsed = time.time() - start_time
+    assert elapsed < 0.1, "Creating a 10,000 coord bbox should take less than 0.1 seconds"

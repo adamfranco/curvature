@@ -69,6 +69,17 @@ class BBox(object):
         self.east = east
         self.north = north
 
+    @classmethod
+    def from_coords(cls, coords):
+        bbox = None
+        for coord in coords:
+            coord_bbox = cls(coord[1], coord[0], coord[1], coord[0])
+            if bbox is None:
+                bbox = coord_bbox
+            else:
+                bbox = bbox.union(coord_bbox)
+        return bbox
+
     # Return the union of two BBoxes.
     def union(self, bbox):
         unionNorth = max(self.north, bbox.north)
