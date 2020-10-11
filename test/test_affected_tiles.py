@@ -1,7 +1,7 @@
 # Add our parent folder to our path
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from curvature.tile_tools import AffectedArea
+from curvature.tile_tools import AffectedArea, BBox
 from mercantile import Tile
 import time
 
@@ -12,7 +12,7 @@ def tiles_at_zoom(tiles, zoom=0):
 
 def test_single_bbox():
     a = AffectedArea()
-    a.record_affected(-73.2548, 43.9493, -73.0, 44.0461)
+    a.record_affected(BBox(-73.2548, 43.9493, -73.0, 44.0461))
 
     b = a.get_affected_bbox()
     assert b.west == -73.2548, "West should be equal"
@@ -38,9 +38,9 @@ def test_single_bbox():
 
 def test_overlapping_bboxes():
     a = AffectedArea()
-    a.record_affected(-73.2548, 43.9493, -73.0, 44.0461)
+    a.record_affected(BBox(-73.2548, 43.9493, -73.0, 44.0461))
     # Add an overlapping region.
-    a.record_affected(-73.5, 44, -73.05, 44.7)
+    a.record_affected(BBox(-73.5, 44, -73.05, 44.7))
 
     b = a.get_affected_bbox()
     assert b.west == -73.5
@@ -81,11 +81,11 @@ def test_many_bboxes_for_performance():
     deg = 12.0
     inc_deg = deg / iterations
     box_size = 0.3
-    a.record_affected(x, y, x + box_size, y + box_size)
+    a.record_affected(BBox(x, y, x + box_size, y + box_size))
     for i in range(1, iterations + 1):
         x = x + inc_deg
         y = y + inc_deg
-        a.record_affected(x, y, x + box_size, y + box_size)
+        a.record_affected(BBox(x, y, x + box_size, y + box_size))
 
     # Make sure our test math is right.
     end_x = start_x + deg

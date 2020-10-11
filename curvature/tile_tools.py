@@ -7,11 +7,10 @@ class AffectedArea(object):
     def __init__(self):
         self.bbox = None
 
-    # Record the tiles affected by changes in a bounding box.
+    # Record the bounding box of an affected area.
     #
     # bbox is decimal degrees with longitude -180 to +180 and Latitude -90 to +90.
-    def record_affected(self, west, south, east, north):
-        bbox = BBox(west, south, east, north)
+    def record_affected(self, bbox):
         if self.bbox:
             self.bbox = self.bbox.union(bbox)
         else:
