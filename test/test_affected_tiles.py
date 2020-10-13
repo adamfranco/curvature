@@ -159,6 +159,38 @@ def test_bbox_from_coords_performance():
     elapsed = time.time() - start_time
     assert elapsed < 0.1, "Creating a 10,000 coord bbox should take less than 0.1 seconds"
 
+def test_bbox_round_trip_through_geojson():
+    coords = [
+        (43.9493, -73.2548), # SW corner
+        (43.997, -73.0), # middle, east
+        (43.95, -73.10), # middle
+        (44.0461, -73.20), # north, middle.
+    ]
+    bbox = BBox.from_coords(coords)
+    geojson = bbox.as_geojson_string()
+
+    new_bbox = BBox.from_geojson_string(geojson)
+    assert new_bbox.west == -73.2548, "West should be equal"
+    assert new_bbox.south == 43.9493, "South should be equal"
+    assert new_bbox.east == -73.0, "East should be equal"
+    assert new_bbox.north == 44.0461, "North should be equal"
+
+    new_geojson = new_bbox.as_geojson_string()
+    assert geojson == new_geojson
+
+def test_bbox_round_trip_through_geojson_fiji():
+    bbox = BBox(177.0, -20.0, -178.0, -16.0)
+    geojson = bbox.as_geojson_string()
+
+    new_bbox = BBox.from_geojson_string(geojson)
+    assert new_bbox.west == 177.0, "West should be equal"
+    assert new_bbox.south == -20.0, "South should be equal"
+    assert new_bbox.east == -178.0, "East should be equal"
+    assert new_bbox.north == -16.0, "North should be equal"
+
+    new_geojson = new_bbox.as_geojson_string()
+    assert geojson == new_geojson
+
 def test_lon_distance_west():
     # Both negative
     assert round(BBox.lon_distance_west(-73.3, -73.0), 1) == 359.7

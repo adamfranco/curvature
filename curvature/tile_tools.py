@@ -1,5 +1,7 @@
 import sys
 import mercantile
+import geojson
+from geojson import Feature, Polygon, MultiPolygon
 
 # Class for building up an affected area from modified bounding-boxes.
 class AffectedArea(object):
@@ -69,6 +71,9 @@ class BBox(object):
         self.east = east
         self.north = north
 
+    # Create a BBox from a list of coordinate tuples.
+    #
+    # coords are each (lat, lon)
     @classmethod
     def from_coords(cls, coords):
         bbox = None
@@ -166,3 +171,69 @@ class BBox(object):
     @classmethod
     def lon_distance_east(cls, a, b):
         return (360 + b - a) % 360
+
+
+    # Create a BBox instance from a GeoJSON string.
+    @classmethod
+    def from_geojson_string(cls, geojson_string):
+        return cls.from_geojson_obj(geojson.loads(geojson_string))
+
+    # Create a BBox instance from a GeoJSON feature or feature collection.
+    @classmethod
+    def from_geojson_obj(cls, geojson_obj):
+        # GeoJSON tuples are lon,lat and ours are lat,lon, so flip
+        bbox = cls.from_coords(
+            [(x, y) for y, x in geojson.utils.coords(geojson_obj)])
+        # Add the BBox embedded in the GeoJSON if available.
+        if geojson_obj['bbox']:
+            bbox = bbox.union(BBox(
+                geojson_obj['bbox'][0],
+                geojson_obj['bbox'][1],
+                geojson_obj['bbox'][2],
+                geojson_obj['bbox'][3]))
+        return bbox
+
+    # Export this BBox as a GeoJSON string.
+    def as_geojson_string(self):
+        return geojson.dumps(self.as_geojson_obj())
+
+    # Export this BBox as a GeoJSON-formatted object.
+    def as_geojson_obj(self):
+        return Feature(
+            bbox=[self.west, self.south, self.east, self.north],
+            geometry=self.get_geojson_geometry())
+
+    # Answer the GeoJSON geometry for the BBox, taking into account
+    # the antimeridian.
+    def get_geojson_geometry(self):
+        # If the bbox crosses the antimeridian, export as a multipolygon.
+        if self.west > self.east:
+            return MultiPolygon([
+                    # Western side.
+                    ([
+                        (self.west, self.south),
+                        (180.0, self.south),
+                        (180.0, self.north),
+                        (self.west, self.north),
+                        (self.west, self.south),
+                    ]),
+                    # Eastern side.
+                    ([
+                        (-180.0, self.south),
+                        (self.east, self.south),
+                        (self.east, self.north),
+                        (-180.0, self.north),
+                        (-180.0, self.south),
+                    ])
+                ])
+        # Non-antimeridian-crossing areas.
+        else:
+            return Polygon([
+                    [
+                        (self.west, self.south),
+                        (self.east, self.south),
+                        (self.east, self.north),
+                        (self.west, self.north),
+                        (self.west, self.south),
+                    ]
+                ])
