@@ -158,3 +158,104 @@ def test_bbox_from_coords_performance():
     bbox = BBox.from_coords(coords)
     elapsed = time.time() - start_time
     assert elapsed < 0.1, "Creating a 10,000 coord bbox should take less than 0.1 seconds"
+
+def test_lon_distance_west():
+    # Both negative
+    assert round(BBox.lon_distance_west(-73.3, -73.0), 1) == 359.7
+    assert round(BBox.lon_distance_west(-73.0, -73.3), 1) == 0.3
+    # Both positive
+    assert round(BBox.lon_distance_west(73.3, 73.0), 1) == 0.3
+    assert round(BBox.lon_distance_west(73.0, 73.3), 1) == 359.7
+    # Across the meridan
+    assert round(BBox.lon_distance_west(-1.5, 2.0), 1) == 356.5
+    assert round(BBox.lon_distance_west(2.0, -1.5), 1) == 3.5
+    # Across the meridan - farther
+    assert round(BBox.lon_distance_west(-95.0, 25.0), 1) == 240.0
+    assert round(BBox.lon_distance_west(25.0, -95.0), 1) == 120.0
+    # 180°
+    assert round(BBox.lon_distance_west(-95.0, 85.0), 1) == 180.0
+    assert round(BBox.lon_distance_west(85.0, -95.0), 1) == 180.0
+    # Across the antimeridan
+    assert round(BBox.lon_distance_west(-178.5, 178.0), 1) == 3.5
+    assert round(BBox.lon_distance_west(178.0, -178.5), 1) == 356.5
+    # Across the antimeridan - farther
+    assert round(BBox.lon_distance_west(110.0, -115.0), 1) == 225.0
+    assert round(BBox.lon_distance_west(-115.0, 110.0), 1) == 135.0
+
+def test_lon_distance_east():
+    # Both negative
+    assert round(BBox.lon_distance_east(-73.3, -73.0), 1) == 0.3
+    assert round(BBox.lon_distance_east(-73.0, -73.3), 1) == 359.7
+    # Both positive
+    assert round(BBox.lon_distance_east(73.3, 73.0), 1) == 359.7
+    assert round(BBox.lon_distance_east(73.0, 73.3), 1) == 0.3
+    # Across the meridan
+    assert round(BBox.lon_distance_east(-1.5, 2.0), 1) == 3.5
+    assert round(BBox.lon_distance_east(2.0, -1.5), 1) == 356.5
+    # Across the meridan - farther
+    assert round(BBox.lon_distance_east(-95.0, 25.0), 1) == 120.0
+    assert round(BBox.lon_distance_east(25.0, -95.0), 1) == 240.0
+    # 180°
+    assert round(BBox.lon_distance_east(-95.0, 85.0), 1) == 180.0
+    assert round(BBox.lon_distance_east(85.0, -95.0), 1) == 180.0
+    # Across the antimeridan
+    assert round(BBox.lon_distance_east(-178.5, 178.0), 1) == 356.5
+    assert round(BBox.lon_distance_east(178.0, -178.5), 1) == 3.5
+    # Across the antimeridan - farther
+    assert round(BBox.lon_distance_east(110.0, -115.0), 1) == 135.0
+    assert round(BBox.lon_distance_east(-115.0, 110.0), 1) == 225.0
+
+def test_min_lon_distance():
+    # Both negative
+    assert round(BBox.min_lon_distance(-73.3, -73.0), 1) == 0.3
+    assert round(BBox.min_lon_distance(-73.0, -73.3), 1) == 0.3
+    # Both positive
+    assert round(BBox.min_lon_distance(73.3, 73.0), 1) == 0.3
+    assert round(BBox.min_lon_distance(73.0, 73.3), 1) == 0.3
+    # Across the meridan
+    assert round(BBox.min_lon_distance(-1.5, 2.0), 1) == 3.5
+    assert round(BBox.min_lon_distance(2.0, -1.5), 1) == 3.5
+    # Across the meridan - farther
+    assert round(BBox.min_lon_distance(-95.0, 25.0), 1) == 120.0
+    assert round(BBox.min_lon_distance(-25.0, 95.0), 1) == 120.0
+    # 180°
+    assert round(BBox.min_lon_distance(-95.0, 85.0), 1) == 180.0
+    assert round(BBox.min_lon_distance(-85.0, 95.0), 1) == 180.0
+    # Across the antimeridan
+    assert round(BBox.min_lon_distance(-178.5, 178.0), 1) == 3.5
+    assert round(BBox.min_lon_distance(178.0, -178.5), 1) == 3.5
+    # Across the antimeridan - farther
+    assert round(BBox.min_lon_distance(110.0, -115.0), 1) == 135.0
+    assert round(BBox.min_lon_distance(-115.0, 110.0), 1) == 135.0
+
+def test_bbox_russia():
+    # Start with two coords on either side of the antimeridan on the Bearing Straight.
+    bbox = BBox.from_coords([(63.7, -167.3)])
+    bbox = bbox.union(BBox.from_coords([(69.2, 173.6)]))
+    assert bbox.west == 173.6
+    assert bbox.south == 63.7
+    assert bbox.east == -167.3
+    assert bbox.north == 69.2
+
+    # Add a far western point in Europe.
+    bbox = bbox.union(BBox.from_coords([(59.8, 26.0)]))
+    assert bbox.west == 26.0
+    assert bbox.south == 59.8
+    assert bbox.east == -167.3
+    assert bbox.north == 69.2
+
+    # Add the embassy in London. We should continue to wrap to the west.
+    bbox = bbox.union(BBox.from_coords([(51.5, -0.1)]))
+    assert bbox.west == -0.1
+    assert bbox.south == 51.5
+    assert bbox.east == -167.3
+    assert bbox.north == 69.2
+
+    # Add the embassy in Washington. We should continue to wrap to the west.
+    # The BBox is now wrapping more than halfway around the world, but includes
+    # all previous bboxes. Our eastern edge hasn't gotten confused.
+    bbox = bbox.union(BBox.from_coords([(38.9, -77.0)]))
+    assert bbox.west == -77.0
+    assert bbox.south == 38.9
+    assert bbox.east == -167.3
+    assert bbox.north == 69.2
