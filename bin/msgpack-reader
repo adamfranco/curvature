@@ -6,7 +6,7 @@ import sys
 import msgpack
 import pprint
 
-unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True)
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
 for item in unpacker:
     pp = pprint.PrettyPrinter(indent=4)
     pp.pprint(item)
