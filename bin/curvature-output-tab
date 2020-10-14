@@ -30,7 +30,7 @@ else:
 length_head = "Length (%s)" % (args.units)
 sys.stdout.write(head.format(curvature="Curvature", length=length_head, name="Name", highway="Highway", surface="Surface", id="Id"))
 
-unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True)
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
 for collection in unpacker:
     name = tools.get_collection_name(collection)
     name = tools.get_collection_name(collection)

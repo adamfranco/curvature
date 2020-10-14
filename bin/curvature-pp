@@ -17,7 +17,7 @@ class_name = ''.join(map(str.capitalize, module_name.split('.').pop().split('_')
 
 mod = importlib.import_module('curvature.post_processors.' + module_name)
 fl = getattr(mod, class_name)
-unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True)
+unpacker = msgpack.Unpacker(sys.stdin.buffer, use_list=True, encoding='utf-8')
 post_processor = fl.parse(argv)
 iterable = post_processor.process(unpacker)
 for collection in iterable:
