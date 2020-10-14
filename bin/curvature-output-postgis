@@ -313,7 +313,9 @@ minutes = math.floor(remainder / 60)
 seconds = remainder - (minutes * 60)
 rate = total / elapsed
 
-sys.stdout.write(affected_area.get_affected_bbox().as_geojson_string())
+bbox = affected_area.get_affected_bbox()
+if bbox is not None:
+    sys.stdout.write(bbox.as_geojson_string())
 
 if args.v or args.s:
     sys.stderr.write("{:d}h {:d}m {:0.2f}s elapsed. {:0.2f} segments/second\n".format(hours, minutes, seconds, rate))
