@@ -14,6 +14,7 @@ import msgpack
 import argparse
 from curvature.geomath import Units
 from curvature.output import OutputTools
+from curvature.tile_tools import AffectedArea, BBox
 from hashlib import sha1
 
 parser = argparse.ArgumentParser(description='Output into a PostGIS database.')
@@ -47,10 +48,17 @@ source_id = result[0]
 
 start = timeit.default_timer()
 existing = {}
+affected_area = AffectedArea()
 # Clear out previously inserted segments from our source.
 if args.clear:
     if args.v:
         sys.stderr.write("Clearing {}\n".format(args.source))
+    # Add the existing segment's extent to the affected area.
+        cur.execute("SELECT ST_AsGeoJSON(ST_Transform(ST_Envelope(ST_Union(ST_Envelope(geom))), 4326)) AS geojson FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
+        result = cur.fetchone()
+        if result is not None:
+            # sys.stderr.write("- Existing:\n\tGeom: {}\n".format(result[0]))
+            affected_area.record_affected(BBox.from_geojson_string(result[0]))
     cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
 else:
     cur.execute("SELECT id_hash, hash FROM public.curvature_segments WHERE fk_source=%s", (source_id,))
@@ -158,15 +166,18 @@ for collection in unpacker:
 
                 # Note the update.
                 # sys.stderr.write("Updating:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, hash, name, curvature, length, highway_tags, surface_tags))
-                # with conn.cursor() as s_cur:
-                #     s_cur.execute("SELECT source, c.id_hash, c.hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id WHERE c.id_hash=%s", (id,))
-                #     result = s_cur.fetchone()
-                #     if result is not None:
-                #         sys.stderr.write("- Existing:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7]))
+
+                # Add the existing segment's extent to the affected area.
+                with conn.cursor() as s_cur:
+                    s_cur.execute("SELECT ST_AsGeoJSON(ST_Transform(ST_Envelope(ST_Union(ST_Envelope(geom))), 4326)) AS geojson FROM public.curvature_segments WHERE fk_source=%s AND id_hash = %s", (source_id, id))
+                    result = s_cur.fetchone()
+                    if result is not None:
+                        # sys.stderr.write("- Existing:\n\tGeom: {}\n".format(result[0]))
+                        affected_area.record_affected(BBox.from_geojson_string(result[0]))
 
                 # Delete the exiting segement and its ways so that they can be recreated
                 # from the source data.
-                cur.execute('DELETE FROM public.curvature_segments WHERE id_hash = %s', (id, ))
+                cur.execute('DELETE FROM public.curvature_segments WHERE fk_source=%s AND id_hash = %s', (source_id, id))
 
         if highway_tags in highway_tag_map:
             fk_highway = highway_tag_map[highway_tags]
@@ -197,6 +208,13 @@ for collection in unpacker:
 
         cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, geom, hash))
         if cur.rowcount == 1:
+            # Add the line coordinates to the affected area if we are adding/updating it.
+            for way in collection['ways']:
+                segments = way['segments']
+                affected_area.record_affected(BBox.from_coords([(segments[0]['start'][0], segments[0]['start'][1])]))
+                for segment in way['segments']:
+                    affected_area.record_affected(BBox.from_coords([(segment['end'][0], segment['end'][1])]))
+
             result = cur.fetchone()
             segment_db_id = result[0]
 
@@ -269,6 +287,13 @@ if not args.clear:
             if args.v:
                 sys.stderr.write("Clearing {} missing ways from {}\n".format(len(existing), args.source))
             with conn.cursor() as cur:
+                # Select the to-be-deleted geometry and add to our affected area.
+                cur.execute("SELECT ST_AsGeoJSON(ST_Transform(ST_Envelope(ST_Union(ST_Envelope(geom))), 4326)) AS geojson FROM public.curvature_segments WHERE fk_source=%s AND id_hash IN %s", (source_id, tuple(existing.keys())))
+                result = cur.fetchone()
+                if result is not None:
+                    # sys.stderr.write("- Existing:\n\tGeom: {}\n".format(result[0]))
+                    affected_area.record_affected(BBox.from_geojson_string(result[0]))
+
                 cur.execute("DELETE FROM public.curvature_segments WHERE fk_source=%s AND id_hash IN %s", (source_id, tuple(existing.keys())))
                 deleted = cur.rowcount
         else:
@@ -281,13 +306,16 @@ conn.commit()
 cur.close()
 conn.close()
 
+elapsed = timeit.default_timer() - start;
+hours = math.floor(elapsed / 3600)
+remainder = elapsed - (hours * 3600)
+minutes = math.floor(remainder / 60)
+seconds = remainder - (minutes * 60)
+rate = total / elapsed
+
+sys.stdout.write(affected_area.get_affected_bbox().as_geojson_string())
+
 if args.v or args.s:
-    elapsed = timeit.default_timer() - start;
-    hours = math.floor(elapsed / 3600)
-    remainder = elapsed - (hours * 3600)
-    minutes = math.floor(remainder / 60)
-    seconds = remainder - (minutes * 60)
-    rate = total / elapsed
     sys.stderr.write("{:d}h {:d}m {:0.2f}s elapsed. {:0.2f} segments/second\n".format(hours, minutes, seconds, rate))
     sys.stderr.write("{} segments in input. {} ignored, {} successfully updated, {} failed.\n".format(total, ignored, updated, failed))
     if deleted:
