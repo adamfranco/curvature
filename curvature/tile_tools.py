@@ -185,7 +185,7 @@ class BBox(object):
         bbox = cls.from_coords(
             [(x, y) for y, x in geojson.utils.coords(geojson_obj)])
         # Add the BBox embedded in the GeoJSON if available.
-        if geojson_obj['bbox']:
+        if 'bbox' in geojson_obj.keys():
             bbox = bbox.union(BBox(
                 geojson_obj['bbox'][0],
                 geojson_obj['bbox'][1],

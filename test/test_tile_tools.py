@@ -191,6 +191,13 @@ def test_bbox_round_trip_through_geojson_fiji():
     new_geojson = new_bbox.as_geojson_string()
     assert geojson == new_geojson
 
+def test_bbox_from_postgis_geojson_string():
+    bbox = BBox.from_geojson_string('{"type":"Polygon","coordinates":[[[-73.426303,42.675246],[-73.426303,45.026259],[-71.46407,45.026259],[-71.46407,42.675246],[-73.426303,42.675246]]]}')
+    assert bbox.west == -73.426303
+    assert bbox.south == 42.675246
+    assert bbox.east == -71.46407
+    assert bbox.north == 45.026259
+
 def test_lon_distance_west():
     # Both negative
     assert round(BBox.lon_distance_west(-73.3, -73.0), 1) == 359.7
