@@ -101,9 +101,16 @@ do
     # 9. Sort the items by their curvature value.
     # 10. Save the intermediate data.
     $script_path/curvature-collect --highway_types 'motorway,trunk,primary,secondary,tertiary,unclassified,residential,service,motorway_link,trunk_link,primary_link,secondary_link,service' $verbose $input_file \
-      | $script_path/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
-      | $script_path/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag surface --values 'unpaved,compacted,dirt,gravel,fine_gravel,sand,grass,ground,pebblestone,mud,clay,dirt/sand,soil' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag service --values 'driveway,parking_aisle,drive-through,parking,bus,emergency_access,alley' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag area --values 'yes' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag golf --values 'cartpath' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag access --values 'no' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag vehicle --values 'no' \
+      | $script_path/curvature-pp filter_out_ways_with_tag --tag motor_vehicle --values 'no' \
       | $script_path/curvature-pp filter_out_ways --match 'And(TagEmpty("name"), TagEmpty("ref"), TagEquals("highway", "residential"), TagEquals("tiger:reviewed", "no"))' \
+      | $script_path/curvature-pp filter_out_ways --match 'And(TagEquals("highway", "raceway"), TagEquals("sport", "motocross"))' \
+      | $script_path/curvature-pp filter_out_ways --match 'And(TagEquals("highway", "service"), Or(TagEquals("access", "private"), TagEquals("motor_vehicle", "private"), TagEquals("vehicle", "private")))' \
       | $script_path/curvature-pp add_segments \
       | $script_path/curvature-pp add_segment_length_and_radius \
       | $script_path/curvature-pp add_segment_curvature \
