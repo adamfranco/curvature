@@ -3,7 +3,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import pytest
-from curvature.post_processors.squash_way_curvature import SquashWayCurvature
+from curvature.post_processors.squash_curvature_for_tagged_ways import SquashCurvatureForTaggedWays
 from copy import copy
 
 def roads():
@@ -53,7 +53,7 @@ def roads():
 
 def test_normal_ways():
     data = roads()
-    result = list(SquashWayCurvature('junction', ['roundabout', 'circular']).process(data))
+    result = list(SquashCurvatureForTaggedWays('junction', ['roundabout', 'circular']).process(data))
     assert result[0]['ways'][0]['curvature'] == 2
     assert result[0]['ways'][0]['segments'][0]['curvature'] == 2
     assert result[1]['ways'][0]['curvature'] == 4
@@ -72,7 +72,7 @@ def test_normal_ways():
 def test_roundabout_ways():
     data = roads()
     data[1]['ways'][1]['tags']['junction'] = 'roundabout'
-    result = list(SquashWayCurvature('junction', ['roundabout', 'circular']).process(data))
+    result = list(SquashCurvatureForTaggedWays('junction', ['roundabout', 'circular']).process(data))
     assert result[0]['ways'][0]['curvature'] == 2
     assert result[0]['ways'][0]['segments'][0]['curvature'] == 2
     assert result[1]['ways'][0]['curvature'] == 4
@@ -91,7 +91,7 @@ def test_roundabout_ways():
 def test_circular_ways():
     data = roads()
     data[1]['ways'][1]['tags']['junction'] = 'circular'
-    result = list(SquashWayCurvature('junction', ['roundabout', 'circular']).process(data))
+    result = list(SquashCurvatureForTaggedWays('junction', ['roundabout', 'circular']).process(data))
     assert result[0]['ways'][0]['curvature'] == 2
     assert result[0]['ways'][0]['segments'][0]['curvature'] == 2
     assert result[1]['ways'][0]['curvature'] == 4
@@ -112,7 +112,7 @@ def test_no_failure_if_curvature_not_always_set():
     data[1]['ways'][1]['tags']['junction'] = 'roundabout'
     del data[1]['ways'][1]['curvature']
     del data[1]['ways'][1]['segments'][1]['curvature']
-    result = list(SquashWayCurvature('junction', ['roundabout', 'circular']).process(data))
+    result = list(SquashCurvatureForTaggedWays('junction', ['roundabout', 'circular']).process(data))
     assert result[0]['ways'][0]['curvature'] == 2
     assert result[0]['ways'][0]['segments'][0]['curvature'] == 2
     assert result[1]['ways'][0]['curvature'] == 4

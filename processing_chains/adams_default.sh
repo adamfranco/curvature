@@ -107,7 +107,7 @@ do
       | $script_path/curvature-pp add_segments \
       | $script_path/curvature-pp add_segment_length_and_radius \
       | $script_path/curvature-pp add_segment_curvature \
-      | $script_path/curvature-pp squash_way_curvature --tag junction --values 'roundabout,circular' \
+      | $script_path/curvature-pp squash_curvature_for_tagged_ways --tag junction --values 'roundabout,circular' \
       | $script_path/curvature-pp filter_segment_deflections \
       | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
       | $script_path/curvature-pp roll_up_length \

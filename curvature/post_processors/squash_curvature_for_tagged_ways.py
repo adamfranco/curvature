@@ -1,14 +1,14 @@
 # -*- coding: UTF-8 -*-
 import argparse
 
-class SquashWayCurvature(object):
+class SquashCurvatureForTaggedWays(object):
     def __init__(self, tag=None, values=None):
         self.tag = tag
         self.values = values
 
     @classmethod
     def parse(cls, argv):
-        parser = argparse.ArgumentParser(prog='squash_way_curvature', description='Squash the curvature on ways with certain properties.')
+        parser = argparse.ArgumentParser(prog='squash_curvature_for_tagged_ways', description='Squash the curvature on ways with certain properties.')
         parser.add_argument('--tag', type=str, required=True, help='The tag to match on. Example: junction')
         parser.add_argument('--values', type=str, required=True, help='The tag values which will trigger squashing when found. Example: roundabout,circular')
         args = parser.parse_args(argv)
