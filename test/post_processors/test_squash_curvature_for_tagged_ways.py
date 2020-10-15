@@ -22,24 +22,30 @@ def roads():
                         'ref':      'US 12345',
                         'highway':  'primary'},
                     'curvature': 4,
-                    'segments': [   {'curvature': 1},
-                                    {'curvature': 3}]},
+                    'segments': [   {'curvature': 1,
+                                     'curvature_level': 1},
+                                    {'curvature': 3,
+                                     'curvature_level': 2}]},
                   { 'id': 3,
                     'tags': {
                         'name':     'My Highway',
                         'ref':      'US 12345',
                         'highway':  'primary'},
                     'curvature': 7,
-                    'segments': [   {'curvature': 4},
-                                    {'curvature': 3}]},
+                    'segments': [   {'curvature': 4,
+                                     'curvature_level': 4},
+                                    {'curvature': 3,
+                                     'curvature_level': 3}]},
                   { 'id': 4,
                     'tags': {
                         'name':     'My Highway',
                         'ref':      'US 12345',
                         'highway':  'primary'},
                     'curvature': 1,
-                    'segments': [   {'curvature': 1},
-                                    {'curvature': 0}]}]},
+                    'segments': [   {'curvature': 1,
+                                     'curvature_level': 1},
+                                    {'curvature': 0,
+                                     'curvature_level': 0}]}]},
         {'join_type': 'none',
          'ways': [{ 'id': 6,
                     'tags': {
@@ -59,9 +65,11 @@ def test_normal_ways():
     assert result[1]['ways'][0]['curvature'] == 4
     assert result[1]['ways'][0]['segments'][0]['curvature'] == 1
     assert result[1]['ways'][0]['segments'][1]['curvature'] == 3
+    assert result[1]['ways'][0]['segments'][1]['curvature_level'] == 2
     assert result[1]['ways'][1]['curvature'] == 7
     assert result[1]['ways'][1]['segments'][0]['curvature'] == 4
     assert result[1]['ways'][1]['segments'][1]['curvature'] == 3
+    assert result[1]['ways'][1]['segments'][1]['curvature_level'] == 3
     assert result[1]['ways'][2]['curvature'] == 1
     assert result[1]['ways'][2]['segments'][0]['curvature'] == 1
     assert result[1]['ways'][2]['segments'][1]['curvature'] == 0
@@ -78,9 +86,11 @@ def test_roundabout_ways():
     assert result[1]['ways'][0]['curvature'] == 4
     assert result[1]['ways'][0]['segments'][0]['curvature'] == 1
     assert result[1]['ways'][0]['segments'][1]['curvature'] == 3
+    assert result[1]['ways'][0]['segments'][1]['curvature_level'] == 2
     assert result[1]['ways'][1]['curvature'] == 0
     assert result[1]['ways'][1]['segments'][0]['curvature'] == 0
     assert result[1]['ways'][1]['segments'][1]['curvature'] == 0
+    assert result[1]['ways'][1]['segments'][1]['curvature_level'] == 0
     assert result[1]['ways'][2]['curvature'] == 1
     assert result[1]['ways'][2]['segments'][0]['curvature'] == 1
     assert result[1]['ways'][2]['segments'][1]['curvature'] == 0
