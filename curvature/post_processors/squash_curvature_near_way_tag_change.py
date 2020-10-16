@@ -37,7 +37,7 @@ class SquashCurvatureNearWayTagChange(SquashCurvatureNearbyProcessorAbstract):
         return collection
 
     def get_value_from_way(self, way):
-        if self.tag in way['tags'].keys():
+        if self.tag in way['tags']:
             if self.only_values is not None:
                 if way['tags'][self.tag] in self.only_values:
                     return way['tags'][self.tag]

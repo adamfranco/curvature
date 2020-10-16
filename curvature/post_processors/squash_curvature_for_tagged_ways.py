@@ -19,17 +19,17 @@ class SquashCurvatureForTaggedWays(object):
             for way in collection['ways']:
                 # If we've hit a matching way, set its curvature to 0.
                 if self.way_matches(way):
-                    if 'curvature' in way.keys():
+                    if 'curvature' in way:
                         way['curvature'] = 0
                     for segment in way['segments']:
-                        if 'curvature' in segment.keys():
+                        if 'curvature' in segment:
                             segment['curvature'] = 0
-                        if 'curvature_level' in segment.keys():
+                        if 'curvature_level' in segment:
                             segment['curvature_level'] = 0
             yield(collection)
 
     def way_matches(self, way):
-        if self.tag in way['tags'].keys() and way['tags'][self.tag] in self.values:
+        if self.tag in way['tags'] and way['tags'][self.tag] in self.values:
             return True
         else:
             return False
