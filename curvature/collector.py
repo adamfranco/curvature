@@ -11,8 +11,10 @@ class WayCollector(osmium.SimpleHandler):
     collections = []
     routes = {}
     coords = {}
+    tagged_nodes = {}
     num_coords = 0
     num_ways = 0
+    num_nodes = 0
     verbose = False
     roads = []
 
@@ -29,17 +31,20 @@ class WayCollector(osmium.SimpleHandler):
         self.collections = []
         self.coords = {}
         self.routes = {}
+        self.tagged_nodes = {}
         num_coords = 0
         num_ways = 0
+        num_nodes = 0
         start_time = time.time()
         self.log("Loading {}".format(filename))
-        self.log("Loading ways, each '-' is 100 ways, each row is 10,000 ways")
+        self.log("Loading ways and nodes, each '-' is 100 ways, each '.' is 100 nodes, each row is 10,000 ways or nodes")
 
         self.apply_file(filename, locations=True, idx='sparse_mem_array')
 
-        self.log("\nWays matched in {}".format(filename))
+        self.log("\nWays and nodes loaded matched in {}".format(filename))
 
         self.join_ways()
+        self.attach_tagged_nodes_to_ways()
 
         # Send our collected data to our callback function.
         self.log("Streaming collections, each '.' is 1% complete")
@@ -60,6 +65,26 @@ class WayCollector(osmium.SimpleHandler):
             callback(collection)
         self.log('\nStreaming completed in {time:.1f}'.format(time=(time.time() - start_time)))
 
+    # Save tagged nodes save the full details for later adding to ways.
+    def node(self, node):
+        if node.tags:
+            new_node = {
+                'tags': {},
+                'lat': node.location.lat,
+                'lon': node.location.lon,
+            }
+            for tag in node.tags:
+                new_node['tags'][tag.k] = tag.v
+            self.tagged_nodes[node.id] = new_node
+
+            # status output
+            if self.verbose:
+                self.num_nodes = self.num_nodes + 1
+                if not (self.num_nodes % 100):
+                    sys.stderr.write('.')
+                    if not (self.num_nodes % 10000):
+                        sys.stderr.write('\n')
+                    sys.stderr.flush()
 
     def way(self, way):
         # callback method for ways
@@ -69,7 +94,7 @@ class WayCollector(osmium.SimpleHandler):
                 self.log('\nSkipping single-point way: id: {}, tags: {}, nodes: {}\n'.format(way.id, way.tags, way.nodes))
                 return
 
-            new_way = {'id': way.id, 'tags': {}, 'refs': [], 'coords': []}
+            new_way = {'id': way.id, 'tags': {}, 'refs': [], 'coords': [], 'nodes': {}}
             for tag in way.tags:
                 new_way['tags'][tag.k] = tag.v
             for node in way.nodes:
@@ -105,10 +130,12 @@ class WayCollector(osmium.SimpleHandler):
 
             # status output
             if self.verbose:
+                if not self.num_ways:
+                    sys.stderr.write('\n')
                 self.num_ways = self.num_ways + 1
                 if not (self.num_ways % 100):
                     sys.stderr.write('-')
-                    if not self.num_ways % 10000:
+                    if not (self.num_ways % 10000):
                         sys.stderr.write('\n')
                     sys.stderr.flush()
 
@@ -243,3 +270,38 @@ class WayCollector(osmium.SimpleHandler):
                 # some more of the remaining ways joined to it.
                 self.collections.append(collection)
         self.log('\nJoining completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
+
+    # Attach tagged nodes to ways that reference them.
+    def attach_tagged_nodes_to_ways(self):
+        # status output
+        start_time = time.time()
+        i = 0
+        total = len(self.collections)
+        if total < 100:
+            marker = 1
+        else:
+            marker = round(total/100)
+        self.log("{} collections will have tagged nodes added '.' is 1% complete".format(total))
+
+        for collection in self.collections:
+            for way in collection['ways']:
+                for j, ref in enumerate(way['refs']):
+                    if ref in self.tagged_nodes:
+                        # Add the node to the way.
+                        way['nodes'][ref] = self.tagged_nodes[ref]
+                        # Add the ref to the coords tuple to associate it.
+                        way['coords'][j] = (way['coords'][j][0], way['coords'][j][1], ref)
+
+            # status output
+            if self.verbose:
+                i = i + 1
+                if not (i % marker):
+                    sys.stderr.write('.')
+                    sys.stderr.flush()
+
+        # Remove remaining tagged nodes as they are no longer needed.
+        del self.tagged_nodes
+
+        # status output
+        if self.verbose:
+            self.log('\nAdding tagged nodes completed in {time:.1f} seconds'.format(time=(time.time() - start_time)))
