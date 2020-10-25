@@ -137,3 +137,43 @@ def test_no_failure_if_curvature_not_always_set():
     assert result[2]['ways'][0]['curvature'] == 6
     assert result[2]['ways'][0]['segments'][0]['curvature'] == 3
     assert result[2]['ways'][0]['segments'][1]['curvature'] == 3
+
+def test_match_tag_only_any_value():
+    data = roads()
+    data[1]['ways'][1]['tags']['junction'] = 'crazy_intersection'
+    result = list(SquashCurvatureForTaggedWays('junction').process(data))
+    assert result[0]['ways'][0]['curvature'] == 2
+    assert result[0]['ways'][0]['segments'][0]['curvature'] == 2
+    assert result[1]['ways'][0]['curvature'] == 4
+    assert result[1]['ways'][0]['segments'][0]['curvature'] == 1
+    assert result[1]['ways'][0]['segments'][1]['curvature'] == 3
+    assert result[1]['ways'][1]['curvature'] == 0
+    assert result[1]['ways'][1]['segments'][0]['curvature'] == 0
+    assert result[1]['ways'][1]['segments'][1]['curvature'] == 0
+    assert result[1]['ways'][2]['curvature'] == 1
+    assert result[1]['ways'][2]['segments'][0]['curvature'] == 1
+    assert result[1]['ways'][2]['segments'][1]['curvature'] == 0
+    assert result[2]['ways'][0]['curvature'] == 6
+    assert result[2]['ways'][0]['segments'][0]['curvature'] == 3
+    assert result[2]['ways'][0]['segments'][1]['curvature'] == 3
+
+def test_match_tag_only_any_value_not_found():
+    data = roads()
+    data[1]['ways'][1]['tags']['parking:lane:both'] = 'parallel'
+    result = list(SquashCurvatureForTaggedWays('junction').process(data))
+    assert result[0]['ways'][0]['curvature'] == 2
+    assert result[0]['ways'][0]['segments'][0]['curvature'] == 2
+    assert result[1]['ways'][0]['curvature'] == 4
+    assert result[1]['ways'][0]['segments'][0]['curvature'] == 1
+    assert result[1]['ways'][0]['segments'][1]['curvature'] == 3
+    assert result[1]['ways'][0]['segments'][1]['curvature_level'] == 2
+    assert result[1]['ways'][1]['curvature'] == 7
+    assert result[1]['ways'][1]['segments'][0]['curvature'] == 4
+    assert result[1]['ways'][1]['segments'][1]['curvature'] == 3
+    assert result[1]['ways'][1]['segments'][1]['curvature_level'] == 3
+    assert result[1]['ways'][2]['curvature'] == 1
+    assert result[1]['ways'][2]['segments'][0]['curvature'] == 1
+    assert result[1]['ways'][2]['segments'][1]['curvature'] == 0
+    assert result[2]['ways'][0]['curvature'] == 6
+    assert result[2]['ways'][0]['segments'][0]['curvature'] == 3
+    assert result[2]['ways'][0]['segments'][1]['curvature'] == 3

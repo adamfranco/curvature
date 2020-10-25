@@ -10,9 +10,13 @@ class SquashCurvatureForTaggedWays(object):
     def parse(cls, argv):
         parser = argparse.ArgumentParser(prog='squash_curvature_for_tagged_ways', description='Squash the curvature on ways with certain properties.')
         parser.add_argument('--tag', type=str, required=True, help='The tag to match on. Example: junction')
-        parser.add_argument('--values', type=str, required=True, help='The tag values which will trigger squashing when found. Example: roundabout,circular')
+        parser.add_argument('--values', type=str, help='The tag values which will trigger squashing when found. Example: roundabout,circular')
         args = parser.parse_args(argv)
-        return cls(args.tag, args.values.split(','))
+        if args.values:
+            values = args.values.split(',')
+        else:
+            values = None
+        return cls(args.tag, values)
 
     def process(self, iterable):
         for collection in iterable:
@@ -29,7 +33,9 @@ class SquashCurvatureForTaggedWays(object):
             yield(collection)
 
     def way_matches(self, way):
-        if self.tag in way['tags'] and way['tags'][self.tag] in self.values:
-            return True
-        else:
-            return False
+        if self.tag in way['tags']:
+            if self.values is None:
+                return True
+            elif way['tags'][self.tag] in self.values:
+                return True
+        return False
