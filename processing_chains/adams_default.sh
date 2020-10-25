@@ -119,6 +119,7 @@ do
       | $script_path/curvature-pp squash_curvature_near_way_tag_change --tag junction --only-values 'roundabout,circular' --distance 30 \
       | $script_path/curvature-pp squash_curvature_near_way_tag_change --tag oneway --ignored-values 'no' --distance 30 \
       | $script_path/curvature-pp squash_curvature_near_tagged_nodes --tag highway --values 'stop,give_way,traffic_signals,crossing,mini_roundabout,traffic_calming' --distance 30 \
+      | $script_path/curvature-pp squash_curvature_near_tagged_nodes --tag traffic_calming --distance 30 \
       | $script_path/curvature-pp squash_curvature_near_tagged_nodes --tag barrier --distance 30 \
       | $script_path/curvature-pp split_collections_on_straight_segments --length 2414 \
       | $script_path/curvature-pp roll_up_length \
