@@ -116,6 +116,9 @@ do
       | $script_path/curvature-pp add_segment_curvature \
       | $script_path/curvature-pp filter_segment_deflections \
       | $script_path/curvature-pp squash_curvature_for_tagged_ways --tag junction --values 'roundabout,circular' \
+      | $script_path/curvature-pp squash_curvature_for_tagged_ways --tag traffic_calming \
+      | $script_path/curvature-pp squash_curvature_for_ways --match 'TagAndValueRegex("^parking:lane:(both|left|right)", "parallel|diagonal|perpendicular|marked")' \
+      | $script_path/curvature-pp squash_curvature_for_ways --match 'TagAndValueRegex("^parking:lane:(both|left|right):(parallel|diagonal|perpendicular)", "^(on_street|on_kerb|half_on_kerb|painted_area_only)$")' \
       | $script_path/curvature-pp squash_curvature_near_way_tag_change --tag junction --only-values 'roundabout,circular' --distance 30 \
       | $script_path/curvature-pp squash_curvature_near_way_tag_change --tag oneway --ignored-values 'no' --distance 30 \
       | $script_path/curvature-pp squash_curvature_near_tagged_nodes --tag highway --values 'stop,give_way,traffic_signals,crossing,mini_roundabout,traffic_calming' --distance 30 \

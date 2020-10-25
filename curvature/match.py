@@ -1,3 +1,4 @@
+import re
 
 class And(object):
     def __init__(self, *terms):
@@ -115,6 +116,36 @@ class TagContains(TagEquals):
         if self.tag not in way['tags']:
             return False
         return self.value in way['tags'][self.tag]
+
+class TagRegex(WayMatcher):
+
+    def __init__(self, regex_pattern, regex_flags=0):
+        if not regex_pattern:
+            raise ValueError('regex_pattern must not be empty')
+        self.regex = re.compile(regex_pattern, regex_flags)
+
+    def match_way(self, way):
+        for key in way['tags']:
+            if self.regex.match(key):
+                return True
+        return False
+
+class TagAndValueRegex(WayMatcher):
+
+    def __init__(self, tag_regex_pattern, value_regex_pattern, tag_regex_flags=0, value_regex_flags=0):
+        if not tag_regex_pattern:
+            raise ValueError('tag_regex_pattern must not be empty')
+        self.tag_regex = re.compile(tag_regex_pattern, tag_regex_flags)
+        if not value_regex_pattern:
+            raise ValueError('value_regex_pattern must not be empty')
+        self.value_regex = re.compile(value_regex_pattern, value_regex_flags)
+
+    def match_way(self, way):
+        for key in way['tags']:
+            if self.tag_regex.match(key):
+                if self.value_regex.match( way['tags'][key]):
+                    return True
+        return False
 
 class Id(WayMatcher):
 
