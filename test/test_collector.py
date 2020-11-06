@@ -600,3 +600,85 @@ def test_collector_joins_past_roundabout(us2):
     assert collections[1]['ways'][1]['id'] == 172791605, "Roundabout, east-bound."
     assert collections[1]['ways'][2]['id'] == 158420754, "Roundabout-entrance, east-bound. River Street."
     assert len(collections) == 2 # VT 30, VT 125, two for US 7
+
+
+
+# The Forlandet test is named after a so-named trio of tertiary
+# ways and service ways where Curvature was joining on the
+# highway=service way instead of the tertiary way where all three
+# intersect.
+# See: https://github.com/adamfranco/curvature/issues/60 for
+# examples.
+@pytest.fixture(scope='session')
+def forlandet_way_data():
+    return (
+        # Two tertiary ways are joined at node 216
+        # Also branching off at 216 is a service way of the same
+        # name.
+        (
+            20001,
+            {   'name':     'Forlandet',
+                'highway':  'tertiary'},
+            [215, 216]
+        ),
+        (
+            20003,
+            {   'name':     'Forlandet',
+                'highway':  'service'},
+            [216, 217]
+        ),
+        (
+            20005,
+            {   'name':     'Forlandet',
+                'highway':  'tertiary'},
+            [216, 218]
+        ),
+        # A lower-id tertiary way that continues from 218
+        (
+            20004,
+            {   'name':     'Forlandet',
+                'highway':  'tertiary'},
+            [218, 219]
+        ),
+    )
+
+@pytest.fixture(scope='session')
+def forlandet_node_data():
+    return (
+        (215, (55.68003, 12.61647), None),
+        (216, (55.67987, 12.61649), None),
+        (217, (55.67983, 12.61661), None),
+        (218, (55.67936, 12.61679), None),
+        (219, (55.67902, 12.61713), None),
+    )
+
+@pytest.fixture(scope='session')
+def forlandet(road_xml_dir, forlandet_node_data, forlandet_way_data):
+    name = 'forlandet'
+    fn = road_xml_dir / name
+
+    return writeOSMFile(str(fn), forlandet_node_data, forlandet_way_data)
+
+# Test that curvature stays on higher-classification roads
+# and doesn't get sidetracked onto service roads.
+def test_joining_stays_on_higher_class_roads(forlandet):
+    collector = WayCollector()
+    collections = []
+    collector.parse(forlandet, callback=lambda collection: collections.append(collection))
+    assert len(collections) == 2
+    assert len(collections[0]['ways']) == 3
+    assert collections[0]['join_type'] == 'name'
+    assert collections[0]['join_data'] == 'Forlandet'
+
+    # Verify the IDs of our three tertiary roads.
+    assert collections[0]['ways'][0]['id'] == 20001
+    assert collections[0]['ways'][0]['tags']['highway'] == 'tertiary'
+    assert collections[0]['ways'][1]['id'] == 20005
+    assert collections[0]['ways'][1]['tags']['highway'] == 'tertiary'
+    assert collections[0]['ways'][2]['id'] == 20004
+    assert collections[0]['ways'][2]['tags']['highway'] == 'tertiary'
+
+    # Verify that the service road ended up in its own collection
+    assert len(collections[1]['ways']) == 1
+    assert collections[1]['ways'][0]['id'] == 20003
+    assert collections[1]['ways'][0]['tags']['highway'] == 'service'
