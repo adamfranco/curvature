@@ -145,25 +145,57 @@ class WayCollector(osmium.SimpleHandler):
         # situations, sort the two-direction ways first, followed by one-way ways,
         # followed by roundabout ways.
 
-        key = 'a'
-        # put roundabouts last.
-        if 'junction' in way['tags']:
-            if way['tags']['junction'] == 'roundabout':
-                key = 'f'
-            elif 'oneway' in way['tags']:
-                if way['tags']['oneway'] == 'yes':
-                    key = 'e'
-                else:
-                    # two-way junctions.
-                    key = 'c'
-        # put one-way after 2-way
+        # We'll also sort the ways in descending order in the road hierarchy
+        # in order to stay on higher-class roads when at similarly-named junctions.
+        groupKey = 'a'
+        if 'motorway' in way['tags']['highway']:
+            highwayKey = 'a'
+        elif 'trunk' in way['tags']['highway']:
+            highwayKey = 'b'
+        elif 'primary' in way['tags']['highway']:
+            highwayKey = 'c'
+        elif 'secondary' in way['tags']['highway']:
+            highwayKey = 'd'
+        elif 'tertiary' in way['tags']['highway']:
+            highwayKey = 'e'
+        elif 'unclassified' in way['tags']['highway']:
+            highwayKey = 'f'
+        elif 'residential' in way['tags']['highway']:
+            highwayKey = 'g'
+        else:
+            highwayKey = 'h'
+
+        # put one-way after 2-way ways
         if 'oneway' in way['tags']:
             if way['tags']['oneway'] == 'yes':
-                key = 'd'
-        # put other link-ways after two-way ways.
-        if key == 'a' and '_link' in way['tags']['highway']:
-            key = 'b'
-        key = '{}-{}'.format(key, str(way['id']).zfill(20))
+                groupKey = 'b'
+
+        # Put link-roads in a group after non-link roads
+        if '_link' in way['tags']['highway']:
+            groupKey = 'c'
+            if 'oneway' in way['tags']:
+                if way['tags']['oneway'] == 'yes':
+                    groupKey = 'd'
+
+        # Put roundabouts, one-way junctions, and two-way junctions after non-junctions.
+        # We want to stay on or get back on main roads if possible and not stay
+        # looping around junctions.
+        if 'junction' in way['tags']:
+            # Put roundabouts last so that we try to exit them asap.
+            if way['tags']['junction'] == 'roundabout' or way['tags']['junction'] == 'circular':
+                groupKey = 'z'
+            # Put other oneway ways next to last so we try to exit them if possible.
+            elif 'oneway' in way['tags']:
+                if way['tags']['oneway'] == 'yes':
+                    groupKey = 'y'
+                else:
+                    # two-way junctions.
+                    key = 'x'
+            else:
+                # two-way junctions.
+                key = 'x'
+
+        key = '{}{}-{}'.format(groupKey, highwayKey, str(way['id']).zfill(20))
         return key
 
     # Join numbered/named routes end-to-end and add them to the way list.
