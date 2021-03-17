@@ -453,8 +453,9 @@ Change Log
 2.4.0 - 2021-03-17
 ------------------
 * Add support for storing maxspeed tags in postgres output.
+* Add support for storing smoothness tags in postgres output.
 
-**Upgrade note:** This release requires updating the PostGIS database structure to support new fk_maxspeed columns.
+**Upgrade note:** This release requires updating the PostGIS database structure to support new fk_maxspeed and fk_smoothness columns.
 
 Release contributors: Adam Franco
 
