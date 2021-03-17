@@ -450,14 +450,44 @@ inserting the new ones. `--host` and `--port` options are also available.
 Change Log
 ==========
 
-2.1.0
------
+2.3.0 - 2020-12-02
+------------------
+* PostGIS output can now record the extent affected by updates.
+* Now squashing curvature values for ways with certain tags (e.g. junction roundabout), near changes in oneway tags (to avoid "chained" modeling of roads from registering as curvy), and near nodes with certain tags (e.g. crossings, stop/yield signs, traffic signals, traffic-calming, etc)
+
+Release contributors: Adam Franco
+
+2.2.1 - 2020-10-08
+------------------
+* Many fixes to get tests working again. (Thanks, Daryl Matuszak)
+* updates args to unpacker to comply with msgpack 1.0
+* Use '{}'.format(x) instead of f'{x}' for compat. with Python 3.5 & 3.6.
+
+Release contributors: Adam Franco, Daryl Matuszak
+
+2.2.0 - 2017-02-06
+------------------
+* Add PostGIS output
+* Fix string replace syntax in Python 3.5.
+* Fix edge case where highway & surface tags contain non-ascii characters.
+* Add post processors to setup.py
+* Fix type error in Python 3.5. Wouldn't allow comparing `None > 0`.
+* Update the tab-delimited output to work again after much neglect.
+* Refactored AddSegmentLengthAndRadius to make the code more readable.
+* Skip nodes with invalid location rather than failing.
+
+Release contributors: Adam Franco, Fonsan
+
+2.1.0 - 2016-12-07
+------------------
 Updated from Python 2.7 to Python 3.5. Also removed the dependency on the Python27-only
 imposom.parser library in favor of the well-maintained Osmium PBF parsing library.
 Python 2.7 is no longer supported by Curvature.
 
-2.0.0
------
+Release contributors: Adam Franco, Fonsan
+
+2.0.0 - 2016-11-04
+------------------
 Curvature 2 is a complete rewrite of the program with a new stream-based processing model.
 Curvature 1 was a single large Python program with many, many options. To add flexibility,
 Curvature 2 is a collection of very small programs that each can modify the data-stream
