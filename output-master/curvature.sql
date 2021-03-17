@@ -38,6 +38,8 @@ CREATE TABLE curvature_segments (
     length integer,
     fk_surface integer NOT NULL,
     fk_highway integer NOT NULL,
+    fk_maxspeed integer,
+    fk_smoothness integer,
     paved boolean DEFAULT false NOT NULL,
     fk_source integer,
     geom geometry(LineString),
@@ -97,6 +99,8 @@ CREATE TABLE segment_ways (
     name character varying(500),
     fk_highway integer NOT NULL,
     fk_surface integer NOT NULL,
+    fk_maxspeed integer,
+    fk_smoothness integer,
     curvature integer,
     length integer,
     min_lon double precision,
@@ -350,6 +354,11 @@ ALTER TABLE ONLY curvature_segments
 ALTER TABLE ONLY curvature_segments
     ADD CONSTRAINT fk_source_key FOREIGN KEY (fk_surface) REFERENCES tags(tag_id) ON DELETE RESTRICT;
 
+ALTER TABLE ONLY curvature_segments
+    ADD CONSTRAINT fk_smoothness_key FOREIGN KEY (fk_smoothness) REFERENCES tags(tag_id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY curvature_segments
+    ADD CONSTRAINT fk_maxspeed_key FOREIGN KEY (fk_maxspeed) REFERENCES tags(tag_id) ON DELETE RESTRICT;
 
 --
 -- TOC entry 4375 (class 2606 OID 19848)
@@ -385,6 +394,12 @@ ALTER TABLE ONLY segment_ways
 
 ALTER TABLE ONLY segment_ways
     ADD CONSTRAINT segment_ways_fk_surface_key FOREIGN KEY (fk_surface) REFERENCES tags(tag_id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY segment_ways
+    ADD CONSTRAINT segment_ways_fk_smoothness_key FOREIGN KEY (fk_smoothness) REFERENCES tags(tag_id) ON DELETE RESTRICT;
+
+ALTER TABLE ONLY segment_ways
+    ADD CONSTRAINT segment_ways_fk_maxspeed_key FOREIGN KEY (fk_maxspeed) REFERENCES tags(tag_id) ON DELETE RESTRICT;
 
 
 -- Completed on 2017-01-04 23:02:11 EST
