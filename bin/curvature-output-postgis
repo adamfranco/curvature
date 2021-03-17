@@ -77,6 +77,7 @@ deleted = 0
 
 highway_tag_map = {}
 surface_tag_map = {}
+maxspeed_tag_map = {}
 
 if args.v:
     sys.stderr.write("Loading ways for {}\n".format(args.source))
@@ -112,7 +113,11 @@ for collection in unpacker:
             surface = way['tags']['surface']
         else:
             surface = 'unknown'
-        content_hash.update('{}-{}-{}'.format(name, highway, surface).encode('utf-8'))
+        if 'maxspeed' in way['tags']:
+            maxspeed = way['tags']['maxspeed']
+        else:
+            maxspeed = 'unknown'
+        content_hash.update('{}-{}-{}'.format(name, highway, surface, maxspeed).encode('utf-8'))
 
     id_hash = sha1()
     id_bytestring = ':'.join(map(str, way_ids)).encode('ascii')
@@ -123,6 +128,7 @@ for collection in unpacker:
     length = int(tools.get_collection_length(collection))
     highway_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'highway'))
     surface_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'surface', 'unknown'))
+    maxspeed_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'maxspeed', 'unknown'))
     surface = tools.get_collection_paved_style(collection)
     if surface == 'unpaved':
         continue;
@@ -148,6 +154,12 @@ for collection in unpacker:
         # Highway tags *should* all be ascii, but in a couple cases non-ascii
         # characters get into the data.
         content_hash.update(surface_tags.encode('utf-8'))
+    try:
+        content_hash.update(maxspeed_tags.encode('ascii'))
+    except UnicodeEncodeError:
+        # Maxspeed tags *should* all be ascii, but in a couple cases non-ascii
+        # characters get into the data.
+        content_hash.update(maxspeed_tags.encode('utf-8'))
     hash = content_hash.hexdigest()
 
     with conn.cursor() as cur:
@@ -165,7 +177,7 @@ for collection in unpacker:
                 del(existing[id])
 
                 # Note the update.
-                # sys.stderr.write("Updating:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, hash, name, curvature, length, highway_tags, surface_tags))
+                # sys.stderr.write("Updating:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n\tMaxspeed: '{}'\n".format(args.source, id, hash, name, curvature, length, highway_tags, surface_tags, maxspeed_tags))
 
                 # Add the existing segment's extent to the affected area.
                 with conn.cursor() as s_cur:
@@ -205,8 +217,21 @@ for collection in unpacker:
                 raise Exception('Failed to insert a surface tag.')
             surface_tag_map[surface_tags] = result[0]
             fk_surface = surface_tag_map[surface_tags]
+        if maxspeed_tags in maxspeed_tag_map:
+            fk_maxspeed = maxspeed_tag_map[maxspeed_tags]
+        else:
+            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('maxspeed', maxspeed_tags))
+            result = cur.fetchone()
+            if result is None:
+                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('maxspeed', maxspeed_tags))
+                result = cur.fetchone()
+                conn.commit()
+            if result is None:
+                raise Exception('Failed to insert a maxspeed tag.')
+            maxspeed_tag_map[maxspeed_tags] = result[0]
+            fk_maxspeed = maxspeed_tag_map[maxspeed_tags]
 
-        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, geom, hash))
+        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, fk_maxspeed, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, fk_maxspeed, geom, hash))
         if cur.rowcount == 1:
             # Add the line coordinates to the affected area if we are adding/updating it.
             for way in collection['ways']:
@@ -233,6 +258,10 @@ for collection in unpacker:
                     surface = way['tags']['surface']
                 else:
                     surface = 'unknown'
+                if 'maxspeed' in way['tags']:
+                    maxspeed = way['tags']['maxspeed']
+                else:
+                    maxspeed = 'unknown'
                 min_lon = tools.get_way_min_lon(way) - 0.001
                 max_lon = tools.get_way_max_lon(way) + 0.001
                 min_lat = tools.get_way_min_lat(way) - 0.001
@@ -264,20 +293,33 @@ for collection in unpacker:
                         raise Exception('Failed to insert a surface tag.')
                     surface_tag_map[surface] = result[0]
                     fk_surface = surface_tag_map[surface]
+                if maxspeed in maxspeed_tag_map:
+                    fk_maxspeed = maxspeed_tag_map[maxspeed]
+                else:
+                    cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('maxspeed', maxspeed))
+                    result = cur.fetchone()
+                    if result is None:
+                        cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('maxspeed', maxspeed))
+                        result = cur.fetchone()
+                        conn.commit()
+                    if result is None:
+                        raise Exception('Failed to insert a maxspeed tag.')
+                    maxspeed_tag_map[maxspeed] = result[0]
+                    fk_maxspeed = maxspeed_tag_map[maxspeed]
 
-                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, fk_highway, fk_surface, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (segment_db_id, position, way['id'], name, fk_highway, fk_surface,  way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
+                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, fk_highway, fk_surface, fk_maxspeed, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (segment_db_id, position, way['id'], name, fk_highway, fk_surface, fk_maxspeed, way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
                 if cur.rowcount != 1:
-                    sys.stderr.write("Error inserting way:\n\tsegment: {}\n\tposition: {}\n\tid: {}\n\tname: {}\n\thighway: {}\n\tsurface: {}\n\tcurvature: {}\n\tlength: {}\n".format(id, position, way['id'], name, highway, surface,  way['curvature'], way['length']))
+                    sys.stderr.write("Error inserting way:\n\tsegment: {}\n\tposition: {}\n\tid: {}\n\tname: {}\n\thighway: {}\n\tsurface: {}\n\tmaxspeed: {}\n\tcurvature: {}\n\tlength: {}\n".format(id, position, way['id'], name, highway, surface, maxspeed, way['curvature'], way['length']))
             updated = updated + 1
         else:
             failed = failed + 1
             if args.v:
-                sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags))
+                sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n\tMaxspeed: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags, maxspeed_tags))
                 with conn.cursor() as cur:
-                    cur.execute("SELECT source, c.id_hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id WHERE c.id_hash=%s", (id,))
+                    cur.execute("SELECT source, c.id_hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface, m.tag_value AS maxspeed FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id LEFT JOIN public.tags m ON fk_maxspeed = m.tag_id WHERE c.id_hash=%s", (id,))
                     result = cur.fetchone()
                     if result is not None:
-                        sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6]))
+                        sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n\tMaxspeed: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7]))
             pass
 
 if not args.clear:

@@ -450,6 +450,14 @@ inserting the new ones. `--host` and `--port` options are also available.
 Change Log
 ==========
 
+2.4.0 - 2021-03-17
+------------------
+* Add support for storing maxspeed tags in postgres output.
+
+**Upgrade note:** This release requires updating the PostGIS database structure to support new fk_maxspeed columns.
+
+Release contributors: Adam Franco
+
 2.3.0 - 2020-12-02
 ------------------
 * PostGIS output can now record the extent affected by updates.
