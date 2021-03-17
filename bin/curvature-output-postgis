@@ -231,7 +231,7 @@ for collection in unpacker:
             maxspeed_tag_map[maxspeed_tags] = result[0]
             fk_maxspeed = maxspeed_tag_map[maxspeed_tags]
 
-        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, fk_maxspeed, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, fk_maxspeed, geom, hash))
+        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, fk_maxspeed, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, fk_maxspeed, geom, hash))
         if cur.rowcount == 1:
             # Add the line coordinates to the affected area if we are adding/updating it.
             for way in collection['ways']:
@@ -307,7 +307,7 @@ for collection in unpacker:
                     maxspeed_tag_map[maxspeed] = result[0]
                     fk_maxspeed = maxspeed_tag_map[maxspeed]
 
-                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, fk_highway, fk_surface, fk_maxspeed, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (segment_db_id, position, way['id'], name, fk_highway, fk_surface, fk_maxspeed, way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
+                cur.execute("INSERT INTO public.segment_ways (fk_segment, position, id, name, fk_highway, fk_surface, fk_maxspeed, curvature, length, min_lon, max_lon, min_lat, max_lat) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;", (segment_db_id, position, way['id'], name, fk_highway, fk_surface, fk_maxspeed, way['curvature'], way['length'], min_lon, max_lon, min_lat, max_lat))
                 if cur.rowcount != 1:
                     sys.stderr.write("Error inserting way:\n\tsegment: {}\n\tposition: {}\n\tid: {}\n\tname: {}\n\thighway: {}\n\tsurface: {}\n\tmaxspeed: {}\n\tcurvature: {}\n\tlength: {}\n".format(id, position, way['id'], name, highway, surface, maxspeed, way['curvature'], way['length']))
             updated = updated + 1
