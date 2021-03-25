@@ -450,6 +450,18 @@ inserting the new ones. `--host` and `--port` options are also available.
 Change Log
 ==========
 
+2.5.0 - 2021-03-24
+------------------
+* Postgres output now only stores highway, surface, smoothness, and maxspeed at
+  the way-level rather than summed at the segment level. This dramatically
+  reduces the number of tags stored in the database. Way-level details can also
+  be more easily summed with statistics client-side.
+
+**Upgrade note:** This release requires updating the PostGIS database structure
+to remove the fk_highway, fk_surface, fk_maxspeed, and fk_smoothness columns
+and their associated constraints from the curvature_segments table.
+See `output-master/curvature.sql` for the new schema.
+
 2.4.0 - 2021-03-17
 ------------------
 * Add support for storing maxspeed tags in postgres output.
