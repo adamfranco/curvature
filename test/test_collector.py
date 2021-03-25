@@ -72,6 +72,71 @@ def road_a_way_data():
     )
 
 @pytest.fixture(scope='session')
+def road_b_node_data():
+    return (
+        (9, (43.70009, -73.00009), None),
+        (10, (43.70010, -73.00010), None),
+        (11, (43.70011, -73.00011), None),
+        (12, (43.70012, -73.00012), None),
+        (13, (43.70013, -73.00013), None),
+        (14, (43.70014, -73.00014), None),
+        (15, (43.70015, -73.00015), None),
+        (16, (43.70016, -73.00016), None),
+        (17, (43.70017, -73.00017), None),
+        (18, (43.70018, -73.00018), None),
+        (19, (43.70019, -73.00019), None),
+        (20, (43.70020, -73.00020), None),
+        (21, (43.70021, -73.00021), None),
+        (22, (43.70022, -73.00022), None),
+        (23, (43.70023, -73.00023), None),
+        (24, (43.70024, -73.00024), None)
+    )
+
+@pytest.fixture(scope='session')
+def road_b_way_data():
+    return (
+        (
+            10000,
+            {   'name':     'Road A',
+             'highway':  'unclassified',
+             'ref': 'CR123'},
+            [15, 16, 17, 18]
+        ),
+        # Can be appended in normal order
+        (
+            10001,
+            {   'name':     'Road B',
+             'highway':  'unclassified',
+             'official_ref': 'CR123'},
+            [18, 19, 20, 21]
+        ),
+        # Can be appended in reverse order
+        (
+            10002,
+            {   'name':     'Road C',
+             'highway':  'unclassified',
+             'highway_ref': 'CR123'},
+            [24, 23, 22, 21]
+        ),
+        # Can be pre-pended in normal order
+        (
+            10003,
+            {   'name':     'Road D',
+             'highway':  'unclassified',
+             'highway_authority_ref': 'CR123'},
+            [12, 13, 14, 15]
+        ),
+        # Can be pre-pended in reverse order
+        (
+            10004,
+            {   'name':     'Road E',
+             'highway':  'unclassified',
+             'admin_ref': 'CR123'},
+            [12, 11, 10, 9]
+            )
+    )
+
+@pytest.fixture(scope='session')
 def us2_node_data():
     return (
         (1706151846, (44.24674290000081, -72.54948910000024), None),
@@ -407,6 +472,13 @@ def road_a(road_xml_dir, road_a_node_data, road_a_way_data):
     return writeOSMFile(str(fn), road_a_node_data, road_a_way_data)
 
 @pytest.fixture(scope='session')
+def road_b(road_xml_dir, road_b_node_data, road_b_way_data):
+    name = 'road_b'
+    fn = road_xml_dir / name
+
+    return writeOSMFile(str(fn), road_b_node_data, road_b_way_data)
+
+@pytest.fixture(scope='session')
 def vermont_125(road_xml_dir, vermont_125_node_data, vermont_125_way_data):
     name = 'vermont_125'
     fn = road_xml_dir / name
@@ -489,6 +561,59 @@ def test_collector_road_a(road_a):
                 'refs': [21, 22, 23, 24],
                 'nodes': {},
                 'tags': {'highway': 'unclassified', 'name': 'Road A'}}
+        ]
+
+    assert collections[0]['ways'] == expected
+
+def test_collector_road_b(road_b):
+    collector = WayCollector()
+    collections = []
+    collector.parse(road_b, callback=lambda collection: collections.append(collection))
+    assert len(collections) == 1
+    assert len(collections[0]['ways']) == 5
+    assert collections[0]['join_type'] == 'ref'
+    assert collections[0]['join_data'] == 'CR123'
+
+    expected = [{'coords': [(-73.00009, 43.70009),
+                          (-73.0001, 43.7001),
+                          (-73.00011, 43.70011),
+                          (-73.00012, 43.70012)],
+               'id': 10004,
+               'refs': [9, 10, 11, 12],
+               'nodes': {},
+               'tags': {'highway': 'unclassified', 'name': 'Road E', 'admin_ref': 'CR123'}},
+              {'coords': [(-73.00012, 43.70012),
+                          (-73.00013, 43.70013),
+                          (-73.00014, 43.70014),
+                          (-73.00015, 43.70015)],
+               'id': 10003,
+               'refs': [12, 13, 14, 15],
+               'nodes': {},
+               'tags': {'highway': 'unclassified', 'name': 'Road D', 'highway_authority_ref': 'CR123'}},
+              {'coords': [(-73.00015, 43.70015),
+                          (-73.00016, 43.70016),
+                          (-73.00017, 43.70017),
+                          (-73.00018, 43.70018)],
+               'id': 10000,
+               'refs': [15, 16, 17, 18],
+               'nodes': {},
+               'tags': {'highway': 'unclassified', 'name': 'Road A', 'ref': 'CR123'}},
+              {'coords': [(-73.00018, 43.70018),
+                          (-73.00019, 43.70019),
+                          (-73.0002, 43.7002),
+                          (-73.00021, 43.70021)],
+               'id': 10001,
+               'refs': [18, 19, 20, 21],
+               'nodes': {},
+               'tags': {'highway': 'unclassified', 'name': 'Road B', 'official_ref': 'CR123'}},
+              {'coords': [(-73.00021, 43.70021),
+                          (-73.00022, 43.70022),
+                          (-73.00023, 43.70023),
+                          (-73.00024, 43.70024)],
+                'id': 10002,
+                'refs': [21, 22, 23, 24],
+                'nodes': {},
+                'tags': {'highway': 'unclassified', 'name': 'Road C', 'highway_ref': 'CR123'}}
         ]
 
     assert collections[0]['ways'] == expected

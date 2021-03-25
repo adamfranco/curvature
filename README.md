@@ -456,6 +456,10 @@ Change Log
   the way-level rather than summed at the segment level. This dramatically
   reduces the number of tags stored in the database. Way-level details can also
   be more easily summed with statistics client-side.
+* In addition to `ref`, way-joining now will use `official_ref`, `admin_ref`,
+  `highway_ref`, or `highway_authority_ref` as the joining key.
+  This fixes #65. Thanks to Pink Duck for reporting this issue affecting UK
+  county roads.
 
 **Upgrade note:** This release requires updating the PostGIS database structure
 to remove the fk_highway, fk_surface, fk_maxspeed, and fk_smoothness columns

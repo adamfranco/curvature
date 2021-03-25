@@ -118,6 +118,38 @@ class WayCollector(osmium.SimpleHandler):
                                                 'join_data': route,
                                                 'ways': []}
                     self.routes[route]['ways'].append(new_way)
+            elif 'official_ref' in new_way['tags']:
+                routes = new_way['tags']['official_ref'].split(';')
+                for route in routes:
+                    if route not in self.routes:
+                        self.routes[route] = {  'join_type': 'ref',
+                                                'join_data': route,
+                                                'ways': []}
+                    self.routes[route]['ways'].append(new_way)
+            elif 'admin_ref' in new_way['tags']:
+                routes = new_way['tags']['admin_ref'].split(';')
+                for route in routes:
+                    if route not in self.routes:
+                        self.routes[route] = {  'join_type': 'ref',
+                                                'join_data': route,
+                                                'ways': []}
+                    self.routes[route]['ways'].append(new_way)
+            elif 'highway_ref' in new_way['tags']:
+                routes = new_way['tags']['highway_ref'].split(';')
+                for route in routes:
+                    if route not in self.routes:
+                        self.routes[route] = {  'join_type': 'ref',
+                                                'join_data': route,
+                                                'ways': []}
+                    self.routes[route]['ways'].append(new_way)
+            elif 'highway_authority_ref' in new_way['tags']:
+                routes = new_way['tags']['highway_authority_ref'].split(';')
+                for route in routes:
+                    if route not in self.routes:
+                        self.routes[route] = {  'join_type': 'ref',
+                                                'join_data': route,
+                                                'ways': []}
+                    self.routes[route]['ways'].append(new_way)
             else:
                 if 'name' in new_way['tags'] and new_way['tags']['name'] != '':
                     if new_way['tags']['name'] not in self.routes:
