@@ -131,10 +131,6 @@ for collection in unpacker:
     name = tools.get_collection_name(collection)
     curvature = int(tools.get_collection_curvature(collection))
     length = int(tools.get_collection_length(collection))
-    highway_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'highway'))
-    surface_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'surface', 'unknown'))
-    smoothness_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'smoothness', 'unknown'))
-    maxspeed_tags = ', '.join(tools.get_length_weighted_collection_tags(collection, 'maxspeed', 'unknown'))
     surface = tools.get_collection_paved_style(collection)
     if surface == 'unpaved':
         continue;
@@ -148,30 +144,6 @@ for collection in unpacker:
     content_hash.update(name.encode('utf-8'))
     content_hash.update('{}'.format(curvature).encode('ascii'))
     content_hash.update('{}'.format(length).encode('ascii'))
-    try:
-        content_hash.update(highway_tags.encode('ascii'))
-    except UnicodeEncodeError:
-        # Highway tags *should* all be ascii, but in a couple cases non-ascii
-        # characters get into the data.
-        content_hash.update(highway_tags.encode('utf-8'))
-    try:
-        content_hash.update(surface_tags.encode('ascii'))
-    except UnicodeEncodeError:
-        # Surface tags *should* all be ascii, but in a couple cases non-ascii
-        # characters get into the data.
-        content_hash.update(surface_tags.encode('utf-8'))
-    try:
-        content_hash.update(smoothness_tags.encode('ascii'))
-    except UnicodeEncodeError:
-        # Smoothness tags *should* all be ascii, but in a couple cases non-ascii
-        # characters get into the data.
-        content_hash.update(smoothness_tags.encode('utf-8'))
-    try:
-        content_hash.update(maxspeed_tags.encode('ascii'))
-    except UnicodeEncodeError:
-        # Maxspeed tags *should* all be ascii, but in a couple cases non-ascii
-        # characters get into the data.
-        content_hash.update(maxspeed_tags.encode('utf-8'))
     hash = content_hash.hexdigest()
 
     with conn.cursor() as cur:
@@ -189,7 +161,7 @@ for collection in unpacker:
                 del(existing[id])
 
                 # Note the update.
-                # sys.stderr.write("Updating:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n\tSmoothness: '{}'\n\tMaxspeed: '{}'\n".format(args.source, id, hash, name, curvature, length, highway_tags, surface_tags, smoothness_tags, maxspeed_tags))
+                # sys.stderr.write("Updating:\n\tSource: {}\n\tId-hash: {}\n\tContent-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n".format(args.source, id, hash, name, curvature, length))
 
                 # Add the existing segment's extent to the affected area.
                 with conn.cursor() as s_cur:
@@ -203,60 +175,7 @@ for collection in unpacker:
                 # from the source data.
                 cur.execute('DELETE FROM public.curvature_segments WHERE fk_source=%s AND id_hash = %s', (source_id, id))
 
-        if highway_tags in highway_tag_map:
-            fk_highway = highway_tag_map[highway_tags]
-        else:
-            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('highway', highway_tags))
-            result = cur.fetchone()
-            if result is None:
-                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('highway', highway_tags))
-                result = cur.fetchone()
-                conn.commit()
-            if result is None:
-                raise Exception('Failed to insert a highway tag.')
-            highway_tag_map[highway_tags] = result[0]
-            fk_highway = highway_tag_map[highway_tags]
-        if surface_tags in surface_tag_map:
-            fk_surface = surface_tag_map[surface_tags]
-        else:
-            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('surface', surface_tags))
-            result = cur.fetchone()
-            if result is None:
-                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('surface', surface_tags))
-                result = cur.fetchone()
-                conn.commit()
-            if result is None:
-                raise Exception('Failed to insert a surface tag.')
-            surface_tag_map[surface_tags] = result[0]
-            fk_surface = surface_tag_map[surface_tags]
-        if smoothness_tags in smoothness_tag_map:
-            fk_smoothness = smoothness_tag_map[smoothness_tags]
-        else:
-            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('smoothness', smoothness_tags))
-            result = cur.fetchone()
-            if result is None:
-                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('smoothness', smoothness_tags))
-                result = cur.fetchone()
-                conn.commit()
-            if result is None:
-                raise Exception('Failed to insert a smoothness tag.')
-            smoothness_tag_map[smoothness_tags] = result[0]
-            fk_smoothness = smoothness_tag_map[smoothness_tags]
-        if maxspeed_tags in maxspeed_tag_map:
-            fk_maxspeed = maxspeed_tag_map[maxspeed_tags]
-        else:
-            cur.execute("SELECT tag_id FROM public.tags WHERE tag_name = %s AND tag_value = %s", ('maxspeed', maxspeed_tags))
-            result = cur.fetchone()
-            if result is None:
-                cur.execute("INSERT INTO public.tags (tag_name, tag_value) VALUES (%s, %s) RETURNING tag_id", ('maxspeed', maxspeed_tags))
-                result = cur.fetchone()
-                conn.commit()
-            if result is None:
-                raise Exception('Failed to insert a maxspeed tag.')
-            maxspeed_tag_map[maxspeed_tags] = result[0]
-            fk_maxspeed = maxspeed_tag_map[maxspeed_tags]
-
-        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, fk_highway, fk_surface, fk_smoothness, fk_maxspeed, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, fk_highway, fk_surface, fk_smoothness, fk_maxspeed, geom, hash))
+        cur.execute("INSERT INTO public.curvature_segments (fk_source, id_hash, name, curvature, paved, length, geom, hash) VALUES (%s, %s, %s, %s, %s, %s, ST_Transform(ST_GeomFromText(%s, 4326), 900913), %s) ON CONFLICT DO NOTHING RETURNING id;", (source_id, id, name, curvature, paved, length, geom, hash))
         if cur.rowcount == 1:
             # Add the line coordinates to the affected area if we are adding/updating it.
             for way in collection['ways']:
@@ -356,12 +275,12 @@ for collection in unpacker:
         else:
             failed = failed + 1
             if args.v:
-                sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: '{}'\n\tSurface: '{}'\n\tSmoothness: '{}'\n\tMaxspeed: '{}'\n".format(args.source, id, name, curvature, length, highway_tags, surface_tags, smoothness_tags, maxspeed_tags))
+                sys.stderr.write("To insert:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n".format(args.source, id, name, curvature, length))
                 with conn.cursor() as cur:
-                    cur.execute("SELECT source, c.id_hash, name, curvature, length, h.tag_value AS highway, u.tag_value AS surface, v.tag_value AS smoothness, m.tag_value AS maxspeed FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id LEFT JOIN public.tags h ON fk_highway = h.tag_id LEFT JOIN public.tags u ON fk_surface = u.tag_id LEFT JOIN public.tags v ON fk_smoothness = v.tag_id LEFT JOIN public.tags m ON fk_maxspeed = m.tag_id WHERE c.id_hash=%s", (id,))
+                    cur.execute("SELECT source, c.id_hash, name, curvature, length FROM public.curvature_segments c LEFT JOIN public.sources s ON fk_source = s.id WHERE c.id_hash=%s", (id,))
                     result = cur.fetchone()
                     if result is not None:
-                        sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n\tHighway: {}\n\tSurface: {}\n\tSmoothness: {}\n\tMaxspeed: {}\n".format(result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7], result[8]))
+                        sys.stderr.write("Existing:\n\tSource: {}\n\tId-hash: {}\n\tName: {}\n\tCurvature: {}\n\tLength: {}\n".format(result[0], result[1], result[2], result[3], result[4]))
             pass
 
 if not args.clear:

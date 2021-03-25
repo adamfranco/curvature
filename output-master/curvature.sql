@@ -36,10 +36,6 @@ CREATE TABLE curvature_segments (
     name character varying(500),
     curvature integer,
     length integer,
-    fk_surface integer NOT NULL,
-    fk_highway integer NOT NULL,
-    fk_maxspeed integer,
-    fk_smoothness integer,
     paved boolean DEFAULT false NOT NULL,
     fk_source integer,
     geom geometry(LineString),
@@ -298,14 +294,6 @@ CREATE INDEX fki_foreign_key_source ON curvature_segments USING btree (fk_source
 
 
 --
--- TOC entry 4360 (class 1259 OID 38299)
--- Name: fki_highway_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX fki_highway_key ON curvature_segments USING btree (fk_highway);
-
-
---
 -- TOC entry 4365 (class 1259 OID 48216)
 -- Name: fki_segment_ways_fk_highway_key; Type: INDEX; Schema: public; Owner: -
 --
@@ -335,30 +323,6 @@ CREATE INDEX fki_source_key ON curvature_segments USING btree (fk_surface);
 --
 
 CREATE INDEX length_idx ON curvature_segments USING btree (length);
-
-
---
--- TOC entry 4376 (class 2606 OID 48269)
--- Name: fk_highway_key; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY curvature_segments
-    ADD CONSTRAINT fk_highway_key FOREIGN KEY (fk_highway) REFERENCES tags(tag_id) ON DELETE RESTRICT;
-
-
---
--- TOC entry 4377 (class 2606 OID 48274)
--- Name: fk_source_key; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY curvature_segments
-    ADD CONSTRAINT fk_source_key FOREIGN KEY (fk_surface) REFERENCES tags(tag_id) ON DELETE RESTRICT;
-
-ALTER TABLE ONLY curvature_segments
-    ADD CONSTRAINT fk_smoothness_key FOREIGN KEY (fk_smoothness) REFERENCES tags(tag_id) ON DELETE RESTRICT;
-
-ALTER TABLE ONLY curvature_segments
-    ADD CONSTRAINT fk_maxspeed_key FOREIGN KEY (fk_maxspeed) REFERENCES tags(tag_id) ON DELETE RESTRICT;
 
 --
 -- TOC entry 4375 (class 2606 OID 19848)
