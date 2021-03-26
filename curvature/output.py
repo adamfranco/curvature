@@ -174,6 +174,12 @@ class OutputTools(object):
         refs = sorted(self.get_shared_collection_refs(collection))
         if refs:
             ref = ' / '.join(refs)
+        # If we don't have route-numbers from the actual 'ref' tag, we may have
+        # an identifier we are joining on from another alternate tag like:
+        # official_ref, admin_ref, highway_ref, or highway_authority_ref
+        elif 'join_type' in collection and collection['join_type'] == 'ref' and 'join_data' in collection and collection['join_data']:
+            ref = collection['join_data']
+        # Maybe we just joined on name.
         else:
             ref = None
         if names and ref:

@@ -295,3 +295,42 @@ def test_get_collection_name(road_a, road_b):
     collection = {'join_type': 'none', 'ways': [road_g]}
     name = output.tools.get_collection_name(collection)
     assert name == 'VT-555 / VT-17' or name == 'VT-17 / VT-555'
+
+def test_get_collection_name_alt_refs():
+    output = KmlOutput('km')
+    # Ensure that if a way in the collection has no refs with a shared key, there are none shared.
+    road_a = {'id':   1000,
+            'tags': {   'name':     'Road A',
+                        'highway':  'tertiary',
+                        'official_ref':      'C555'},
+            'length': 3000}
+    road_b = {'id':   1001,
+            'tags': {   'name':     'Road B',
+                        'highway':  'tertiary',
+                        'highway_authority_ref':    'C555'},
+            'length': 100}
+    collection = {'join_type': 'ref', 'join_data': 'C555', 'ways': [road_a, road_b]}
+    name = output.tools.get_collection_name(collection)
+    assert name == 'Road A (C555)'
+
+    # Ensure that multiple refs can be returned
+    road_c = {'id':   1002,
+            'tags': {   'name':     'Road B',
+                        'highway':  'tertiary',
+                        'official_ref':      'C555;C17'},
+            'length': 3000}
+    road_d = {'id':   1003,
+            'tags': {   'name':     'Road A',
+                        'highway':  'tertiary',
+                        'official_ref':      'C555',
+                        'highway_authority_ref':    'C17'},
+            'length': 100}
+    road_e = {'id':   1003,
+            'tags': {   'name':     'Road A',
+                        'highway':  'tertiary',
+                        'admin_ref':      'C555'},
+            'length': 100}
+    collection = {'join_type': 'ref', 'join_data': 'C555', 'ways': [road_c, road_d, road_e]}
+    refs = output.tools.get_shared_collection_refs(collection)
+    name = output.tools.get_collection_name(collection)
+    assert name == 'Road B (C555)'
