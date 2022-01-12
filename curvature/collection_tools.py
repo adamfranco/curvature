@@ -52,6 +52,55 @@ class SquashCurvatureNearbyProcessorAbstract(object):
         if 'curvature_level' in segment.keys():
             segment['curvature_level'] = 0
 
+# Abstract class for post-processors that traverse segments, inflating curvature.
+class InflateCurvatureNearbyProcessorAbstract(object):
+    def __init__(self, curvature=1, distance=0):
+        self.curvature = curvature
+        self.distance = distance
+
+    def process(self, iterable):
+        for collection in iterable:
+            yield(self.process_collection(collection))
+
+    # Inflate curvature values near an initial point out to our configured distance.
+    def inflate_segment_curvature_nearby(self, collection, initial_way_index, initial_segment_index, initial_segment_end):
+        segments = CollectionSegmentTraverser(collection, initial_way_index, initial_segment_index)
+        # The initial matching segment will always have its curvature inflated.
+        initial_segment = segments.next()
+        self.inflate_segment_curvature(initial_segment)
+
+        # Explore forward, inflating curvature until our distance has been exceeded.
+        if initial_segment_end == 'start':
+            d = initial_segment['length']
+        else:
+            d = 0
+        while d < self.distance and segments.has_next():
+            segment = segments.next()
+            self.inflate_segment_curvature(segment)
+            d = d + segment['length']
+
+        # Explore backward, inflating curvature until our distance has been exceeded.
+        segments.reset_postition()
+        segments.set_direction('backward')
+        segments.next() # We've already inflated the initial segment's curvature.
+        if initial_segment_end == 'end':
+            d = initial_segment['length']
+        else:
+            d = 0
+        while d < self.distance and segments.has_next():
+            segment = segments.next()
+            self.inflate_segment_curvature(segment)
+            d = d + segment['length']
+
+    # Inflate the curvature values on a single segment.
+    def inflate_segment_curvature(self, segment):
+        if 'curvature' in segment.keys():
+            segment['curvature'] = segment['curvature'] + self.curvature
+        else:
+            segment['curvature'] = self.curvature
+        if 'curvature_level' in segment.keys() and segment['curvature_level'] < 4:
+            segment['curvature_level'] = segment['curvature_level'] + 1
+
 # Utility class for traversing through adjoining segments in a collection.
 class CollectionSegmentTraverser(object):
 
